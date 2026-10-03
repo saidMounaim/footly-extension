@@ -11,13 +11,25 @@ function StatusCell({ match }: MatchRowProps) {
     case 'live':
       return (
         <span className="font-semibold text-accent">
-          Live{score && <span className="ml-1 tabular-nums">{score}</span>}
+          Live
+          {score && (
+            <>
+              {' '}
+              <span className="tabular-nums">{score}</span>
+            </>
+          )}
         </span>
       )
     case 'halftime':
       return (
         <span className="font-semibold text-foreground">
-          HT{score && <span className="ml-1 tabular-nums">{score}</span>}
+          HT
+          {score && (
+            <>
+              {' '}
+              <span className="tabular-nums">{score}</span>
+            </>
+          )}
         </span>
       )
     case 'postponed':
