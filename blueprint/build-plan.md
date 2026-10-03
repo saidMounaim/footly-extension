@@ -2,10 +2,10 @@
 
 ## Your features
 
-- [ ] 1. **Match Discovery & Upcoming Games** - Show the user's upcoming football matches with competition, teams, kickoff time, and match status using the football data API.
+- [x] 1. **Match Discovery & Upcoming Games** - Show the user's upcoming football matches with competition, teams, kickoff time, and match status using the football data API.
 
   - [x] 1a. **Extension Shell** - Turn the Vite app into a loadable Manifest V3 Chrome extension popup with `@crxjs/vite-plugin`, Tailwind CSS, and light/dark tokens that follow the system theme. No host permissions or Chrome APIs yet.
-  - [ ] 1b. **Upcoming Matches** - Fetch ESPN scoreboards for a fixed top-league set (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League) for today plus the next 7 days, normalize into the internal `Team`/`Competition`/`Match` models, and list matches by kickoff with competition, teams, time, and status. Fetch directly; add `host_permissions` for `https://site.api.espn.com/*` only if CORS blocks it. No backend.
+  - [x] 1b. **Upcoming Matches** - Fetch ESPN scoreboards for a fixed top-league set (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League) for today plus the next 7 days, normalize into the internal `Team`/`Competition`/`Match` models, and list matches by kickoff with competition, teams, time, and status. Fetch directly; add `host_permissions` for `https://site.api.espn.com/*` only if CORS blocks it. No backend.
 
 - [ ] 2. **Match Details & Live Events** - Display live score, goals, yellow/red cards, substitutions, penalties, and other important match events in a clean chronological timeline.
 

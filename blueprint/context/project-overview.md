@@ -30,7 +30,9 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 
 Build order from `build-plan.md`. Headline: the compact popup with next match and live score.
 
-1. **Match Discovery & Upcoming Games** - upcoming matches with competition, teams, kickoff, status.
+1. **Match Discovery & Upcoming Games** - upcoming matches with competition, teams, kickoff, status. Split into:
+   - **1a. Extension Shell** (done) - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
+   - **1b. Upcoming Matches** - ESPN scoreboards for a fixed set (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League), today plus the next 7 days, normalized into `Team`/`Competition`/`Match`, listed by kickoff. Direct fetch; `host_permissions` for `https://site.api.espn.com/*` only if CORS blocks it. No backend.
 2. **Match Details & Live Events** - live score and chronological timeline (goals, cards, substitutions, penalties).
 3. **Recent Results** - completed matches with final scores, key events, dates.
 4. **Favorite Teams** - search and save teams; their matches are prioritized.
@@ -126,12 +128,12 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 
 > Resolve in the plans, then re-run /overview.
 
-- **No extension setup feature.** The repo is a plain Vite + React app. Tailwind, `@crxjs/vite-plugin`, a Manifest V3 manifest, and the popup entry are not installed or configured, and no build-plan item covers it. Feature 1 would absorb that work.
 - **Overlap.** Feature 2 (live timeline) and feature 10 (Match Center with timeline) cover similar ground; feature 6 (status) and 7 (countdown) are small items that feature 1 also touches.
-- **Themes.** Feature 14 is late, but UI/UX asks for excellent dark mode from the start.
+- **Themes.** 1a follows the system theme; feature 14 still owns a user theme toggle and the polished pass.
 - **Cross-cutting items.** Features 15, 16, and 17 are cross-cutting concerns that earlier features will already need in part.
-- **Provider risk.** ESPN endpoints are unofficial; whether the extension can call them directly (CORS, host permissions) is unverified, and the plan wants no host permissions.
+- **Provider risk.** ESPN endpoints are unofficial and CORS from the popup is unverified. The build plan allows one narrow ESPN host permission in 1b if needed; the project plan says the extension should *ideally* have none.
 - **Lineups and statistics** (feature 10) are not in the project plan's MVP list or data model.
 - **Search** appears in the plan as team and match search; build plan adds competitions.
-- **Undefined types.** `MatchStatus` and `MatchEvent` shapes are missing.
+- **Undefined types.** `MatchStatus` and `MatchEvent` shapes are missing. 1b must define `MatchStatus` (it locks the `Match` shape); `MatchEvent` can wait for feature 2.
+- **Default competitions.** The six-league default for 1b lives only in the build plan; how it combines with favorites (features 4, 5, 12) is undecided.
 - **Testing and `AGENTS.md`.** The plan lists Vitest and Testing Library, but no runner is configured yet, so tests are not a gate until `/tests` is run.

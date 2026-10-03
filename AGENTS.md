@@ -297,7 +297,8 @@ Vite + React + TypeScript project, npm.
 - Build (typecheck + bundle): `npm run build`
 - Preview production build: `npm run preview`
 - Lint: `npm run lint`
+- Test: `npm test` (Vitest, single run; fails on an empty suite)
+- Test watch: `npm run test:watch`
 
-No test runner is configured, so tests are not a gate yet. Run `/tests` to add
-one, and `/tests browser` for a browser harness. No Verify command or GitHub
-workflow exists; run `/ci` to set them up.
+Tests sit next to their source as `*.test.ts`. Run `/tests browser` for a browser
+harness. No Verify command or GitHub workflow exists; run `/ci` to set them up.
