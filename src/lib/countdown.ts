@@ -15,7 +15,7 @@ export function rowCountdown(kickoff: Date, now: Date): string | null {
   return `in ${Math.ceil(remaining / MINUTE_MS)} min`
 }
 
-/** Detail text: "Kicks off in 3d 04h 12m", "… 2h 14m 05s", "… 14m 05s", or "Starting". */
+/** Detail text: "Kicks off in 3d 04h 12m", "Kicks off in 2h 14m 05s", "Kicks off in 14m 05s", or "Starting". */
 export function detailCountdown(kickoff: Date, now: Date): string {
   const remaining = kickoff.getTime() - now.getTime()
   if (remaining <= 0) return 'Starting'

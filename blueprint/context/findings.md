@@ -15,13 +15,13 @@
 **Suggested fix:** Add one test where `fetchImpl` throws a non-network error and assert `getTeamCatalog` rejects with that same error. Requirement lost: none.
 **Resolution:**
 
-### F-04 [P3] open - Ellipsis character in new countdown doc comment
+### F-04 [P3] fixed - Ellipsis character in new countdown doc comment
 
 **File:** src/lib/countdown.ts:18
 **Found:** 2026-10-04 by /audit independent (scope: current; lens: quality)
 **Why it matters:** The coding standards' Writing section says to avoid the ellipsis character in comments. The `detailCountdown` doc comment uses it twice.
 **Suggested fix:** Write the examples out in full or use "...". Requirement lost: none.
-**Resolution:**
+**Resolution:** Fixed on fix/ellipsis-in-countdown-doc-comment: the `detailCountdown` doc comment now writes each example in full ("Kicks off in 2h 14m 05s", "Kicks off in 14m 05s"); `grep -n "…" src/lib/countdown.ts` finds nothing. Awaiting re-review.
 
 ### F-06 [P3] unverified - A postponed match that is rescheduled under the same id is never watched again
 
