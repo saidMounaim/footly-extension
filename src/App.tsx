@@ -5,6 +5,7 @@ import { MatchDetail } from './components/matches/MatchDetail.tsx'
 import { MatchList } from './components/matches/MatchList.tsx'
 import { MatchTabs } from './components/matches/MatchTabs.tsx'
 import { MATCH_TABS, panelId, tabId, type MatchTab } from './components/matches/tabs.ts'
+import { SearchPanel } from './components/search/SearchPanel.tsx'
 import { useFavoriteCompetitions } from './hooks/useFavoriteCompetitions.ts'
 import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
 import { useKickoffChecks } from './hooks/useKickoffChecks.ts'
@@ -27,9 +28,15 @@ function App() {
   const competitions = useFavoriteCompetitions()
   const notifications = useNotificationsSetting()
   const [tab, setTab] = useState<MatchTab>('upcoming')
+  const [searchFocus, setSearchFocus] = useState(0)
   const catalog = useTeamCatalog(tab === 'favorites')
   const [selected, setSelected] = useState<Match | null>(null)
   const returnTo = useRef<{ trigger: HTMLButtonElement; scrollY: number } | null>(null)
+
+  const changeTab = useCallback((next: MatchTab, via: 'click' | 'key') => {
+    setTab(next)
+    if (next === 'search' && via === 'click') setSearchFocus((n) => n + 1)
+  }, [])
 
   const openMatch = useCallback((match: Match, trigger: HTMLButtonElement) => {
     returnTo.current = { trigger, scrollY: window.scrollY }
@@ -63,7 +70,7 @@ function App() {
           </p>
         )}
         <div hidden={selected !== null}>
-          <MatchTabs active={tab} onChange={setTab} />
+          <MatchTabs active={tab} onChange={changeTab} />
           {MATCH_TABS.map(({ id }) => (
             <div
               key={id}
@@ -79,6 +86,16 @@ function App() {
                   notifications={notifications}
                   catalog={catalog.state}
                   onRetryCatalog={catalog.retry}
+                />
+              ) : id === 'search' ? (
+                <SearchPanel
+                  state={state}
+                  onRetry={retry}
+                  now={now}
+                  favorites={favorites}
+                  competitions={competitions}
+                  onSelect={openMatch}
+                  focusRequest={searchFocus}
                 />
               ) : (
                 <MatchList

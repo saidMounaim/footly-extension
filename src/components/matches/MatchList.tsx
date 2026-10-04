@@ -31,7 +31,7 @@ function groupByDay(matches: Match[]): Match[][] {
   return [...groups.values()]
 }
 
-function Skeleton() {
+export function MatchListSkeleton() {
   return (
     <div aria-busy="true" className="px-4 py-3">
       <span className="sr-only">Loading matches…</span>
@@ -51,6 +51,18 @@ function Skeleton() {
   )
 }
 
+export function MatchListError({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div role="alert" className="flex flex-col items-center gap-3 px-6 py-12 text-center">
+      <p className="text-sm text-foreground">Couldn't load match data.</p>
+      <p className="text-sm text-muted">Check your connection and try again.</p>
+      <button type="button" onClick={onRetry} className={secondaryButtonClass}>
+        Retry
+      </button>
+    </div>
+  )
+}
+
 export function MatchList({
   state,
   view,
@@ -60,19 +72,8 @@ export function MatchList({
   onRetry,
   onSelect,
 }: MatchListProps) {
-  if (state.status === 'loading') return <Skeleton />
-
-  if (state.status === 'error') {
-    return (
-      <div role="alert" className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-        <p className="text-sm text-foreground">Couldn't load match data.</p>
-        <p className="text-sm text-muted">Check your connection and try again.</p>
-        <button type="button" onClick={onRetry} className={secondaryButtonClass}>
-          Retry
-        </button>
-      </div>
-    )
-  }
+  if (state.status === 'loading') return <MatchListSkeleton />
+  if (state.status === 'error') return <MatchListError onRetry={onRetry} />
 
   const { result, loadedAt } = state
   const matches = result[view]

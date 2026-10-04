@@ -3,7 +3,8 @@ import { MATCH_TABS, panelId, tabId, type MatchTab } from './tabs.ts'
 
 interface MatchTabsProps {
   active: MatchTab
-  onChange: (tab: MatchTab) => void
+  /** `via` tells a click apart from arrow-key navigation, which must keep focus on the tab. */
+  onChange: (tab: MatchTab, via: 'click' | 'key') => void
 }
 
 export function MatchTabs({ active, onChange }: MatchTabsProps) {
@@ -11,7 +12,7 @@ export function MatchTabs({ active, onChange }: MatchTabsProps) {
 
   function select(index: number) {
     const tab = MATCH_TABS[(index + MATCH_TABS.length) % MATCH_TABS.length].id
-    onChange(tab)
+    onChange(tab, 'key')
     buttons.current.get(tab)?.focus()
   }
 
@@ -50,7 +51,7 @@ export function MatchTabs({ active, onChange }: MatchTabsProps) {
             aria-selected={selected}
             aria-controls={panelId(id)}
             tabIndex={selected ? 0 : -1}
-            onClick={() => onChange(id)}
+            onClick={() => onChange(id, 'click')}
             className={`flex-1 border-b-2 px-4 py-2 text-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
               selected
                 ? 'border-accent font-semibold text-foreground'
