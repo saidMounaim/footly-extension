@@ -367,4 +367,16 @@ describe('getTeamCatalog', () => {
     })
     expect(result).toEqual({ teams: [], failedCompetitionIds: COMPETITIONS.map((c) => c.id) })
   })
+
+  it('does not fold unexpected errors into failed competitions', async () => {
+    const bug = new RangeError('bug')
+    const body = {
+      get children(): unknown {
+        throw bug
+      },
+    }
+    // fetchJson wraps anything fetch throws as an expected failure, so the error comes from parsing.
+    const fetchImpl = vi.fn<typeof fetch>(async () => ({ ok: true, json: async () => body }) as Response)
+    await expect(getTeamCatalog({ fetchImpl })).rejects.toBe(bug)
+  })
 })
