@@ -3,10 +3,12 @@ import {
   EspnResponseError,
   normalizeScoreboard,
   normalizeSummary,
+  normalizeTeams,
   scoreboardUrl,
+  standingsUrl,
   summaryUrl,
 } from './espn.ts'
-import type { Match } from './types.ts'
+import type { Match, Team } from './types.ts'
 
 /** Competitions shown before favorites exist, in display tie-break order. */
 export const COMPETITIONS = [
@@ -144,4 +146,40 @@ export async function getMatchDetails(
     }
     throw error
   }
+}
+
+export interface TeamCatalogResult {
+  /** Clubs in the fixed competitions, unique by id, sorted by name. */
+  teams: Team[]
+  failedCompetitionIds: string[]
+}
+
+/**
+ * Loads every club in the fixed competition set. Per-competition failures are
+ * reported in `failedCompetitionIds`; unexpected errors are rethrown.
+ */
+export async function getTeamCatalog({
+  fetchImpl = (input, init) => fetch(input, init),
+}: { fetchImpl?: typeof fetch } = {}): Promise<TeamCatalogResult> {
+  const settled = await Promise.allSettled(
+    COMPETITIONS.map(async (competition) =>
+      normalizeTeams(await fetchJson(standingsUrl(competition.id), fetchImpl)),
+    ),
+  )
+
+  const failedCompetitionIds: string[] = []
+  const byId = new Map<string, Team>()
+  settled.forEach((result, index) => {
+    if (result.status === 'rejected') {
+      if (!isExpectedFailure(result.reason)) throw result.reason
+      failedCompetitionIds.push(COMPETITIONS[index].id)
+      return
+    }
+    for (const team of result.value) {
+      if (!byId.has(team.id)) byId.set(team.id, team)
+    }
+  })
+
+  const teams = [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
+  return { teams, failedCompetitionIds }
 }

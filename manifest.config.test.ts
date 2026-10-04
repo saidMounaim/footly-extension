@@ -12,8 +12,8 @@ describe('manifest', () => {
     })
   })
 
-  it('requests no permissions, host access, or background work', () => {
-    expect(manifest).not.toHaveProperty('permissions')
+  it('requests only storage, with no host access or background work', () => {
+    expect(manifest).toHaveProperty('permissions', ['storage'])
     expect(manifest).not.toHaveProperty('host_permissions')
     expect(manifest).not.toHaveProperty('background')
     expect(manifest).not.toHaveProperty('content_scripts')

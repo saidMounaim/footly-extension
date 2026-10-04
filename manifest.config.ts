@@ -6,6 +6,8 @@ export default defineManifest({
   name: 'Footly',
   description: 'Upcoming matches, live scores, and results in a compact popup.',
   version: pkg.version,
+  // Saves favorite teams locally (chrome.storage.local).
+  permissions: ['storage'],
   action: {
     default_popup: 'index.html',
     default_title: 'Footly',

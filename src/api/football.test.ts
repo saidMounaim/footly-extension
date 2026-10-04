@@ -1,5 +1,11 @@
 import { describe, expect, it, vi } from 'vitest'
-import { COMPETITIONS, getMatchDetails, getMatchList, MatchDetailsError } from './football.ts'
+import {
+  COMPETITIONS,
+  getMatchDetails,
+  getMatchList,
+  getTeamCatalog,
+  MatchDetailsError,
+} from './football.ts'
 import type { Match } from './types.ts'
 
 // Results: 2026-10-12T23:00Z to 2026-10-20T23:00Z. Upcoming: 2026-10-19T23:00Z to 2026-10-28T00:00Z.
@@ -297,5 +303,68 @@ describe('getMatchDetails', () => {
     }
     const fetchImpl = vi.fn(async () => new Response(JSON.stringify(summary)))
     await expect(getMatchDetails(broken, { fetchImpl })).rejects.toBe(bug)
+  })
+})
+
+describe('getTeamCatalog', () => {
+  function teamsResponse(teams: { id: string; name: string }[]) {
+    return {
+      children: [
+        { standings: { entries: teams.map(({ id, name }) => ({ team: { id, displayName: name } })) } },
+      ],
+    }
+  }
+
+  function teamsFetch(replies: Record<string, { id: string; name: string }[] | number>) {
+    return vi.fn<typeof fetch>(async (input) => {
+      const slug = String(input).split('/soccer/')[1].split('/')[0]
+      const reply = replies[slug] ?? []
+      if (typeof reply === 'number') return new Response('', { status: reply })
+      return new Response(JSON.stringify(teamsResponse(reply)))
+    })
+  }
+
+  it('requests every competition once over HTTPS', async () => {
+    const fetchImpl = teamsFetch({})
+    await getTeamCatalog({ fetchImpl })
+    expect(fetchImpl.mock.calls.map(([input]) => String(input))).toEqual(
+      COMPETITIONS.map(
+        (c) => `https://site.api.espn.com/apis/v2/sports/soccer/${c.id}/standings`,
+      ),
+    )
+  })
+
+  it('dedupes clubs across competitions and sorts by name', async () => {
+    const { teams, failedCompetitionIds } = await getTeamCatalog({
+      fetchImpl: teamsFetch({
+        'eng.1': [
+          { id: '382', name: 'Manchester City' },
+          { id: '359', name: 'Arsenal' },
+        ],
+        'uefa.champions': [
+          { id: '359', name: 'Arsenal' },
+          { id: '1068', name: 'Atlético Madrid' },
+        ],
+      }),
+    })
+    expect(teams.map((t) => t.name)).toEqual(['Arsenal', 'Atlético Madrid', 'Manchester City'])
+    expect(failedCompetitionIds).toEqual([])
+  })
+
+  it('reports failed competitions and keeps the rest', async () => {
+    const result = await getTeamCatalog({
+      fetchImpl: teamsFetch({ 'eng.1': [{ id: '359', name: 'Arsenal' }], 'esp.1': 503 }),
+    })
+    expect(result.teams.map((t) => t.id)).toEqual(['359'])
+    expect(result.failedCompetitionIds).toEqual(['esp.1'])
+  })
+
+  it('reports every competition when all fail', async () => {
+    const result = await getTeamCatalog({
+      fetchImpl: vi.fn<typeof fetch>(async () => {
+        throw new TypeError('Failed to fetch')
+      }),
+    })
+    expect(result).toEqual({ teams: [], failedCompetitionIds: COMPETITIONS.map((c) => c.id) })
   })
 })

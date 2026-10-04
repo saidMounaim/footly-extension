@@ -3,11 +3,14 @@ import {
   EspnResponseError,
   normalizeScoreboard,
   normalizeSummary,
+  normalizeTeams,
   scoreboardUrl,
+  standingsUrl,
   summaryUrl,
 } from './espn.ts'
 import fixture from './fixtures/espn-scoreboard.json'
 import summaryFixture from './fixtures/espn-summary.json'
+import standingsFixture from './fixtures/espn-standings.json'
 import type { Match } from './types.ts'
 
 const league = { id: '700', name: 'English Premier League' }
@@ -383,5 +386,60 @@ describe('normalizeSummary', () => {
     ['a string', 'oops'],
   ])('throws EspnResponseError for %s', (_label, input) => {
     expect(() => normalizeSummary(input, listMatch)).toThrow(EspnResponseError)
+  })
+})
+
+describe('standingsUrl', () => {
+  it('builds the HTTPS standings endpoint', () => {
+    expect(standingsUrl('eng.1')).toBe(
+      'https://site.api.espn.com/apis/v2/sports/soccer/eng.1/standings',
+    )
+  })
+})
+
+describe('normalizeTeams', () => {
+  it('normalizes a real ESPN standings response', () => {
+    const teams = normalizeTeams(standingsFixture)
+    const first = standingsFixture.children[0].standings.entries[0].team
+    expect(teams).toHaveLength(4)
+    expect(teams[0]).toEqual({
+      id: first.id,
+      name: first.displayName,
+      shortName: first.shortDisplayName,
+      logo: first.logos[0].href,
+    })
+  })
+
+  it('reads every group and skips malformed teams and non-https logos', () => {
+    const teams = normalizeTeams({
+      children: [
+        {
+          standings: {
+            entries: [
+              null,
+              { team: { id: '1' } },
+              { team: { displayName: 'No id' } },
+              { team: { id: '2', displayName: 'Kept', logos: [{ href: 'http://x/2.png' }] } },
+            ],
+          },
+        },
+        { standings: { entries: [{ team: { id: '3', displayName: 'Group B' } }] } },
+        { standings: {} },
+        null,
+      ],
+    })
+    expect(teams).toEqual([
+      { id: '2', name: 'Kept' },
+      { id: '3', name: 'Group B' },
+    ])
+  })
+
+  it.each([
+    ['null', null],
+    ['an array', []],
+    ['no groups', {}],
+    ['non-array groups', { children: {} }],
+  ])('throws EspnResponseError for %s', (_label, input) => {
+    expect(() => normalizeTeams(input)).toThrow(EspnResponseError)
   })
 })

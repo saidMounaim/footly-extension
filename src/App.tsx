@@ -1,14 +1,19 @@
 import { useCallback, useRef, useState } from 'react'
 import type { Match } from './api/types.ts'
+import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
 import { MatchDetail } from './components/matches/MatchDetail.tsx'
 import { MatchList } from './components/matches/MatchList.tsx'
 import { MatchTabs } from './components/matches/MatchTabs.tsx'
 import { MATCH_TABS, panelId, tabId, type MatchTab } from './components/matches/tabs.ts'
+import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
 import { useMatchList } from './hooks/useMatchList.ts'
+import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 
 function App() {
   const { state, retry } = useMatchList()
+  const favorites = useFavoriteTeams()
   const [tab, setTab] = useState<MatchTab>('upcoming')
+  const catalog = useTeamCatalog(tab === 'favorites')
   const [selected, setSelected] = useState<Match | null>(null)
   const returnTo = useRef<{ trigger: HTMLButtonElement; scrollY: number } | null>(null)
 
@@ -38,6 +43,11 @@ function App() {
         </h1>
       </header>
       <main className="flex-1">
+        {favorites.saveError && (
+          <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
+            Couldn't save your favorites. Try again.
+          </p>
+        )}
         <div hidden={selected !== null}>
           <MatchTabs active={tab} onChange={setTab} />
           {MATCH_TABS.map(({ id }) => (
@@ -48,11 +58,32 @@ function App() {
               aria-labelledby={tabId(id)}
               hidden={id !== tab}
             >
-              <MatchList state={state} view={id} onRetry={retry} onSelect={openMatch} />
+              {id === 'favorites' ? (
+                <FavoritesPanel
+                  favorites={favorites}
+                  catalog={catalog.state}
+                  onRetryCatalog={catalog.retry}
+                />
+              ) : (
+                <MatchList
+                  state={state}
+                  view={id}
+                  favoriteIds={favorites.favoriteIds}
+                  onRetry={retry}
+                  onSelect={openMatch}
+                />
+              )}
             </div>
           ))}
         </div>
-        {selected && <MatchDetail key={selected.id} match={selected} onBack={closeMatch} />}
+        {selected && (
+          <MatchDetail
+            key={selected.id}
+            match={selected}
+            favorites={favorites}
+            onBack={closeMatch}
+          />
+        )}
       </main>
     </div>
   )

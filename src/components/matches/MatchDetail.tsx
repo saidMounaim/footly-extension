@@ -1,5 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Match } from '../../api/types.ts'
+import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
+import { TeamToggle } from '../favorites/TeamToggle.tsx'
 import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
 import { StatusText } from './MatchRow.tsx'
@@ -8,20 +10,35 @@ import { formatScore, secondaryButtonClass } from './status.ts'
 
 interface MatchDetailProps {
   match: Match
+  favorites: FavoriteTeamsApi
   onBack: () => void
 }
 
-function ScoreBlock({ match }: { match: Match }) {
+function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTeamsApi }) {
   return (
     <div className="flex flex-col items-center gap-1 border-b border-border px-4 py-5">
       <div className="flex w-full items-center gap-3">
-        <p className="flex-1 text-right text-sm font-semibold text-foreground">
-          {match.homeTeam.name}
+        <p className="flex flex-1 items-center justify-end gap-1 text-right text-sm font-semibold text-foreground">
+          <span className="min-w-0">{match.homeTeam.name}</span>
+          <TeamToggle
+            team={match.homeTeam}
+            pressed={favorites.isFavorite(match.homeTeam.id)}
+            disabled={!favorites.ready}
+            onToggle={favorites.toggle}
+          />
         </p>
         <p className="shrink-0 text-2xl font-bold tabular-nums text-foreground">
           {match.score ? formatScore(match.score) : formatKickoff(new Date(match.startTime))}
         </p>
-        <p className="flex-1 text-sm font-semibold text-foreground">{match.awayTeam.name}</p>
+        <p className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground">
+          <TeamToggle
+            team={match.awayTeam}
+            pressed={favorites.isFavorite(match.awayTeam.id)}
+            disabled={!favorites.ready}
+            onToggle={favorites.toggle}
+          />
+          <span className="min-w-0">{match.awayTeam.name}</span>
+        </p>
       </div>
       <p className="text-sm">
         {match.status === 'upcoming' ? (
@@ -34,7 +51,7 @@ function ScoreBlock({ match }: { match: Match }) {
   )
 }
 
-export function MatchDetail({ match, onBack }: MatchDetailProps) {
+export function MatchDetail({ match, favorites, onBack }: MatchDetailProps) {
   const { state, retry } = useMatchDetails(match)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const shown = state.status === 'success' ? state.match : match
@@ -59,7 +76,7 @@ export function MatchDetail({ match, onBack }: MatchDetailProps) {
       <h2 ref={headingRef} tabIndex={-1} className="sr-only">
         {match.homeTeam.name} vs {match.awayTeam.name}
       </h2>
-      <ScoreBlock match={shown} />
+      <ScoreBlock match={shown} favorites={favorites} />
       <section aria-label="Timeline">
         {state.status === 'loading' && <MatchTimelineSkeleton />}
         {state.status === 'error' && (

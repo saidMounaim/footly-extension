@@ -1,0 +1,66 @@
+{
+  "id": "23",
+  "name": "English Premier League",
+  "abbreviation": "Premier League",
+  "children": [
+    {
+      "name": "2026-27 English Premier League",
+      "standings": {
+        "entries": [
+          {
+            "team": {
+              "id": "382",
+              "displayName": "Manchester City",
+              "shortDisplayName": "Man City",
+              "abbreviation": "MNC",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/soccer/500/382.png"
+                }
+              ]
+            }
+          },
+          {
+            "team": {
+              "id": "359",
+              "displayName": "Arsenal",
+              "shortDisplayName": "Arsenal",
+              "abbreviation": "ARS",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png"
+                }
+              ]
+            }
+          },
+          {
+            "team": {
+              "id": "331",
+              "displayName": "Brighton & Hove Albion",
+              "shortDisplayName": "Brighton",
+              "abbreviation": "BHA",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/soccer/500/331.png"
+                }
+              ]
+            }
+          },
+          {
+            "team": {
+              "id": "337",
+              "displayName": "Brentford",
+              "shortDisplayName": "Brentford",
+              "abbreviation": "BRE",
+              "logos": [
+                {
+                  "href": "https://a.espncdn.com/i/teamlogos/soccer/500/337.png"
+                }
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

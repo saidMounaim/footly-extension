@@ -11,7 +11,7 @@
 
 - [x] 3. **Recent Results** - Show completed matches with final scores, key events, and match dates.
 
-- [ ] 4. **Favorite Teams** - Let users search for teams and save favorites so Footly can prioritize their matches automatically.
+- [x] 4. **Favorite Teams** - Let users search for teams and save favorites so Footly can prioritize their matches automatically.
 
 - [ ] 5. **Favorite Competitions** - Let users follow leagues and competitions and surface their most relevant matches.
 

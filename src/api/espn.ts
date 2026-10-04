@@ -22,6 +22,11 @@ export function scoreboardUrl(slug: string, month: string): string {
   return `${ESPN_SOCCER_BASE}/${slug}/scoreboard?dates=${month}`
 }
 
+/** Standings URL for one competition slug; used for the club list because it allows CORS. */
+export function standingsUrl(slug: string): string {
+  return `https://site.api.espn.com/apis/v2/sports/soccer/${slug}/standings`
+}
+
 /** Summary URL for one match in a competition. */
 export function summaryUrl(slug: string, matchId: string): string {
   return `${ESPN_SOCCER_BASE}/${slug}/summary?event=${encodeURIComponent(matchId)}`
@@ -232,4 +237,35 @@ export function normalizeSummary(json: unknown, match: Match): Match {
     delete updated.score
   }
   return updated
+}
+
+function toCatalogTeam(entry: unknown): Team | undefined {
+  if (!isRecord(entry) || !isRecord(entry.team)) return undefined
+  const { team } = entry
+  const id = text(team.id)
+  const name = text(team.displayName)
+  if (!id || !name) return undefined
+  const shortName = text(team.shortDisplayName)
+  const logos = Array.isArray(team.logos) ? team.logos : []
+  const logo = logos
+    .map((logoEntry) => (isRecord(logoEntry) ? httpsUrl(logoEntry.href) : undefined))
+    .find((href) => href !== undefined)
+  return { id, name, ...(shortName && { shortName }), ...(logo && { logo }) }
+}
+
+/**
+ * Converts an untrusted ESPN standings response into the clubs it lists, across
+ * every group. Malformed teams are skipped; a malformed response throws EspnResponseError.
+ */
+export function normalizeTeams(json: unknown): Team[] {
+  if (!isRecord(json) || !Array.isArray(json.children)) {
+    throw new EspnResponseError('Standings response has no groups')
+  }
+  return json.children.flatMap((group) => {
+    const entries =
+      isRecord(group) && isRecord(group.standings) && Array.isArray(group.standings.entries)
+        ? group.standings.entries
+        : []
+    return entries.flatMap((entry) => toCatalogTeam(entry) ?? [])
+  })
 }

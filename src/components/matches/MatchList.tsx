@@ -1,18 +1,20 @@
 import type { Match } from '../../api/types.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { dayLabel, localDayKey } from '../../lib/date.ts'
+import { splitByFavorites } from '../../lib/favorites.ts'
 import { MatchRow } from './MatchRow.tsx'
-import type { MatchTab } from './tabs.ts'
+import type { ListTab } from './tabs.ts'
 import { secondaryButtonClass } from './status.ts'
 
-const EMPTY_MESSAGE: Record<MatchTab, string> = {
+const EMPTY_MESSAGE: Record<ListTab, string> = {
   upcoming: 'No upcoming matches in the next 7 days.',
   results: 'No results in the last 7 days.',
 }
 
 interface MatchListProps {
   state: MatchListState
-  view: MatchTab
+  view: ListTab
+  favoriteIds: ReadonlySet<string>
   onRetry: () => void
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
 }
@@ -46,7 +48,7 @@ function Skeleton() {
   )
 }
 
-export function MatchList({ state, view, onRetry, onSelect }: MatchListProps) {
+export function MatchList({ state, view, favoriteIds, onRetry, onSelect }: MatchListProps) {
   if (state.status === 'loading') return <Skeleton />
 
   if (state.status === 'error') {
@@ -63,6 +65,9 @@ export function MatchList({ state, view, onRetry, onSelect }: MatchListProps) {
 
   const { result, loadedAt } = state
   const matches = result[view]
+  const { favorites, others } = splitByFavorites(matches, favoriteIds)
+  const headingClass =
+    'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
   return (
     <div>
       {result.failedCompetitionIds.length > 0 && (
@@ -79,21 +84,32 @@ export function MatchList({ state, view, onRetry, onSelect }: MatchListProps) {
       {matches.length === 0 ? (
         <p className="px-6 py-12 text-center text-sm text-muted">{EMPTY_MESSAGE[view]}</p>
       ) : (
-        groupByDay(matches).map((group) => (
-          <section key={group[0].startTime} aria-labelledby={`${view}-day-${group[0].id}`}>
-            <h2
-              id={`${view}-day-${group[0].id}`}
-              className="bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted"
-            >
-              {dayLabel(new Date(group[0].startTime), loadedAt)}
-            </h2>
-            <ul className="divide-y divide-border">
-              {group.map((match) => (
-                <MatchRow key={match.id} match={match} onSelect={onSelect} />
-              ))}
-            </ul>
-          </section>
-        ))
+        <>
+          {favorites.length > 0 && (
+            <section aria-labelledby={`${view}-your-teams`}>
+              <h2 id={`${view}-your-teams`} className={headingClass}>
+                Your teams
+              </h2>
+              <ul className="divide-y divide-border">
+                {favorites.map((match) => (
+                  <MatchRow key={match.id} match={match} favorite onSelect={onSelect} />
+                ))}
+              </ul>
+            </section>
+          )}
+          {groupByDay(others).map((group) => (
+            <section key={group[0].startTime} aria-labelledby={`${view}-day-${group[0].id}`}>
+              <h2 id={`${view}-day-${group[0].id}`} className={headingClass}>
+                {dayLabel(new Date(group[0].startTime), loadedAt)}
+              </h2>
+              <ul className="divide-y divide-border">
+                {group.map((match) => (
+                  <MatchRow key={match.id} match={match} onSelect={onSelect} />
+                ))}
+              </ul>
+            </section>
+          ))}
+        </>
       )}
     </div>
   )

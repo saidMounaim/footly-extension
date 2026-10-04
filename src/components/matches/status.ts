@@ -3,7 +3,7 @@ import { formatKickoff } from '../../lib/date.ts'
 
 /** Shared look for Retry and similar secondary buttons. */
 export const secondaryButtonClass =
-  'rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
+  'rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50'
 
 export function formatScore(score: NonNullable<Match['score']>): string {
   return `${score.home}–${score.away}`

@@ -50,20 +50,33 @@ export function StatusText({ match }: StatusTextProps) {
 
 interface MatchRowProps {
   match: Match
+  favorite?: boolean
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
 }
 
-export function MatchRow({ match, onSelect }: MatchRowProps) {
+export function MatchRow({ match, favorite = false, onSelect }: MatchRowProps) {
   return (
     <li>
       <button
         type="button"
         onClick={(event) => onSelect(match, event.currentTarget)}
-        aria-label={`${match.homeTeam.name} vs ${match.awayTeam.name}, ${statusLabel(match)}`}
+        aria-label={`${match.homeTeam.name} vs ${match.awayTeam.name}, ${statusLabel(match)}${
+          favorite ? ', favorite team' : ''
+        }`}
         className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
       >
         <span className="block min-w-0 flex-1">
-          <span className="block truncate text-xs text-muted">{match.competition.name}</span>
+          <span className="block truncate text-xs text-muted">
+            {favorite && (
+              <>
+                <span aria-hidden="true" className="text-accent">
+                  ★
+                </span>
+                <span className="sr-only">Favorite team</span>{' '}
+              </>
+            )}
+            {match.competition.name}
+          </span>
           <span className="block truncate text-sm text-foreground">{match.homeTeam.name}</span>
           <span className="block truncate text-sm text-foreground">{match.awayTeam.name}</span>
         </span>
