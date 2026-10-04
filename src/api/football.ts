@@ -1,4 +1,4 @@
-import { monthsToRequest, upcomingWindow } from '../lib/date.ts'
+import { matchListWindow, monthsToRequest } from '../lib/date.ts'
 import {
   EspnResponseError,
   normalizeScoreboard,
@@ -20,12 +20,15 @@ export const COMPETITIONS = [
 
 const REQUEST_TIMEOUT_MS = 10_000
 
-export interface UpcomingMatchesResult {
-  matches: Match[]
+export interface MatchListResult {
+  /** Today through the next 7 days, everything except finished, kickoff ascending. */
+  upcoming: Match[]
+  /** Finished matches from today and the previous 7 days, newest first. */
+  results: Match[]
   failedCompetitionIds: string[]
 }
 
-interface UpcomingMatchesOptions {
+interface MatchListOptions {
   now?: Date
   fetchImpl?: typeof fetch
 }
@@ -68,18 +71,18 @@ function isExpectedFailure(reason: unknown): boolean {
 }
 
 /**
- * Upcoming, live, halftime, postponed, and cancelled matches from today through
- * the next 7 days for the fixed competition set. Per-competition failures are
- * reported in `failedCompetitionIds`; unexpected errors are rethrown.
+ * Upcoming matches and recent results for the fixed competition set, from one
+ * set of scoreboard requests. Per-competition failures are reported in
+ * `failedCompetitionIds`; unexpected errors are rethrown.
  */
-export async function getUpcomingMatches({
+export async function getMatchList({
   now = new Date(),
   fetchImpl = (input, init) => fetch(input, init),
-}: UpcomingMatchesOptions = {}): Promise<UpcomingMatchesResult> {
-  const window = upcomingWindow(now)
-  const months = monthsToRequest(window)
+}: MatchListOptions = {}): Promise<MatchListResult> {
+  const window = matchListWindow(now)
+  const months = monthsToRequest({ start: window.resultsStart, end: window.upcomingEnd })
 
-  const results = await Promise.allSettled(
+  const settled = await Promise.allSettled(
     COMPETITIONS.map(async (competition) => {
       const pages = await Promise.all(
         months.map(async (month) =>
@@ -96,7 +99,7 @@ export async function getUpcomingMatches({
   const failedCompetitionIds: string[] = []
   const order = new Map<string, number>()
   const matches: Match[] = []
-  results.forEach((result, index) => {
+  settled.forEach((result, index) => {
     if (result.status === 'rejected') {
       if (!isExpectedFailure(result.reason)) throw result.reason
       failedCompetitionIds.push(COMPETITIONS[index].id)
@@ -109,20 +112,19 @@ export async function getUpcomingMatches({
     }
   })
 
-  const start = window.start.getTime()
-  const end = window.end.getTime()
-  const upcoming = matches
-    .filter((match) => {
-      const time = Date.parse(match.startTime)
-      return match.status !== 'finished' && time >= start && time < end
-    })
-    .sort(
-      (a, b) =>
-        Date.parse(a.startTime) - Date.parse(b.startTime) ||
-        (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0),
-    )
+  const competitionOrder = (a: Match, b: Match) => (order.get(a.id) ?? 0) - (order.get(b.id) ?? 0)
+  const kickoff = (match: Match) => Date.parse(match.startTime)
+  const within = (match: Match, start: Date, end: Date) =>
+    kickoff(match) >= start.getTime() && kickoff(match) < end.getTime()
 
-  return { matches: upcoming, failedCompetitionIds }
+  const upcoming = matches
+    .filter((m) => m.status !== 'finished' && within(m, window.todayStart, window.upcomingEnd))
+    .sort((a, b) => kickoff(a) - kickoff(b) || competitionOrder(a, b))
+  const results = matches
+    .filter((m) => m.status === 'finished' && within(m, window.resultsStart, window.tomorrowStart))
+    .sort((a, b) => kickoff(b) - kickoff(a) || competitionOrder(a, b))
+
+  return { upcoming, results, failedCompetitionIds }
 }
 
 /**

@@ -1,11 +1,18 @@
 import type { Match } from '../../api/types.ts'
-import type { UpcomingMatchesState } from '../../hooks/useUpcomingMatches.ts'
+import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { dayLabel, localDayKey } from '../../lib/date.ts'
 import { MatchRow } from './MatchRow.tsx'
+import type { MatchTab } from './tabs.ts'
 import { secondaryButtonClass } from './status.ts'
 
+const EMPTY_MESSAGE: Record<MatchTab, string> = {
+  upcoming: 'No upcoming matches in the next 7 days.',
+  results: 'No results in the last 7 days.',
+}
+
 interface MatchListProps {
-  state: UpcomingMatchesState
+  state: MatchListState
+  view: MatchTab
   onRetry: () => void
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
 }
@@ -39,7 +46,7 @@ function Skeleton() {
   )
 }
 
-export function MatchList({ state, onRetry, onSelect }: MatchListProps) {
+export function MatchList({ state, view, onRetry, onSelect }: MatchListProps) {
   if (state.status === 'loading') return <Skeleton />
 
   if (state.status === 'error') {
@@ -55,6 +62,7 @@ export function MatchList({ state, onRetry, onSelect }: MatchListProps) {
   }
 
   const { result, loadedAt } = state
+  const matches = result[view]
   return (
     <div>
       {result.failedCompetitionIds.length > 0 && (
@@ -68,15 +76,13 @@ export function MatchList({ state, onRetry, onSelect }: MatchListProps) {
           </button>
         </div>
       )}
-      {result.matches.length === 0 ? (
-        <p className="px-6 py-12 text-center text-sm text-muted">
-          No upcoming matches in the next 7 days.
-        </p>
+      {matches.length === 0 ? (
+        <p className="px-6 py-12 text-center text-sm text-muted">{EMPTY_MESSAGE[view]}</p>
       ) : (
-        groupByDay(result.matches).map((group) => (
-          <section key={group[0].startTime} aria-labelledby={`day-${group[0].id}`}>
+        groupByDay(matches).map((group) => (
+          <section key={group[0].startTime} aria-labelledby={`${view}-day-${group[0].id}`}>
             <h2
-              id={`day-${group[0].id}`}
+              id={`${view}-day-${group[0].id}`}
               className="bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted"
             >
               {dayLabel(new Date(group[0].startTime), loadedAt)}

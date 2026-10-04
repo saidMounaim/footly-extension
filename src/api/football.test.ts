@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest'
-import { COMPETITIONS, getMatchDetails, getUpcomingMatches, MatchDetailsError } from './football.ts'
+import { COMPETITIONS, getMatchDetails, getMatchList, MatchDetailsError } from './football.ts'
 import type { Match } from './types.ts'
 
-const NOW = new Date('2026-10-20T12:00:00Z') // window: 2026-10-19T23:00Z to 2026-10-28T00:00Z
+// Results: 2026-10-12T23:00Z to 2026-10-20T23:00Z. Upcoming: 2026-10-19T23:00Z to 2026-10-28T00:00Z.
+const NOW = new Date('2026-10-20T12:00:00Z')
 
 interface FakeEvent {
   id: string
@@ -45,10 +46,10 @@ function fakeFetch(replies: Record<string, Reply>) {
   })
 }
 
-describe('getUpcomingMatches', () => {
+describe('getMatchList upcoming', () => {
   it('requests every competition for each month over HTTPS', async () => {
     const fetchImpl = fakeFetch({})
-    await getUpcomingMatches({ now: NOW, fetchImpl })
+    await getMatchList({ now: NOW, fetchImpl })
     const urls = fetchImpl.mock.calls.map(([input]) => String(input))
     expect(urls).toEqual(
       COMPETITIONS.map(
@@ -60,12 +61,12 @@ describe('getUpcomingMatches', () => {
 
   it('requests two months per competition near a month boundary', async () => {
     const fetchImpl = fakeFetch({})
-    await getUpcomingMatches({ now: new Date('2026-10-28T12:00:00Z'), fetchImpl })
+    await getMatchList({ now: new Date('2026-10-28T12:00:00Z'), fetchImpl })
     expect(fetchImpl).toHaveBeenCalledTimes(COMPETITIONS.length * 2)
   })
 
   it('keeps only matches inside the local window', async () => {
-    const { matches } = await getUpcomingMatches({
+    const { upcoming: matches } = await getMatchList({
       now: NOW,
       fetchImpl: fakeFetch({
         'eng.1': [
@@ -80,7 +81,7 @@ describe('getUpcomingMatches', () => {
   })
 
   it('drops finished matches and keeps other states', async () => {
-    const { matches } = await getUpcomingMatches({
+    const { upcoming: matches } = await getMatchList({
       now: NOW,
       fetchImpl: fakeFetch({
         'eng.1': [
@@ -99,7 +100,7 @@ describe('getUpcomingMatches', () => {
   })
 
   it('sorts by kickoff, then competition order, and dedupes by id', async () => {
-    const { matches } = await getUpcomingMatches({
+    const { upcoming: matches } = await getMatchList({
       now: NOW,
       fetchImpl: fakeFetch({
         'uefa.champions': [{ id: 'ucl', date: '2026-10-21T19:00Z' }],
@@ -115,7 +116,7 @@ describe('getUpcomingMatches', () => {
   })
 
   it('reports competitions that fail and keeps the rest', async () => {
-    const result = await getUpcomingMatches({
+    const result = await getMatchList({
       now: NOW,
       fetchImpl: fakeFetch({
         'eng.1': [{ id: 'ok', date: '2026-10-21T19:00Z' }],
@@ -126,7 +127,7 @@ describe('getUpcomingMatches', () => {
         'uefa.champions': new DOMException('Timed out', 'TimeoutError'),
       }),
     })
-    expect(result.matches.map((m) => m.id)).toEqual(['ok'])
+    expect(result.upcoming.map((m) => m.id)).toEqual(['ok'])
     expect(result.failedCompetitionIds).toEqual([
       'esp.1',
       'ita.1',
@@ -143,21 +144,86 @@ describe('getUpcomingMatches', () => {
       if (String(input).includes('eng.1') && call === 2) return new Response('', { status: 503 })
       return new Response(JSON.stringify(scoreboard('x', [])))
     })
-    const result = await getUpcomingMatches({ now: new Date('2026-10-28T12:00:00Z'), fetchImpl })
+    const result = await getMatchList({ now: new Date('2026-10-28T12:00:00Z'), fetchImpl })
     expect(result.failedCompetitionIds).toEqual(['eng.1'])
   })
 
   it('reports every competition when all fail', async () => {
-    const result = await getUpcomingMatches({
+    const result = await getMatchList({
       now: NOW,
       fetchImpl: vi.fn(async () => {
         throw new TypeError('Failed to fetch')
       }),
     })
     expect(result).toEqual({
-      matches: [],
+      upcoming: [],
+      results: [],
       failedCompetitionIds: COMPETITIONS.map((c) => c.id),
     })
+  })
+})
+
+describe('getMatchList results', () => {
+  const finished = { state: 'post' as const, name: 'STATUS_FULL_TIME' }
+
+  it('keeps finished matches from today and the previous 7 local days', async () => {
+    const { results } = await getMatchList({
+      now: NOW,
+      fetchImpl: fakeFetch({
+        'eng.1': [
+          { id: 'too-old', date: '2026-10-12T22:59Z', ...finished },
+          { id: 'oldest', date: '2026-10-12T23:00Z', ...finished }, // 00:00 BST, 7 days ago
+          { id: 'today', date: '2026-10-20T10:00Z', ...finished },
+          { id: 'past-postponed', date: '2026-10-15T10:00Z', state: 'post', name: 'STATUS_POSTPONED' },
+          { id: 'live', date: '2026-10-20T11:00Z', state: 'in', name: 'STATUS_FIRST_HALF' },
+        ],
+      }),
+    })
+    expect(results.map((m) => m.id)).toEqual(['today', 'oldest'])
+    expect(results[0].score).toEqual({ home: 0, away: 0 })
+  })
+
+  it('sorts newest first, then competition order, and leaves upcoming unchanged', async () => {
+    const { results, upcoming } = await getMatchList({
+      now: NOW,
+      fetchImpl: fakeFetch({
+        'ita.1': [
+          { id: 'ita-sat', date: '2026-10-18T15:00Z', ...finished },
+          { id: 'ita-next', date: '2026-10-22T19:00Z' },
+        ],
+        'eng.1': [
+          { id: 'eng-sat', date: '2026-10-18T15:00Z', ...finished },
+          { id: 'eng-sun', date: '2026-10-19T15:00Z', ...finished },
+        ],
+      }),
+    })
+    expect(results.map((m) => m.id)).toEqual(['eng-sun', 'eng-sat', 'ita-sat'])
+    expect(upcoming.map((m) => m.id)).toEqual(['ita-next'])
+  })
+
+  it('requests each competition once per month in the combined range', async () => {
+    const fetchImpl = fakeFetch({})
+    await getMatchList({ now: new Date('2026-10-03T12:00:00Z'), fetchImpl })
+    const urls = fetchImpl.mock.calls.map(([input]) => String(input))
+    expect(urls).toHaveLength(COMPETITIONS.length * 2)
+    expect(urls).toContain(
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard?dates=202609',
+    )
+    expect(urls).toContain(
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard?dates=202610',
+    )
+  })
+
+  it('shares failed competitions with the upcoming list', async () => {
+    const result = await getMatchList({
+      now: NOW,
+      fetchImpl: fakeFetch({
+        'eng.1': [{ id: 'r', date: '2026-10-18T15:00Z', ...finished }],
+        'esp.1': 500,
+      }),
+    })
+    expect(result.results.map((m) => m.id)).toEqual(['r'])
+    expect(result.failedCompetitionIds).toEqual(['esp.1'])
   })
 })
 

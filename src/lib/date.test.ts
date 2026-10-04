@@ -1,39 +1,47 @@
 import { describe, expect, it } from 'vitest'
-import { dayLabel, formatKickoff, localDayKey, monthsToRequest, upcomingWindow } from './date.ts'
+import { dayLabel, formatKickoff, localDayKey, matchListWindow, monthsToRequest } from './date.ts'
 
 // Vitest pins TZ to Europe/London (see vite.config.ts).
 
-describe('upcomingWindow', () => {
-  it('runs from local midnight today to local midnight 8 days later', () => {
-    const { start, end } = upcomingWindow(new Date('2026-10-03T15:20:00Z'))
-    expect(start.toISOString()).toBe('2026-10-02T23:00:00.000Z') // 00:00 BST
-    expect(end.toISOString()).toBe('2026-10-10T23:00:00.000Z') // 00:00 BST, day 8
+describe('matchListWindow', () => {
+  it('covers the previous 7 days, today, and the next 7 days in local days', () => {
+    const w = matchListWindow(new Date('2026-10-03T15:20:00Z'))
+    expect(w.resultsStart.toISOString()).toBe('2026-09-25T23:00:00.000Z') // 00:00 BST 26 Sep
+    expect(w.todayStart.toISOString()).toBe('2026-10-02T23:00:00.000Z') // 00:00 BST 3 Oct
+    expect(w.tomorrowStart.toISOString()).toBe('2026-10-03T23:00:00.000Z') // 00:00 BST 4 Oct
+    expect(w.upcomingEnd.toISOString()).toBe('2026-10-10T23:00:00.000Z') // 00:00 BST 11 Oct
   })
 
   it('keeps local midnight across the end of daylight saving time', () => {
-    const { start, end } = upcomingWindow(new Date('2026-10-20T12:00:00Z'))
-    expect(start.toISOString()).toBe('2026-10-19T23:00:00.000Z') // 00:00 BST
-    expect(end.toISOString()).toBe('2026-10-28T00:00:00.000Z') // 00:00 GMT
+    const forward = matchListWindow(new Date('2026-10-20T12:00:00Z'))
+    expect(forward.todayStart.toISOString()).toBe('2026-10-19T23:00:00.000Z') // BST
+    expect(forward.upcomingEnd.toISOString()).toBe('2026-10-28T00:00:00.000Z') // GMT
+    const back = matchListWindow(new Date('2026-10-30T12:00:00Z'))
+    expect(back.resultsStart.toISOString()).toBe('2026-10-22T23:00:00.000Z') // BST 23 Oct
+    expect(back.todayStart.toISOString()).toBe('2026-10-30T00:00:00.000Z') // GMT
   })
 })
 
+function rangeFor(now: string) {
+  const w = matchListWindow(new Date(now))
+  return { start: w.resultsStart, end: w.upcomingEnd }
+}
+
 describe('monthsToRequest', () => {
-  it('requests one month when the padded window fits inside it', () => {
-    expect(monthsToRequest(upcomingWindow(new Date('2026-10-03T12:00:00Z')))).toEqual(['202610'])
+  it('requests one month when the padded range fits inside it', () => {
+    expect(monthsToRequest(rangeFor('2026-10-15T12:00:00Z'))).toEqual(['202610'])
   })
 
-  it('includes the previous month when the padding day falls in it', () => {
-    expect(monthsToRequest(upcomingWindow(new Date('2026-10-01T12:00:00Z')))).toEqual([
-      '202609',
-      '202610',
-    ])
+  it('includes the previous month when the range starts in it', () => {
+    expect(monthsToRequest(rangeFor('2026-10-03T12:00:00Z'))).toEqual(['202609', '202610'])
+  })
+
+  it('includes the next month when the range ends in it', () => {
+    expect(monthsToRequest(rangeFor('2026-10-28T12:00:00Z'))).toEqual(['202610', '202611'])
   })
 
   it('crosses a year boundary', () => {
-    expect(monthsToRequest(upcomingWindow(new Date('2026-12-28T12:00:00Z')))).toEqual([
-      '202612',
-      '202701',
-    ])
+    expect(monthsToRequest(rangeFor('2026-12-28T12:00:00Z'))).toEqual(['202612', '202701'])
   })
 })
 
@@ -48,6 +56,8 @@ describe('day helpers', () => {
     expect(dayLabel(new Date('2026-10-03T08:00:00Z'), now, 'en-GB')).toBe('Today')
     expect(dayLabel(new Date('2026-10-03T23:30:00Z'), now, 'en-GB')).toBe('Tomorrow')
     expect(dayLabel(new Date('2026-10-06T18:00:00Z'), now, 'en-GB')).toBe('Tue 6 Oct')
+    expect(dayLabel(new Date('2026-10-02T19:00:00Z'), now, 'en-GB')).toBe('Yesterday')
+    expect(dayLabel(new Date('2026-09-30T19:00:00Z'), now, 'en-GB')).toBe('Wed 30 Sept')
   })
 
   it('formats kickoff as local 24-hour time', () => {

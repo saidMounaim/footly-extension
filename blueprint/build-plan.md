@@ -9,7 +9,7 @@
 
 - [x] 2. **Match Details & Live Events** - Display live score, goals, yellow/red cards, substitutions, penalties, and other important match events in a clean chronological timeline.
 
-- [ ] 3. **Recent Results** - Show completed matches with final scores, key events, and match dates.
+- [x] 3. **Recent Results** - Show completed matches with final scores, key events, and match dates.
 
 - [ ] 4. **Favorite Teams** - Let users search for teams and save favorites so Footly can prioritize their matches automatically.
 

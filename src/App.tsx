@@ -2,10 +2,13 @@ import { useCallback, useRef, useState } from 'react'
 import type { Match } from './api/types.ts'
 import { MatchDetail } from './components/matches/MatchDetail.tsx'
 import { MatchList } from './components/matches/MatchList.tsx'
-import { useUpcomingMatches } from './hooks/useUpcomingMatches.ts'
+import { MatchTabs } from './components/matches/MatchTabs.tsx'
+import { MATCH_TABS, panelId, tabId, type MatchTab } from './components/matches/tabs.ts'
+import { useMatchList } from './hooks/useMatchList.ts'
 
 function App() {
-  const { state, retry } = useUpcomingMatches()
+  const { state, retry } = useMatchList()
+  const [tab, setTab] = useState<MatchTab>('upcoming')
   const [selected, setSelected] = useState<Match | null>(null)
   const returnTo = useRef<{ trigger: HTMLButtonElement; scrollY: number } | null>(null)
 
@@ -36,7 +39,18 @@ function App() {
       </header>
       <main className="flex-1">
         <div hidden={selected !== null}>
-          <MatchList state={state} onRetry={retry} onSelect={openMatch} />
+          <MatchTabs active={tab} onChange={setTab} />
+          {MATCH_TABS.map(({ id }) => (
+            <div
+              key={id}
+              role="tabpanel"
+              id={panelId(id)}
+              aria-labelledby={tabId(id)}
+              hidden={id !== tab}
+            >
+              <MatchList state={state} view={id} onRetry={retry} onSelect={openMatch} />
+            </div>
+          ))}
         </div>
         {selected && <MatchDetail key={selected.id} match={selected} onBack={closeMatch} />}
       </main>

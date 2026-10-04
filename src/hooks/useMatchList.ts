@@ -1,18 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
-import { COMPETITIONS, getUpcomingMatches, type UpcomingMatchesResult } from '../api/football.ts'
+import { COMPETITIONS, getMatchList, type MatchListResult } from '../api/football.ts'
 
-export type UpcomingMatchesState =
+export type MatchListState =
   | { status: 'loading' }
-  | { status: 'success'; result: UpcomingMatchesResult; loadedAt: Date }
+  | { status: 'success'; result: MatchListResult; loadedAt: Date }
   | { status: 'error' }
 
-export function useUpcomingMatches(): { state: UpcomingMatchesState; retry: () => void } {
-  const [state, setState] = useState<UpcomingMatchesState>({ status: 'loading' })
+/** Loads upcoming matches and recent results once; `retry` reloads both. */
+export function useMatchList(): { state: MatchListState; retry: () => void } {
+  const [state, setState] = useState<MatchListState>({ status: 'loading' })
   const [attempt, setAttempt] = useState(0)
 
   useEffect(() => {
     let cancelled = false
-    getUpcomingMatches().then(
+    getMatchList().then(
       (result) => {
         if (cancelled) return
         if (result.failedCompetitionIds.length === COMPETITIONS.length) {
