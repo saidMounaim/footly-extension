@@ -5,6 +5,7 @@ import { MatchDetail } from './components/matches/MatchDetail.tsx'
 import { MatchList } from './components/matches/MatchList.tsx'
 import { MatchTabs } from './components/matches/MatchTabs.tsx'
 import { MATCH_TABS, panelId, tabId, type MatchTab } from './components/matches/tabs.ts'
+import { useFavoriteCompetitions } from './hooks/useFavoriteCompetitions.ts'
 import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
 import { useMatchList } from './hooks/useMatchList.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
@@ -12,6 +13,7 @@ import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 function App() {
   const { state, retry } = useMatchList()
   const favorites = useFavoriteTeams()
+  const competitions = useFavoriteCompetitions()
   const [tab, setTab] = useState<MatchTab>('upcoming')
   const catalog = useTeamCatalog(tab === 'favorites')
   const [selected, setSelected] = useState<Match | null>(null)
@@ -43,7 +45,7 @@ function App() {
         </h1>
       </header>
       <main className="flex-1">
-        {favorites.saveError && (
+        {(favorites.saveError || competitions.saveError) && (
           <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
             Couldn't save your favorites. Try again.
           </p>
@@ -61,6 +63,7 @@ function App() {
               {id === 'favorites' ? (
                 <FavoritesPanel
                   favorites={favorites}
+                  competitions={competitions}
                   catalog={catalog.state}
                   onRetryCatalog={catalog.retry}
                 />
@@ -69,6 +72,7 @@ function App() {
                   state={state}
                   view={id}
                   favoriteIds={favorites.favoriteIds}
+                  competitionIds={competitions.idSet}
                   onRetry={retry}
                   onSelect={openMatch}
                 />

@@ -1,12 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import type { Match } from '../api/types.ts'
 import {
+  FAVORITE_COMPETITIONS_KEY,
   FAVORITE_TEAMS_KEY,
   FavoritesStorageError,
+  loadFavoriteCompetitions,
   loadFavoriteTeams,
+  saveFavoriteCompetitions,
   saveFavoriteTeams,
+  splitByCompetitions,
   splitByFavorites,
   toggleFavorite,
+  toggleId,
   type StorageArea,
 } from './favorites.ts'
 
@@ -113,5 +118,76 @@ describe('splitByFavorites', () => {
   it('keeps everything in others with no favorites', () => {
     const matches = [match('a', '1', '2')]
     expect(splitByFavorites(matches, new Set())).toEqual({ favorites: [], others: matches })
+  })
+})
+
+const failingArea: StorageArea = {
+  get: () => Promise.reject(new Error('quota')),
+  set: () => Promise.reject(new Error('quota')),
+}
+
+describe('loadFavoriteCompetitions', () => {
+  it('gives an empty list when nothing is stored', async () => {
+    expect(await loadFavoriteCompetitions(memoryArea().area)).toEqual([])
+  })
+
+  it('gives an empty list for a non-array value', async () => {
+    const { area } = memoryArea({ [FAVORITE_COMPETITIONS_KEY]: 'eng.1' })
+    expect(await loadFavoriteCompetitions(area)).toEqual([])
+  })
+
+  it('drops non-strings, unknown ids, and duplicates, keeping the first', async () => {
+    const { area } = memoryArea({
+      [FAVORITE_COMPETITIONS_KEY]: ['esp.1', 42, null, 'ned.1', 'eng.1', 'esp.1', { id: 'ita.1' }],
+    })
+    expect(await loadFavoriteCompetitions(area)).toEqual(['esp.1', 'eng.1'])
+  })
+
+  it('throws FavoritesStorageError when reading fails', async () => {
+    await expect(loadFavoriteCompetitions(failingArea)).rejects.toBeInstanceOf(FavoritesStorageError)
+  })
+})
+
+describe('saveFavoriteCompetitions', () => {
+  it('writes exactly the id array under its own key', async () => {
+    const { area, data } = memoryArea({ [FAVORITE_TEAMS_KEY]: [{ id: '359', name: 'Arsenal' }] })
+    await saveFavoriteCompetitions(area, ['uefa.champions', 'eng.1'])
+    expect(data).toEqual({
+      [FAVORITE_TEAMS_KEY]: [{ id: '359', name: 'Arsenal' }],
+      [FAVORITE_COMPETITIONS_KEY]: ['uefa.champions', 'eng.1'],
+    })
+  })
+
+  it('throws FavoritesStorageError when writing fails', async () => {
+    await expect(saveFavoriteCompetitions(failingArea, [])).rejects.toBeInstanceOf(
+      FavoritesStorageError,
+    )
+  })
+})
+
+describe('toggleId', () => {
+  it('adds to the end', () => {
+    expect(toggleId(['eng.1'], 'esp.1')).toEqual(['eng.1', 'esp.1'])
+  })
+
+  it('removes an existing id', () => {
+    expect(toggleId(['eng.1', 'esp.1'], 'eng.1')).toEqual(['esp.1'])
+  })
+})
+
+describe('splitByCompetitions', () => {
+  const match = (id: string, competition: string) =>
+    ({ id, competition: { id: competition, name: competition } }) as Match
+
+  it('matches on the competition id and keeps order', () => {
+    const matches = [match('a', 'eng.1'), match('b', 'esp.1'), match('c', 'eng.1'), match('d', 'ita.1')]
+    const { favorites, others } = splitByCompetitions(matches, new Set(['eng.1', 'ita.1']))
+    expect(favorites.map((m) => m.id)).toEqual(['a', 'c', 'd'])
+    expect(others.map((m) => m.id)).toEqual(['b'])
+  })
+
+  it('keeps everything in others with nothing followed', () => {
+    const matches = [match('a', 'eng.1')]
+    expect(splitByCompetitions(matches, new Set())).toEqual({ favorites: [], others: matches })
   })
 })

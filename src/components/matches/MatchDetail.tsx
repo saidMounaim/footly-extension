@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import type { Match } from '../../api/types.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
-import { TeamToggle } from '../favorites/TeamToggle.tsx'
+import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
 import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
 import { StatusText } from './MatchRow.tsx'
@@ -20,22 +20,22 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
       <div className="flex w-full items-center gap-3">
         <p className="flex flex-1 items-center justify-end gap-1 text-right text-sm font-semibold text-foreground">
           <span className="min-w-0">{match.homeTeam.name}</span>
-          <TeamToggle
-            team={match.homeTeam}
+          <FavoriteToggle
+            name={match.homeTeam.name}
             pressed={favorites.isFavorite(match.homeTeam.id)}
             disabled={!favorites.ready}
-            onToggle={favorites.toggle}
+            onToggle={() => favorites.toggle(match.homeTeam)}
           />
         </p>
         <p className="shrink-0 text-2xl font-bold tabular-nums text-foreground">
           {match.score ? formatScore(match.score) : formatKickoff(new Date(match.startTime))}
         </p>
         <p className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground">
-          <TeamToggle
-            team={match.awayTeam}
+          <FavoriteToggle
+            name={match.awayTeam.name}
             pressed={favorites.isFavorite(match.awayTeam.id)}
             disabled={!favorites.ready}
-            onToggle={favorites.toggle}
+            onToggle={() => favorites.toggle(match.awayTeam)}
           />
           <span className="min-w-0">{match.awayTeam.name}</span>
         </p>

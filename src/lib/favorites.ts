@@ -1,7 +1,13 @@
+import { COMPETITIONS } from '../api/football.ts'
 import type { Match, Team } from '../api/types.ts'
 
 /** Key in chrome.storage.local holding the favorite teams array. */
 export const FAVORITE_TEAMS_KEY = 'favoriteTeams'
+
+/** Key in chrome.storage.local holding the followed competition ids. */
+export const FAVORITE_COMPETITIONS_KEY = 'favoriteCompetitions'
+
+const COMPETITION_IDS: ReadonlySet<string> = new Set(COMPETITIONS.map((competition) => competition.id))
 
 /** What is saved per favorite team: enough to list it without a network request. */
 export type FavoriteTeam = Pick<Team, 'id' | 'name' | 'shortName'>
@@ -39,14 +45,37 @@ export function parseFavoriteTeams(value: unknown): FavoriteTeam[] {
   return teams
 }
 
-export async function loadFavoriteTeams(area: StorageArea): Promise<FavoriteTeam[]> {
-  let stored: Record<string, unknown>
-  try {
-    stored = await area.get(FAVORITE_TEAMS_KEY)
-  } catch (cause) {
-    throw new FavoritesStorageError("Couldn't read favorite teams", { cause })
+/** Validates an untrusted stored value: only known competition ids, duplicates keep the first. */
+export function parseFavoriteCompetitionIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  const ids: string[] = []
+  for (const entry of value) {
+    if (typeof entry === 'string' && COMPETITION_IDS.has(entry) && !ids.includes(entry)) {
+      ids.push(entry)
+    }
   }
-  return parseFavoriteTeams(stored?.[FAVORITE_TEAMS_KEY])
+  return ids
+}
+
+async function readKey(area: StorageArea, key: string): Promise<unknown> {
+  try {
+    const stored = await area.get(key)
+    return stored?.[key]
+  } catch (cause) {
+    throw new FavoritesStorageError(`Couldn't read ${key}`, { cause })
+  }
+}
+
+async function writeKey(area: StorageArea, key: string, value: unknown): Promise<void> {
+  try {
+    await area.set({ [key]: value })
+  } catch (cause) {
+    throw new FavoritesStorageError(`Couldn't save ${key}`, { cause })
+  }
+}
+
+export async function loadFavoriteTeams(area: StorageArea): Promise<FavoriteTeam[]> {
+  return parseFavoriteTeams(await readKey(area, FAVORITE_TEAMS_KEY))
 }
 
 export async function saveFavoriteTeams(area: StorageArea, teams: FavoriteTeam[]): Promise<void> {
@@ -55,11 +84,20 @@ export async function saveFavoriteTeams(area: StorageArea, teams: FavoriteTeam[]
     name,
     ...(shortName && { shortName }),
   }))
-  try {
-    await area.set({ [FAVORITE_TEAMS_KEY]: value })
-  } catch (cause) {
-    throw new FavoritesStorageError("Couldn't save favorite teams", { cause })
-  }
+  await writeKey(area, FAVORITE_TEAMS_KEY, value)
+}
+
+export async function loadFavoriteCompetitions(area: StorageArea): Promise<string[]> {
+  return parseFavoriteCompetitionIds(await readKey(area, FAVORITE_COMPETITIONS_KEY))
+}
+
+export async function saveFavoriteCompetitions(area: StorageArea, ids: string[]): Promise<void> {
+  await writeKey(area, FAVORITE_COMPETITIONS_KEY, [...ids])
+}
+
+/** Adds the id at the end, or removes it when present. */
+export function toggleId(ids: string[], id: string): string[] {
+  return ids.includes(id) ? ids.filter((existing) => existing !== id) : [...ids, id]
 }
 
 /** Adds the team at the end, or removes it when already a favorite. */
@@ -81,6 +119,19 @@ export function splitByFavorites(
   for (const match of matches) {
     const isFavorite = favoriteIds.has(match.homeTeam.id) || favoriteIds.has(match.awayTeam.id)
     ;(isFavorite ? favorites : others).push(match)
+  }
+  return { favorites, others }
+}
+
+/** Splits matches into those in a followed competition and the rest, keeping order. */
+export function splitByCompetitions(
+  matches: Match[],
+  competitionIds: ReadonlySet<string>,
+): { favorites: Match[]; others: Match[] } {
+  const favorites: Match[] = []
+  const others: Match[] = []
+  for (const match of matches) {
+    ;(competitionIds.has(match.competition.id) ? favorites : others).push(match)
   }
   return { favorites, others }
 }

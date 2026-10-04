@@ -1,7 +1,7 @@
 import type { Match } from '../../api/types.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { dayLabel, localDayKey } from '../../lib/date.ts'
-import { splitByFavorites } from '../../lib/favorites.ts'
+import { splitByCompetitions, splitByFavorites } from '../../lib/favorites.ts'
 import { MatchRow } from './MatchRow.tsx'
 import type { ListTab } from './tabs.ts'
 import { secondaryButtonClass } from './status.ts'
@@ -15,6 +15,7 @@ interface MatchListProps {
   state: MatchListState
   view: ListTab
   favoriteIds: ReadonlySet<string>
+  competitionIds: ReadonlySet<string>
   onRetry: () => void
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
 }
@@ -48,7 +49,14 @@ function Skeleton() {
   )
 }
 
-export function MatchList({ state, view, favoriteIds, onRetry, onSelect }: MatchListProps) {
+export function MatchList({
+  state,
+  view,
+  favoriteIds,
+  competitionIds,
+  onRetry,
+  onSelect,
+}: MatchListProps) {
   if (state.status === 'loading') return <Skeleton />
 
   if (state.status === 'error') {
@@ -65,7 +73,8 @@ export function MatchList({ state, view, favoriteIds, onRetry, onSelect }: Match
 
   const { result, loadedAt } = state
   const matches = result[view]
-  const { favorites, others } = splitByFavorites(matches, favoriteIds)
+  const { favorites, others: rest } = splitByFavorites(matches, favoriteIds)
+  const { favorites: followed, others } = splitByCompetitions(rest, competitionIds)
   const headingClass =
     'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
   return (
@@ -93,6 +102,18 @@ export function MatchList({ state, view, favoriteIds, onRetry, onSelect }: Match
               <ul className="divide-y divide-border">
                 {favorites.map((match) => (
                   <MatchRow key={match.id} match={match} favorite onSelect={onSelect} />
+                ))}
+              </ul>
+            </section>
+          )}
+          {followed.length > 0 && (
+            <section aria-labelledby={`${view}-your-competitions`}>
+              <h2 id={`${view}-your-competitions`} className={headingClass}>
+                Your competitions
+              </h2>
+              <ul className="divide-y divide-border">
+                {followed.map((match) => (
+                  <MatchRow key={match.id} match={match} onSelect={onSelect} />
                 ))}
               </ul>
             </section>

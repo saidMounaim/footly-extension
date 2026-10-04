@@ -13,7 +13,7 @@
 
 - [x] 4. **Favorite Teams** - Let users search for teams and save favorites so Footly can prioritize their matches automatically.
 
-- [ ] 5. **Favorite Competitions** - Let users follow leagues and competitions and surface their most relevant matches.
+- [x] 5. **Favorite Competitions** - Let users follow leagues and competitions and surface their most relevant matches.
 
 - [ ] 6. **Live Match Status** - Clearly distinguish upcoming, live, halftime, postponed, cancelled, and completed matches with compact status indicators.
 

@@ -1,13 +1,16 @@
 import { useId, useState } from 'react'
+import { COMPETITIONS } from '../../api/football.ts'
 import type { Team } from '../../api/types.ts'
+import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { TeamCatalogState } from '../../hooks/useTeamCatalog.ts'
 import { searchTeams } from '../../lib/search.ts'
 import { secondaryButtonClass } from '../matches/status.ts'
-import { TeamToggle } from './TeamToggle.tsx'
+import { FavoriteToggle } from './FavoriteToggle.tsx'
 
 interface FavoritesPanelProps {
   favorites: FavoriteTeamsApi
+  competitions: FavoriteCompetitionsApi
   catalog: TeamCatalogState
   onRetryCatalog: () => void
 }
@@ -48,6 +51,29 @@ function YourTeams({ favorites }: { favorites: FavoriteTeamsApi }) {
   )
 }
 
+function Competitions({ competitions }: { competitions: FavoriteCompetitionsApi }) {
+  return (
+    <section aria-labelledby="competitions-heading">
+      <h2 id="competitions-heading" className={headingClass}>
+        Competitions
+      </h2>
+      <ul className="divide-y divide-border">
+        {COMPETITIONS.map((competition) => (
+          <li key={competition.id}>
+            <FavoriteToggle
+              name={competition.name}
+              pressed={competitions.isFavorite(competition.id)}
+              disabled={!competitions.ready}
+              onToggle={() => competitions.toggle(competition.id)}
+              showName
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
 function CatalogSkeleton() {
   return (
     <div aria-busy="true" className="px-4 py-3">
@@ -71,11 +97,11 @@ function SearchResults({ teams, query, favorites }: { teams: Team[]; query: stri
     <ul aria-label="Search results" className="divide-y divide-border">
       {found.map((team) => (
         <li key={team.id}>
-          <TeamToggle
-            team={team}
+          <FavoriteToggle
+            name={team.name}
             pressed={favorites.isFavorite(team.id)}
             disabled={!favorites.ready}
-            onToggle={favorites.toggle}
+            onToggle={() => favorites.toggle(team)}
             showName
           />
         </li>
@@ -84,19 +110,25 @@ function SearchResults({ teams, query, favorites }: { teams: Team[]; query: stri
   )
 }
 
-export function FavoritesPanel({ favorites, catalog, onRetryCatalog }: FavoritesPanelProps) {
+export function FavoritesPanel({
+  favorites,
+  competitions,
+  catalog,
+  onRetryCatalog,
+}: FavoritesPanelProps) {
   const [query, setQuery] = useState('')
   const inputId = useId()
   const ready = catalog.status === 'success'
 
   return (
     <div>
-      {favorites.loadError && (
+      {(favorites.loadError || competitions.loadError) && (
         <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
           Couldn't load your saved favorites.
         </p>
       )}
       <YourTeams favorites={favorites} />
+      <Competitions competitions={competitions} />
       <section aria-labelledby="find-teams-heading">
         <h2 id="find-teams-heading" className={headingClass}>
           Find teams
