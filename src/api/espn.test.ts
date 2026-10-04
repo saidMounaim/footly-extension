@@ -10,6 +10,7 @@ import {
 } from './espn.ts'
 import fixture from './fixtures/espn-scoreboard.json'
 import summaryFixture from './fixtures/espn-summary.json'
+import centerFixture from './fixtures/espn-summary-center.json'
 import standingsFixture from './fixtures/espn-standings.json'
 import type { Match } from './types.ts'
 
@@ -386,6 +387,157 @@ describe('normalizeSummary', () => {
     ['a string', 'oops'],
   ])('throws EspnResponseError for %s', (_label, input) => {
     expect(() => normalizeSummary(input, listMatch)).toThrow(EspnResponseError)
+  })
+})
+
+function statsTeam(id: string, values: Record<string, string>) {
+  return {
+    team: { id },
+    statistics: Object.entries(values).map(([name, displayValue]) => ({ name, displayValue })),
+  }
+}
+
+function rosterTeam(id: string, roster: unknown[], formation?: unknown) {
+  return { team: { id }, formation, roster }
+}
+
+function player(id: string, name: string, starter = true, extra: Record<string, unknown> = {}) {
+  return { starter, athlete: { id, displayName: name }, ...extra }
+}
+
+describe('normalizeSummary stats and lineups', () => {
+  it('normalizes stats and lineups from a real ESPN summary', () => {
+    const match = normalizeSummary(centerFixture, listMatch)
+    expect(match.stats).toEqual({
+      home: { possession: 55, shots: 16, shotsOnTarget: 6, corners: 6, fouls: 14 },
+      away: { possession: 45, shots: 17, shotsOnTarget: 9, corners: 5, fouls: 14 },
+    })
+    const { home, away } = match.lineups!
+    expect(home.formation).toBe('4-2-3-1')
+    expect(away.formation).toBe('4-2-3-1')
+    expect([home.starters.length, home.substitutes.length]).toEqual([11, 9])
+    expect([away.starters.length, away.substitutes.length]).toEqual([11, 9])
+    expect(home.starters[0]).toEqual({
+      id: '217092',
+      name: 'Gianluigi Donnarumma',
+      jersey: '1',
+      position: 'G',
+    })
+    expect(away.starters[0]?.name).toBe('Robin Roefs')
+    // ESPN's "SUB" placeholder is not kept as a position.
+    expect(home.substitutes[0]).toEqual({ id: expect.any(String), name: 'Gerónimo Rulli', jersey: '28' })
+  })
+
+  it('leaves stats and lineups out of a summary without them', () => {
+    const match = normalizeSummary(summaryFixture, listMatch)
+    expect(match).not.toHaveProperty('stats')
+    expect(match).not.toHaveProperty('lineups')
+    expect(match.events.length).toBeGreaterThan(0)
+  })
+
+  it('matches sides by team id, not array order', () => {
+    const match = normalizeSummary(
+      {
+        boxscore: { teams: [statsTeam('366', { totalShots: '3' }), statsTeam('382', { totalShots: '9' })] },
+        rosters: [
+          rosterTeam('366', [player('a1', 'Away One')]),
+          rosterTeam('382', [player('h1', 'Home One')]),
+        ],
+      },
+      listMatch,
+    )
+    expect(match.stats).toEqual({ home: { shots: 9 }, away: { shots: 3 } })
+    expect(match.lineups?.home.starters[0]?.name).toBe('Home One')
+    expect(match.lineups?.away.starters[0]?.name).toBe('Away One')
+  })
+
+  it('keeps only stats both sides have with valid values', () => {
+    const match = normalizeSummary(
+      {
+        boxscore: {
+          teams: [
+            statsTeam('382', { possessionPct: '55.5%', totalShots: '-1', wonCorners: '4', foulsCommitted: '7' }),
+            statsTeam('366', { possessionPct: '44.5', totalShots: '5', wonCorners: 'x', shotsOnTarget: '2' }),
+            statsTeam('999', { foulsCommitted: '1' }),
+          ],
+        },
+      },
+      listMatch,
+    )
+    expect(match.stats).toEqual({ home: { possession: 55.5 }, away: { possession: 44.5 } })
+  })
+
+  it.each([
+    ['above 100', '101'],
+    ['negative', '-5'],
+    ['not a number', 'n/a'],
+  ])('drops possession that is %s', (_label, value) => {
+    const match = normalizeSummary(
+      {
+        boxscore: {
+          teams: [statsTeam('382', { possessionPct: value }), statsTeam('366', { possessionPct: '50' })],
+        },
+      },
+      listMatch,
+    )
+    expect(match).not.toHaveProperty('stats')
+  })
+
+  it('skips players without id or name and duplicate ids', () => {
+    const match = normalizeSummary(
+      {
+        rosters: [
+          rosterTeam(
+            '382',
+            [
+              player('h1', 'Home One', true, { jersey: '9', position: { abbreviation: 'F' } }),
+              player('h1', 'Duplicate'),
+              { starter: true, athlete: { displayName: 'No Id' } },
+              { starter: true, athlete: { id: 'h2' } },
+              'junk',
+              player('h3', 'Bench', false),
+            ],
+            '',
+          ),
+          rosterTeam('366', [player('a1', 'Away One')], '4-4-2'),
+        ],
+      },
+      listMatch,
+    )
+    expect(match.lineups?.home).toEqual({
+      starters: [{ id: 'h1', name: 'Home One', jersey: '9', position: 'F' }],
+      substitutes: [{ id: 'h3', name: 'Bench' }],
+    })
+    expect(match.lineups?.away.formation).toBe('4-4-2')
+  })
+
+  it('leaves lineups out unless both sides have starters', () => {
+    const match = normalizeSummary(
+      {
+        rosters: [
+          rosterTeam('382', [player('h1', 'Home One')]),
+          rosterTeam('366', [player('a1', 'Bench Only', false)]),
+        ],
+      },
+      listMatch,
+    )
+    expect(match).not.toHaveProperty('lineups')
+  })
+
+  it.each([
+    ['missing', {}],
+    ['malformed', { boxscore: 'x', rosters: { roster: [] } }],
+  ])('ignores %s boxscore and rosters without throwing', (_label, input) => {
+    const match = normalizeSummary(input, listMatch)
+    expect(match).not.toHaveProperty('stats')
+    expect(match).not.toHaveProperty('lineups')
+  })
+
+  it('drops stale stats and lineups when a refreshed summary has none', () => {
+    const loaded = normalizeSummary(centerFixture, listMatch)
+    const refreshed = normalizeSummary({ keyEvents: [] }, loaded)
+    expect(refreshed).not.toHaveProperty('stats')
+    expect(refreshed).not.toHaveProperty('lineups')
   })
 })
 

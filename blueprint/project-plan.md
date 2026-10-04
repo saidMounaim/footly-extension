@@ -66,14 +66,14 @@ The product should work for both casual football fans and users who follow footb
 - Favorite competitions.
 - Match countdown.
 - Quick team and match search.
-- Match detail view.
+- Match detail view, with basic team statistics and starting lineups when the provider supplies them.
 - Intelligent API refresh and caching.
 - Basic goal and match notifications.
 - Dark and light themes.
 - Settings for preferences and notifications.
 - Clear loading, empty, offline, and API error states.
 
-The MVP should focus on the smallest useful football experience before expanding into advanced statistics and additional match information.
+The MVP should focus on the smallest useful football experience before expanding into advanced statistics (such as player-level statistics and extended history) and additional match information.
 
 ---
 
@@ -125,8 +125,40 @@ type Match = {
     away: number;
   };
   events: MatchEvent[];
+  stats?: {
+    home: TeamMatchStats;
+    away: TeamMatchStats;
+  };
+  lineups?: {
+    home: Lineup;
+    away: Lineup;
+  };
+};
+
+// Basic team statistics; each value is optional because providers omit some.
+type TeamMatchStats = {
+  possession?: number; // percent, 0-100
+  shots?: number;
+  shotsOnTarget?: number;
+  corners?: number;
+  fouls?: number;
+};
+
+type Lineup = {
+  formation?: string; // e.g. "4-2-3-1"
+  starters: LineupPlayer[];
+  substitutes: LineupPlayer[];
+};
+
+type LineupPlayer = {
+  id: string;
+  name: string;
+  jersey?: string;
+  position?: string; // short label, e.g. "G", "CD-L"
 };
 ```
+
+`stats` and `lineups` come from the match summary and are missing when the provider does not supply them; the match detail view hides those sections instead of showing empty values.
 
 The exact data model can evolve as more football features are implemented.
 

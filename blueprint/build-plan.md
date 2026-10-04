@@ -26,7 +26,7 @@
 
 - [x] 9. **Quick Match Search** - Allow users to quickly search for teams, competitions, and matches without leaving the extension.
 
-- [ ] 10. **Match Center** - Provide a focused match view with score, timeline, teams, lineups, statistics, and other available match information.
+- [x] 10. **Match Center** - Provide a focused match view with score, timeline, teams, lineups, statistics, and other available match information.
 
 - [ ] 11. **Smart Data Refresh & Caching** - Refresh live matches intelligently while caching stable data to minimize API requests, battery usage, and extension resource consumption.
 

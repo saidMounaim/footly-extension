@@ -1,10 +1,13 @@
 import type {
   Competition,
+  Lineup,
+  LineupPlayer,
   Match,
   MatchEvent,
   MatchEventType,
   MatchStatus,
   Team,
+  TeamMatchStats,
 } from './types.ts'
 
 const ESPN_SOCCER_BASE = 'https://site.api.espn.com/apis/site/v2/sports/soccer'
@@ -208,10 +211,95 @@ function toTimedEvent(raw: unknown, teamIds: string[]): TimedEvent | undefined {
   }
 }
 
+/** Home and away entries of an ESPN list keyed by `team.id`; the first entry per team wins. */
+function byTeam(list: unknown, match: Match): { home?: UnknownRecord; away?: UnknownRecord } {
+  const entries = (Array.isArray(list) ? list : []).filter(isRecord)
+  const find = (teamId: string) =>
+    entries.find((entry) => isRecord(entry.team) && text(entry.team.id) === teamId)
+  return { home: find(match.homeTeam.id), away: find(match.awayTeam.id) }
+}
+
+const STAT_NAMES: Record<keyof TeamMatchStats, string> = {
+  possession: 'possessionPct',
+  shots: 'totalShots',
+  shotsOnTarget: 'shotsOnTarget',
+  corners: 'wonCorners',
+  fouls: 'foulsCommitted',
+}
+
+function statValue(key: keyof TeamMatchStats, raw: string): number | undefined {
+  if (key === 'possession') {
+    const value = Number(raw.trim().replace(/%$/, ''))
+    return raw.trim() !== '' && Number.isFinite(value) && value >= 0 && value <= 100 ? value : undefined
+  }
+  return /^\d+$/.test(raw.trim()) ? Number(raw) : undefined
+}
+
+function toTeamStats(entry: UnknownRecord | undefined): TeamMatchStats {
+  const statistics = entry && Array.isArray(entry.statistics) ? entry.statistics.filter(isRecord) : []
+  const stats: TeamMatchStats = {}
+  for (const [key, name] of Object.entries(STAT_NAMES) as [keyof TeamMatchStats, string][]) {
+    const raw = text(statistics.find((stat) => stat.name === name)?.displayValue)
+    const value = raw === undefined ? undefined : statValue(key, raw)
+    if (value !== undefined) stats[key] = value
+  }
+  return stats
+}
+
+/** Team stats from a summary boxscore, keeping only stats both sides have. */
+function toStats(boxscore: unknown, match: Match): Match['stats'] {
+  const { home, away } = byTeam(isRecord(boxscore) ? boxscore.teams : undefined, match)
+  const homeStats = toTeamStats(home)
+  const awayStats = toTeamStats(away)
+  const stats: NonNullable<Match['stats']> = { home: {}, away: {} }
+  for (const key of Object.keys(STAT_NAMES) as (keyof TeamMatchStats)[]) {
+    if (homeStats[key] === undefined || awayStats[key] === undefined) continue
+    stats.home[key] = homeStats[key]
+    stats.away[key] = awayStats[key]
+  }
+  return Object.keys(stats.home).length > 0 ? stats : undefined
+}
+
+function toLineupPlayer(raw: UnknownRecord): LineupPlayer | undefined {
+  const athlete = isRecord(raw.athlete) ? raw.athlete : {}
+  const id = text(athlete.id)
+  const name = text(athlete.displayName)
+  if (!id || !name) return undefined
+  const jersey = text(raw.jersey)
+  const abbreviation = isRecord(raw.position) ? text(raw.position.abbreviation) : undefined
+  // ESPN labels every substitute "SUB", which is not a position.
+  const position = abbreviation === 'SUB' ? undefined : abbreviation
+  return { id, name, ...(jersey && { jersey }), ...(position && { position }) }
+}
+
+function toLineup(entry: UnknownRecord | undefined): Lineup | undefined {
+  if (!entry || !Array.isArray(entry.roster)) return undefined
+  const lineup: Lineup = { starters: [], substitutes: [] }
+  const seen = new Set<string>()
+  for (const raw of entry.roster.filter(isRecord)) {
+    const player = toLineupPlayer(raw)
+    if (!player || seen.has(player.id)) continue
+    seen.add(player.id)
+    ;(raw.starter === true ? lineup.starters : lineup.substitutes).push(player)
+  }
+  if (lineup.starters.length === 0) return undefined
+  const formation = text(entry.formation)
+  return formation ? { formation, ...lineup } : lineup
+}
+
+/** Both lineups from summary rosters, or undefined unless both sides have starters. */
+function toLineups(rosters: unknown, match: Match): Match['lineups'] {
+  const { home, away } = byTeam(rosters, match)
+  const homeLineup = toLineup(home)
+  const awayLineup = toLineup(away)
+  return homeLineup && awayLineup ? { home: homeLineup, away: awayLineup } : undefined
+}
+
 /**
  * Applies an untrusted ESPN match summary to a match from the list: current
- * status and score (kept from `match` when unusable) and a chronological event
- * timeline. Malformed events are skipped; a non-object response throws.
+ * status and score (kept from `match` when unusable), a chronological event
+ * timeline, and team stats and lineups when available. Malformed events,
+ * stats, and players are skipped; a non-object response throws.
  */
 export function normalizeSummary(json: unknown, match: Match): Match {
   if (!isRecord(json)) {
@@ -229,6 +317,12 @@ export function normalizeSummary(json: unknown, match: Match): Match {
     .map(({ event }) => event)
 
   const updated: Match = { ...match, events }
+  const stats = toStats(json.boxscore, match)
+  const lineups = toLineups(json.rosters, match)
+  if (stats) updated.stats = stats
+  else delete updated.stats
+  if (lineups) updated.lineups = lineups
+  else delete updated.lineups
   if (!status) return updated
   updated.status = status
   const score = toScore(status, home, away)

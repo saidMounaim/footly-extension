@@ -1,0 +1,588 @@
+{
+  "header": {
+    "id": "401879272",
+    "competitions": [
+      {
+        "id": "401879272",
+        "date": "2026-09-20T13:00Z",
+        "status": {
+          "type": {
+            "id": "28",
+            "name": "STATUS_FULL_TIME",
+            "state": "post",
+            "completed": true,
+            "description": "Full Time",
+            "detail": "FT",
+            "shortDetail": "FT"
+          }
+        },
+        "competitors": [
+          {
+            "id": "382",
+            "homeAway": "home",
+            "score": "5",
+            "team": {
+              "id": "382",
+              "displayName": "Manchester City",
+              "shortDisplayName": "Man City"
+            }
+          },
+          {
+            "id": "366",
+            "homeAway": "away",
+            "score": "3",
+            "team": {
+              "id": "366",
+              "displayName": "Sunderland",
+              "shortDisplayName": "Sunderland"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "boxscore": {
+    "teams": [
+      {
+        "homeAway": "home",
+        "team": {
+          "id": "382",
+          "displayName": "Manchester City"
+        },
+        "statistics": [
+          {
+            "name": "foulsCommitted",
+            "displayValue": "14",
+            "label": "Fouls"
+          },
+          {
+            "name": "wonCorners",
+            "displayValue": "6",
+            "label": "Corner Kicks"
+          },
+          {
+            "name": "saves",
+            "displayValue": "4",
+            "label": "Saves"
+          },
+          {
+            "name": "possessionPct",
+            "displayValue": "55",
+            "label": "Possession"
+          },
+          {
+            "name": "totalShots",
+            "displayValue": "16",
+            "label": "SHOTS"
+          },
+          {
+            "name": "shotsOnTarget",
+            "displayValue": "6",
+            "label": "ON GOAL"
+          }
+        ]
+      },
+      {
+        "homeAway": "away",
+        "team": {
+          "id": "366",
+          "displayName": "Sunderland"
+        },
+        "statistics": [
+          {
+            "name": "foulsCommitted",
+            "displayValue": "14",
+            "label": "Fouls"
+          },
+          {
+            "name": "wonCorners",
+            "displayValue": "5",
+            "label": "Corner Kicks"
+          },
+          {
+            "name": "saves",
+            "displayValue": "1",
+            "label": "Saves"
+          },
+          {
+            "name": "possessionPct",
+            "displayValue": "45",
+            "label": "Possession"
+          },
+          {
+            "name": "totalShots",
+            "displayValue": "17",
+            "label": "SHOTS"
+          },
+          {
+            "name": "shotsOnTarget",
+            "displayValue": "9",
+            "label": "ON GOAL"
+          }
+        ]
+      }
+    ]
+  },
+  "rosters": [
+    {
+      "homeAway": "home",
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "formation": "4-2-3-1",
+      "roster": [
+        {
+          "starter": true,
+          "jersey": "1",
+          "athlete": {
+            "id": "217092",
+            "displayName": "Gianluigi Donnarumma"
+          },
+          "position": {
+            "abbreviation": "G"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "6",
+          "athlete": {
+            "id": "265907",
+            "displayName": "Marc Guéhi"
+          },
+          "position": {
+            "abbreviation": "CD-L"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "3",
+          "athlete": {
+            "id": "234878",
+            "displayName": "Rúben Dias"
+          },
+          "position": {
+            "abbreviation": "CD-R"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "24",
+          "athlete": {
+            "id": "299910",
+            "displayName": "Josko Gvardiol"
+          },
+          "position": {
+            "abbreviation": "LB"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "27",
+          "athlete": {
+            "id": "303785",
+            "displayName": "Matheus Nunes"
+          },
+          "position": {
+            "abbreviation": "RB"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "10",
+          "athlete": {
+            "id": "298008",
+            "displayName": "Rayan Cherki"
+          },
+          "position": {
+            "abbreviation": "AM"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "5",
+          "athlete": {
+            "id": "238472",
+            "displayName": "Elliot Anderson"
+          },
+          "position": {
+            "abbreviation": "LM"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "17",
+          "athlete": {
+            "id": "285450",
+            "displayName": "Enzo Fernández"
+          },
+          "position": {
+            "abbreviation": "RM"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "9",
+          "athlete": {
+            "id": "253989",
+            "displayName": "Erling Haaland"
+          },
+          "position": {
+            "abbreviation": "F"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "42",
+          "athlete": {
+            "id": "273292",
+            "displayName": "Antoine Semenyo"
+          },
+          "position": {
+            "abbreviation": "AM-L"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "7",
+          "athlete": {
+            "id": "268641",
+            "displayName": "Iliman Ndiaye"
+          },
+          "position": {
+            "abbreviation": "AM-R"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "28",
+          "athlete": {
+            "id": "167192",
+            "displayName": "Gerónimo Rulli"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "37",
+          "athlete": {
+            "id": "382966",
+            "displayName": "Allan Elias"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "45",
+          "athlete": {
+            "id": "362211",
+            "displayName": "Abdukodir Khusanov"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "32",
+          "athlete": {
+            "id": "373927",
+            "displayName": "Ayyoub Bouaddi"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "11",
+          "athlete": {
+            "id": "283672",
+            "displayName": "Jérémy Doku"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "21",
+          "athlete": {
+            "id": "272512",
+            "displayName": "Rayan Aït-Nouri"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "33",
+          "athlete": {
+            "id": "328464",
+            "displayName": "Nico O'Reilly"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "8",
+          "athlete": {
+            "id": "154595",
+            "displayName": "Mateo Kovacic"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "82",
+          "athlete": {
+            "id": "325564",
+            "displayName": "Rico Lewis"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        }
+      ]
+    },
+    {
+      "homeAway": "away",
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "formation": "4-2-3-1",
+      "roster": [
+        {
+          "starter": true,
+          "jersey": "22",
+          "athlete": {
+            "id": "301449",
+            "displayName": "Robin Roefs"
+          },
+          "position": {
+            "abbreviation": "G"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "5",
+          "athlete": {
+            "id": "282645",
+            "displayName": "Danny Ballard"
+          },
+          "position": {
+            "abbreviation": "CD-L"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "4",
+          "athlete": {
+            "id": "250543",
+            "displayName": "Kevin Danso"
+          },
+          "position": {
+            "abbreviation": "CD-R"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "6",
+          "athlete": {
+            "id": "388070",
+            "displayName": "Dayann Methalie"
+          },
+          "position": {
+            "abbreviation": "LB"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "20",
+          "athlete": {
+            "id": "214188",
+            "displayName": "Nordi Mukiele"
+          },
+          "position": {
+            "abbreviation": "RB"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "28",
+          "athlete": {
+            "id": "288340",
+            "displayName": "Enzo Le Fée"
+          },
+          "position": {
+            "abbreviation": "AM"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "27",
+          "athlete": {
+            "id": "340240",
+            "displayName": "Noah Sadiki"
+          },
+          "position": {
+            "abbreviation": "LM"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "34",
+          "athlete": {
+            "id": "149981",
+            "displayName": "Granit Xhaka"
+          },
+          "position": {
+            "abbreviation": "RM"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "9",
+          "athlete": {
+            "id": "282229",
+            "displayName": "Brian Brobbey"
+          },
+          "position": {
+            "abbreviation": "F"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "10",
+          "athlete": {
+            "id": "318090",
+            "displayName": "Nilson Angulo"
+          },
+          "position": {
+            "abbreviation": "AM-L"
+          }
+        },
+        {
+          "starter": true,
+          "jersey": "12",
+          "athlete": {
+            "id": "166473",
+            "displayName": "Thomas Meunier"
+          },
+          "position": {
+            "abbreviation": "AM-R"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "15",
+          "athlete": {
+            "id": "215401",
+            "displayName": "Omar Alderete"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "29",
+          "athlete": {
+            "id": "410687",
+            "displayName": "Jules Ahoka"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "31",
+          "athlete": {
+            "id": "307800",
+            "displayName": "Melker Ellborg"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "39",
+          "athlete": {
+            "id": "340645",
+            "displayName": "Malick Fofana"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "13",
+          "athlete": {
+            "id": "191574",
+            "displayName": "Luke O'Nien"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "11",
+          "athlete": {
+            "id": "356295",
+            "displayName": "Chris Rigg"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "18",
+          "athlete": {
+            "id": "265915",
+            "displayName": "Wilson Isidor"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "7",
+          "athlete": {
+            "id": "360062",
+            "displayName": "Chemsdine Talbi"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        },
+        {
+          "starter": false,
+          "jersey": "32",
+          "athlete": {
+            "id": "290207",
+            "displayName": "Trai Hume"
+          },
+          "position": {
+            "abbreviation": "SUB"
+          }
+        }
+      ]
+    }
+  ]
+}

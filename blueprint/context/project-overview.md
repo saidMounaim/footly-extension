@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash 545624dc6b5cbe4cf3cdec0306baf81cbabd1e85294df598ada53002ef145cd7 -->
+<!-- blueprint:source-hash 787c058159f59bdb12b958fce753a190787b99b24f4749f2b028840340fde45a -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -28,20 +28,22 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 
 ## Features
 
-Build order from `build-plan.md`. Headline: the compact popup with next match and live score.
+Build order from `build-plan.md`; features 1 to 9 are done. Headline: the compact popup with next match and live score.
 
-1. **Match Discovery & Upcoming Games** - upcoming matches with competition, teams, kickoff, status. Split into:
-   - **1a. Extension Shell** (done) - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
+1. **Match Discovery & Upcoming Games** (done) - upcoming matches with competition, teams, kickoff, status. Split into:
+   - **1a. Extension Shell** - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
    - **1b. Upcoming Matches** - ESPN scoreboards for a fixed set (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League), today plus the next 7 days, normalized into `Team`/`Competition`/`Match`, listed by kickoff. Direct fetch; `host_permissions` for `https://site.api.espn.com/*` only if CORS blocks it. No backend.
-2. **Match Details & Live Events** - live score and chronological timeline (goals, cards, substitutions, penalties).
-3. **Recent Results** - completed matches with final scores, key events, dates.
-4. **Favorite Teams** - search and save teams; their matches are prioritized.
-5. **Favorite Competitions** - follow leagues and surface their matches.
-6. **Live Match Status** - compact indicators for upcoming, live, halftime, postponed, cancelled, completed.
-7. **Match Countdown** - countdown to kickoff, switching to live info at start.
-8. **Goal & Match Notifications** - goals, cards, start, halftime, full-time for favorite teams.
-9. **Quick Match Search** - search teams, competitions, matches inside the extension.
-10. **Match Center** - focused match view with score, timeline, teams, lineups, statistics when available.
+2. **Match Details & Live Events** (done) - live score and chronological timeline (goals, cards, substitutions, penalties).
+3. **Recent Results** (done) - completed matches with final scores, key events, dates.
+4. **Favorite Teams** (done) - search and save teams; their matches are prioritized.
+5. **Favorite Competitions** (done) - follow leagues and surface their matches.
+6. **Live Match Status** (done) - compact indicators for upcoming, live, halftime, postponed, cancelled, completed.
+7. **Match Countdown** (done) - countdown to kickoff, switching to live info at start.
+8. **Goal & Match Notifications** (done) - goals, cards, start, halftime, full-time for favorite teams. Split into:
+   - **8a. Match Start & Result Notifications** - first service worker with `chrome.alarms` and `notifications`; kickoff, halftime, full-time alerts, checking only around favorite teams' kickoffs.
+   - **8b. Goal & Card Notifications** - goal and card alerts for favorite teams' live matches from match summaries, on 8a's watcher.
+9. **Quick Match Search** (done) - search teams, competitions, matches inside the extension.
+10. **Match Center** - the match detail view (from feature 2) plus basic team statistics and starting lineups when the provider supplies them; hidden when missing.
 11. **Smart Data Refresh & Caching** - state-based refresh, cache stable data, minimize requests.
 12. **Personalized Home** - dashboard prioritizing favorites, live matches, next games.
 13. **Extension Settings** - notifications, refresh behavior, favorites, appearance.
@@ -76,8 +78,29 @@ Provider data is normalized into internal models; UI never sees the raw ESPN sha
 - `status` (MatchStatus) - covers upcoming, live, halftime, finished, postponed, cancelled
 - `score` (`{ home: number, away: number }`, optional)
 - `events` (MatchEvent[]) - goals, cards, substitutions, penalties; may be empty or incomplete
+- `stats` (`{ home: TeamMatchStats, away: TeamMatchStats }`, optional) - from the match summary; missing when the provider omits it
+- `lineups` (`{ home: Lineup, away: Lineup }`, optional) - from the match summary; missing when the provider omits it
 
 > TODO: `MatchStatus` and `MatchEvent` fields are not defined in the plans.
+
+### TeamMatchStats
+
+Basic team statistics; every field is optional because providers omit some.
+
+- `possession` (number, optional) - percent, 0-100
+- `shots`, `shotsOnTarget`, `corners`, `fouls` (number, optional)
+
+### Lineup
+
+- `formation` (string, optional) - e.g. "4-2-3-1"
+- `starters` (LineupPlayer[]), `substitutes` (LineupPlayer[])
+
+### LineupPlayer
+
+- `id` (string), `name` (string)
+- `jersey` (string, optional), `position` (string, optional) - short label such as "G" or "CD-L"
+
+> The match detail view hides the stats and lineup sections when the data is missing instead of showing empty values. Player-level statistics and extended history stay out of the MVP.
 
 ### Local preferences (chrome.storage.local)
 
@@ -98,7 +121,7 @@ Provider data is normalized into internal models; UI never sees the raw ESPN sha
 
 ## Monetization
 
-Not in v1: free and adoption-focused. Possible later "Footly Plus" (advanced notifications and statistics, personalization, notification profiles, extended history, advanced competition tracking, more providers). Never block basic scores or use intrusive ads or upgrade prompts. Decide after real feedback.
+Not in v1: free and adoption-focused. Possible later "Footly Plus" (advanced notifications, advanced statistics beyond the MVP's basic team stats, personalization, notification profiles, extended history, advanced competition tracking, more providers). Never block basic scores or use intrusive ads or upgrade prompts. Decide after real feedback.
 
 ## UI/UX
 
@@ -128,12 +151,11 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 
 > Resolve in the plans, then re-run /overview.
 
-- **Overlap.** Feature 2 (live timeline) and feature 10 (Match Center with timeline) cover similar ground; feature 6 (status) and 7 (countdown) are small items that feature 1 also touches.
+- **Overlap.** Feature 10 (Match Center) builds on feature 2's detail view rather than replacing it; the project plan now scopes it to basic team statistics and starting lineups.
 - **Themes.** 1a follows the system theme; feature 14 still owns a user theme toggle and the polished pass.
 - **Cross-cutting items.** Features 15, 16, and 17 are cross-cutting concerns that earlier features will already need in part.
 - **Provider risk.** ESPN endpoints are unofficial and CORS from the popup is unverified. The build plan allows one narrow ESPN host permission in 1b if needed; the project plan says the extension should *ideally* have none.
-- **Lineups and statistics** (feature 10) are not in the project plan's MVP list or data model.
 - **Search** appears in the plan as team and match search; build plan adds competitions.
 - **Undefined types.** `MatchStatus` and `MatchEvent` shapes are missing. 1b must define `MatchStatus` (it locks the `Match` shape); `MatchEvent` can wait for feature 2.
 - **Default competitions.** The six-league default for 1b lives only in the build plan; how it combines with favorites (features 4, 5, 12) is undecided.
-- **Testing and `AGENTS.md`.** The plan lists Vitest and Testing Library, but no runner is configured yet, so tests are not a gate until `/tests` is run.
+- **Testing.** The plan lists Vitest and React Testing Library; only Vitest is configured (`npm test`), and UI stays out of unit tests by the coding standards.

@@ -53,4 +53,33 @@ export interface Match {
   score?: { home: number; away: number }
   /** Chronological; empty when unknown or not loaded. */
   events: MatchEvent[]
+  /** From the match summary; only stats both sides have. Missing when unavailable. */
+  stats?: { home: TeamMatchStats; away: TeamMatchStats }
+  /** From the match summary; missing unless both sides have starters. */
+  lineups?: { home: Lineup; away: Lineup }
+}
+
+/** Basic team statistics; each value is optional because providers omit some. */
+export interface TeamMatchStats {
+  /** Percent, 0-100. */
+  possession?: number
+  shots?: number
+  shotsOnTarget?: number
+  corners?: number
+  fouls?: number
+}
+
+export interface Lineup {
+  /** E.g. "4-2-3-1". */
+  formation?: string
+  starters: LineupPlayer[]
+  substitutes: LineupPlayer[]
+}
+
+export interface LineupPlayer {
+  id: string
+  name: string
+  jersey?: string
+  /** Short label, e.g. "G" or "CD-L". */
+  position?: string
 }

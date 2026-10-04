@@ -7,7 +7,9 @@ import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
 import { useNow } from '../../hooks/useNow.ts'
 import { detailCountdown } from '../../lib/countdown.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
+import { MatchLineups } from './MatchLineups.tsx'
 import { StatusText } from './MatchRow.tsx'
+import { MatchStats } from './MatchStats.tsx'
 import { MatchTimeline, MatchTimelineSkeleton } from './MatchTimeline.tsx'
 import { formatScore, secondaryButtonClass } from './status.ts'
 
@@ -101,6 +103,12 @@ export function MatchDetail({ match, favorites, onBack }: MatchDetailProps) {
         )}
         {state.status === 'success' && <MatchTimeline match={state.match} />}
       </section>
+      {state.status === 'success' && (
+        <>
+          <MatchStats match={state.match} />
+          <MatchLineups match={state.match} />
+        </>
+      )}
     </div>
   )
 }
