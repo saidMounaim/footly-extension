@@ -15,7 +15,7 @@
 
 - [x] 5. **Favorite Competitions** - Let users follow leagues and competitions and surface their most relevant matches.
 
-- [ ] 6. **Live Match Status** - Clearly distinguish upcoming, live, halftime, postponed, cancelled, and completed matches with compact status indicators.
+- [x] 6. **Live Match Status** - Clearly distinguish upcoming, live, halftime, postponed, cancelled, and completed matches with compact status indicators.
 
 - [ ] 7. **Match Countdown** - Show a live countdown for upcoming matches and automatically switch to live match information when the game starts.
 

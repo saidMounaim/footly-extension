@@ -6,39 +6,66 @@ interface StatusTextProps {
   match: Match
 }
 
+const pillClass = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs'
+
+function Score({ score }: { score: string | null }) {
+  if (!score) return null
+  return (
+    <>
+      {' '}
+      <span className="tabular-nums text-foreground">{score}</span>
+    </>
+  )
+}
+
 export function StatusText({ match }: StatusTextProps) {
   const score = match.score ? formatScore(match.score) : null
   switch (match.status) {
     case 'live':
       return (
-        <span className="font-semibold text-accent">
-          Live
-          {score && (
-            <>
-              {' '}
-              <span className="tabular-nums">{score}</span>
-            </>
-          )}
+        <span className={`${pillClass} border-accent font-semibold text-accent`}>
+          <span aria-hidden="true" className="relative flex size-1.5">
+            <span className="absolute inline-flex size-full rounded-full bg-accent opacity-75 motion-safe:animate-ping" />
+            <span className="relative inline-flex size-1.5 rounded-full bg-accent" />
+          </span>
+          <span>
+            Live
+            <Score score={score} />
+          </span>
         </span>
       )
     case 'halftime':
       return (
-        <span className="font-semibold text-foreground">
-          HT
-          {score && (
-            <>
-              {' '}
-              <span className="tabular-nums">{score}</span>
-            </>
-          )}
+        <span className={`${pillClass} border-border bg-surface font-semibold text-foreground`}>
+          <span>
+            HT
+            <Score score={score} />
+          </span>
+        </span>
+      )
+    case 'finished':
+      return (
+        <span className={`${pillClass} border-border bg-surface text-muted`}>
+          <span>
+            FT
+            <Score score={score} />
+          </span>
         </span>
       )
     case 'postponed':
-      return <span className="font-medium text-foreground">Postponed</span>
+      return (
+        <span className={`${pillClass} border-warning font-medium text-warning`}>
+          <span aria-hidden="true">⚠</span>
+          <span>Postponed</span>
+        </span>
+      )
     case 'cancelled':
-      return <span className="font-medium text-muted line-through">Cancelled</span>
-    case 'finished':
-      return <span className="text-muted">FT{score && ` ${score}`}</span>
+      return (
+        <span className={`${pillClass} border-border bg-surface text-muted`}>
+          <span aria-hidden="true">⊘</span>
+          <span>Cancelled</span>
+        </span>
+      )
     case 'upcoming':
       return (
         <time className="tabular-nums text-foreground" dateTime={match.startTime}>

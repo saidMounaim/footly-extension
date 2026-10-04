@@ -7,6 +7,7 @@
   --muted: #4b5563;
   --border: #e5e7eb;
   --accent: #15803d;
+  --warning: #b45309;
 
   color-scheme: light dark;
 }
@@ -19,6 +20,7 @@
     --muted: #9ca3af;
     --border: #273140;
     --accent: #4ade80;
+    --warning: #fbbf24;
   }
 }
 
@@ -29,6 +31,7 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
   --color-accent: var(--accent);
+  --color-warning: var(--warning);
 }
 
 body {
