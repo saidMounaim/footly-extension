@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import { loadFavoriteCompetitions, saveFavoriteCompetitions, toggleId } from '../lib/favorites.ts'
-import { useSavedList } from './useSavedList.ts'
+import { useSavedValue } from './useSavedValue.ts'
 
 export interface FavoriteCompetitionsApi {
   /** Followed competition ids, in the order they were followed. */
@@ -17,12 +17,15 @@ export interface FavoriteCompetitionsApi {
   saveError: boolean
 }
 
+const NO_IDS: string[] = []
+
 /** Followed competitions persisted in chrome.storage.local. */
 export function useFavoriteCompetitions(): FavoriteCompetitionsApi {
-  const { items: ids, ready, toggle, loadError, saveError } = useSavedList(
+  const { value: ids, ready, toggle, loadError, saveError } = useSavedValue(
     loadFavoriteCompetitions,
     saveFavoriteCompetitions,
     toggleId,
+    NO_IDS,
   )
   const idSet = useMemo(() => new Set(ids), [ids])
   const isFavorite = useCallback((id: string) => idSet.has(id), [idSet])

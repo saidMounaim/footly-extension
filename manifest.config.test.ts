@@ -12,10 +12,16 @@ describe('manifest', () => {
     })
   })
 
-  it('requests only storage, with no host access or background work', () => {
-    expect(manifest).toHaveProperty('permissions', ['storage'])
+  it('requests only storage, alarms, and notifications, with no host access', () => {
+    expect(manifest).toHaveProperty('permissions', ['storage', 'alarms', 'notifications'])
     expect(manifest).not.toHaveProperty('host_permissions')
-    expect(manifest).not.toHaveProperty('background')
     expect(manifest).not.toHaveProperty('content_scripts')
+  })
+
+  it('runs one module service worker for background match alerts', () => {
+    expect(manifest).toHaveProperty('background', {
+      service_worker: 'src/background.ts',
+      type: 'module',
+    })
   })
 })

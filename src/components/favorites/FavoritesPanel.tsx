@@ -3,6 +3,7 @@ import { COMPETITIONS } from '../../api/football.ts'
 import type { Team } from '../../api/types.ts'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
+import type { NotificationsSettingApi } from '../../hooks/useNotificationsSetting.ts'
 import type { TeamCatalogState } from '../../hooks/useTeamCatalog.ts'
 import { searchTeams } from '../../lib/search.ts'
 import { secondaryButtonClass } from '../matches/status.ts'
@@ -11,12 +12,51 @@ import { FavoriteToggle } from './FavoriteToggle.tsx'
 interface FavoritesPanelProps {
   favorites: FavoriteTeamsApi
   competitions: FavoriteCompetitionsApi
+  notifications: NotificationsSettingApi
   catalog: TeamCatalogState
   onRetryCatalog: () => void
 }
 
 const headingClass =
   'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
+
+function NotificationsSwitch({ notifications }: { notifications: NotificationsSettingApi }) {
+  const { enabled } = notifications
+  return (
+    <div className="flex items-start gap-3 border-b border-border px-4 py-3">
+      <div className="min-w-0 flex-1">
+        <p id="notifications-label" className="text-sm font-medium text-foreground">
+          Match notifications
+        </p>
+        <p id="notifications-help" className="text-xs text-muted">
+          Kick-off, half-time, and full-time alerts for your favorite teams.
+        </p>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={enabled}
+        aria-labelledby="notifications-label"
+        aria-describedby="notifications-help"
+        disabled={!notifications.ready}
+        onClick={notifications.toggle}
+        className="flex shrink-0 items-center gap-2 rounded-full text-xs font-medium text-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50"
+      >
+        <span
+          aria-hidden="true"
+          className={`flex h-5 w-9 items-center rounded-full border p-0.5 ${
+            enabled ? 'justify-end border-accent bg-accent' : 'justify-start border-border bg-surface'
+          }`}
+        >
+          <span className="size-3.5 rounded-full bg-background shadow" />
+        </span>
+        <span aria-hidden="true" className="w-6 text-left">
+          {enabled ? 'On' : 'Off'}
+        </span>
+      </button>
+    </div>
+  )
+}
 
 function YourTeams({ favorites }: { favorites: FavoriteTeamsApi }) {
   return (
@@ -113,6 +153,7 @@ function SearchResults({ teams, query, favorites }: { teams: Team[]; query: stri
 export function FavoritesPanel({
   favorites,
   competitions,
+  notifications,
   catalog,
   onRetryCatalog,
 }: FavoritesPanelProps) {
@@ -122,11 +163,12 @@ export function FavoritesPanel({
 
   return (
     <div>
-      {(favorites.loadError || competitions.loadError) && (
+      {(favorites.loadError || competitions.loadError || notifications.loadError) && (
         <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
           Couldn't load your saved favorites.
         </p>
       )}
+      <NotificationsSwitch notifications={notifications} />
       <YourTeams favorites={favorites} />
       <Competitions competitions={competitions} />
       <section aria-labelledby="find-teams-heading">

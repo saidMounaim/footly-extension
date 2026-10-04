@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash 31dd7cc6266a7f028b70660128ea693b7435f12ef85925711abe3b54fe17809b -->
+<!-- blueprint:source-hash 545624dc6b5cbe4cf3cdec0306baf81cbabd1e85294df598ada53002ef145cd7 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 

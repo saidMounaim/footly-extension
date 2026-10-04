@@ -6,7 +6,7 @@ import {
   toggleFavorite,
   type FavoriteTeam,
 } from '../lib/favorites.ts'
-import { useSavedList } from './useSavedList.ts'
+import { useSavedValue } from './useSavedValue.ts'
 
 export interface FavoriteTeamsApi {
   teams: FavoriteTeam[]
@@ -22,12 +22,15 @@ export interface FavoriteTeamsApi {
   saveError: boolean
 }
 
+const NO_TEAMS: FavoriteTeam[] = []
+
 /** Favorite teams persisted in chrome.storage.local. */
 export function useFavoriteTeams(): FavoriteTeamsApi {
-  const { items: teams, ready, toggle, loadError, saveError } = useSavedList(
+  const { value: teams, ready, toggle, loadError, saveError } = useSavedValue(
     loadFavoriteTeams,
     saveFavoriteTeams,
     toggleFavorite,
+    NO_TEAMS,
   )
   const favoriteIds = useMemo(() => new Set(teams.map((team) => team.id)), [teams])
   const isFavorite = useCallback((id: string) => favoriteIds.has(id), [favoriteIds])

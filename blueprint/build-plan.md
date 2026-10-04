@@ -21,6 +21,9 @@
 
 - [ ] 8. **Goal & Match Notifications** - Notify users about goals, cards, match starts, halftime, and full-time results for their favorite teams.
 
+  - [x] 8a. **Match Start & Result Notifications** - Add the extension's first service worker with `chrome.alarms` and `notifications`; notify kickoff, halftime, and full-time for favorite teams' matches, checking only around their kickoff times.
+  - [ ] 8b. **Goal & Card Notifications** - Notify goals and cards in favorite teams' live matches using match summaries, built on 8a's background watcher.
+
 - [ ] 9. **Quick Match Search** - Allow users to quickly search for teams, competitions, and matches without leaving the extension.
 
 - [ ] 10. **Match Center** - Provide a focused match view with score, timeline, teams, lineups, statistics, and other available match information.

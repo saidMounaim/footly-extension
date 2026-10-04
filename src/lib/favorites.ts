@@ -57,7 +57,8 @@ export function parseFavoriteCompetitionIds(value: unknown): string[] {
   return ids
 }
 
-async function readKey(area: StorageArea, key: string): Promise<unknown> {
+/** Reads one key, wrapping storage failures in FavoritesStorageError. */
+export async function readStoredKey(area: StorageArea, key: string): Promise<unknown> {
   try {
     const stored = await area.get(key)
     return stored?.[key]
@@ -66,7 +67,8 @@ async function readKey(area: StorageArea, key: string): Promise<unknown> {
   }
 }
 
-async function writeKey(area: StorageArea, key: string, value: unknown): Promise<void> {
+/** Writes one key, wrapping storage failures in FavoritesStorageError. */
+export async function writeStoredKey(area: StorageArea, key: string, value: unknown): Promise<void> {
   try {
     await area.set({ [key]: value })
   } catch (cause) {
@@ -75,7 +77,7 @@ async function writeKey(area: StorageArea, key: string, value: unknown): Promise
 }
 
 export async function loadFavoriteTeams(area: StorageArea): Promise<FavoriteTeam[]> {
-  return parseFavoriteTeams(await readKey(area, FAVORITE_TEAMS_KEY))
+  return parseFavoriteTeams(await readStoredKey(area, FAVORITE_TEAMS_KEY))
 }
 
 export async function saveFavoriteTeams(area: StorageArea, teams: FavoriteTeam[]): Promise<void> {
@@ -84,15 +86,15 @@ export async function saveFavoriteTeams(area: StorageArea, teams: FavoriteTeam[]
     name,
     ...(shortName && { shortName }),
   }))
-  await writeKey(area, FAVORITE_TEAMS_KEY, value)
+  await writeStoredKey(area, FAVORITE_TEAMS_KEY, value)
 }
 
 export async function loadFavoriteCompetitions(area: StorageArea): Promise<string[]> {
-  return parseFavoriteCompetitionIds(await readKey(area, FAVORITE_COMPETITIONS_KEY))
+  return parseFavoriteCompetitionIds(await readStoredKey(area, FAVORITE_COMPETITIONS_KEY))
 }
 
 export async function saveFavoriteCompetitions(area: StorageArea, ids: string[]): Promise<void> {
-  await writeKey(area, FAVORITE_COMPETITIONS_KEY, [...ids])
+  await writeStoredKey(area, FAVORITE_COMPETITIONS_KEY, [...ids])
 }
 
 /** Adds the id at the end, or removes it when present. */

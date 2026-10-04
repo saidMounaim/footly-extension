@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { FavoritesStorageError, type StorageArea } from '../lib/favorites.ts'
 
-export interface SavedList<T, Change> {
-  items: T[]
-  /** True once the saved list was read; changes are ignored until then. */
+export interface SavedValue<V, Change> {
+  value: V
+  /** True once the saved value was read; changes are ignored until then. */
   ready: boolean
-  /** Applies the change immediately; rolls back to the last saved list if saving fails. */
+  /** Applies the change immediately; rolls back to the last saved value if saving fails. */
   toggle: (change: Change) => void
-  /** The saved list couldn't be read. */
+  /** The saved value couldn't be read. */
   loadError: boolean
   /** The last save failed. */
   saveError: boolean
@@ -29,20 +29,22 @@ function unavailable(): Promise<never> {
 }
 
 /**
- * A list persisted in chrome.storage.local, read once on mount. `load`, `save`,
- * and `apply` must be stable (module-level) functions.
+ * A value persisted in chrome.storage.local, read once on mount and shown as
+ * `initial` until then. `load`, `save`, `apply`, and `initial` must be stable
+ * (module-level) values.
  */
-export function useSavedList<T, Change>(
-  load: (area: StorageArea) => Promise<T[]>,
-  save: (area: StorageArea, items: T[]) => Promise<void>,
-  apply: (items: T[], change: Change) => T[],
-): SavedList<T, Change> {
-  const [items, setItems] = useState<T[]>([])
+export function useSavedValue<V, Change>(
+  load: (area: StorageArea) => Promise<V>,
+  save: (area: StorageArea, value: V) => Promise<void>,
+  apply: (value: V, change: Change) => V,
+  initial: V,
+): SavedValue<V, Change> {
+  const [value, setValue] = useState<V>(initial)
   const [ready, setReady] = useState(false)
   const [loadError, setLoadError] = useState(false)
   const [saveError, setSaveError] = useState(false)
-  const latest = useRef<T[]>([])
-  const saved = useRef<T[]>([])
+  const latest = useRef<V>(initial)
+  const saved = useRef<V>(initial)
   const readyRef = useRef(false)
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export function useSavedList<T, Change>(
         latest.current = loaded
         saved.current = loaded
         readyRef.current = true
-        setItems(loaded)
+        setValue(loaded)
         setReady(true)
       },
       (failure: unknown) => {
@@ -72,7 +74,7 @@ export function useSavedList<T, Change>(
       if (!readyRef.current) return
       const next = apply(latest.current, change)
       latest.current = next
-      setItems(next)
+      setValue(next)
       const storage = extensionStorage()
       ;(storage ? save(storage, next) : unavailable()).then(
         () => {
@@ -84,7 +86,7 @@ export function useSavedList<T, Change>(
           // Return to what is actually stored, unless a newer change is still in flight.
           if (latest.current === next) {
             latest.current = saved.current
-            setItems(saved.current)
+            setValue(saved.current)
           }
           setSaveError(true)
         },
@@ -93,5 +95,5 @@ export function useSavedList<T, Change>(
     [save, apply],
   )
 
-  return { items, ready, toggle, loadError, saveError }
+  return { value, ready, toggle, loadError, saveError }
 }

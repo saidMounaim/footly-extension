@@ -9,6 +9,7 @@ import { useFavoriteCompetitions } from './hooks/useFavoriteCompetitions.ts'
 import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
 import { useKickoffChecks } from './hooks/useKickoffChecks.ts'
 import { useMatchList } from './hooks/useMatchList.ts'
+import { useNotificationsSetting } from './hooks/useNotificationsSetting.ts'
 import { useNow } from './hooks/useNow.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 
@@ -24,6 +25,7 @@ function App() {
   useKickoffChecks(upcoming, refresh)
   const favorites = useFavoriteTeams()
   const competitions = useFavoriteCompetitions()
+  const notifications = useNotificationsSetting()
   const [tab, setTab] = useState<MatchTab>('upcoming')
   const catalog = useTeamCatalog(tab === 'favorites')
   const [selected, setSelected] = useState<Match | null>(null)
@@ -55,7 +57,7 @@ function App() {
         </h1>
       </header>
       <main className="flex-1">
-        {(favorites.saveError || competitions.saveError) && (
+        {(favorites.saveError || competitions.saveError || notifications.saveError) && (
           <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
             Couldn't save your favorites. Try again.
           </p>
@@ -74,6 +76,7 @@ function App() {
                 <FavoritesPanel
                   favorites={favorites}
                   competitions={competitions}
+                  notifications={notifications}
                   catalog={catalog.state}
                   onRetryCatalog={catalog.retry}
                 />
