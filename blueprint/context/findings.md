@@ -7,14 +7,35 @@
 > finding is `open` or `fixed`, then archives resolved findings with the work
 > and resets this file.
 
-### F-01 [P3] fixed - Live/HT status text has no separator before the score
+### F-02 [P3] open - Summary with a valid status but unusable score drops the list's score
 
-**File:** src/components/matches/MatchRow.tsx:14
+**File:** src/api/espn.ts:231
 **Found:** 2026-10-03 by /audit independent (scope: current; lens: quality)
-**Why it matters:** The visual gap between "Live"/"HT" and the score comes only
-from the `ml-1` margin (lines 14 and 20). The text content is `Live2–1` /
-`HT1–0`, so screen readers and copy/paste get the words run together. The spec
-asks for status as text, not only visual presentation.
-**Suggested fix:** Render a real space before the score (for example `{' '}`
-before the score span) and drop `ml-1`. No current requirement is lost.
-**Resolution:** Fixed on fix/space-before-live-ht-score: live and halftime cases render a real `{' '}` before the score span and drop `ml-1`. Awaiting /audit re-review.
+**Why it matters:** The spec's ESPN summary mapping says that when score or
+status are missing or invalid, the list's values are kept. `normalizeSummary`
+applies a valid header status and then runs `delete updated.score` whenever
+`toScore` returns nothing, including for `live`, `halftime`, or `finished`
+when the competitors' scores are missing or malformed. A list match shown as
+`Live 1-0` whose summary header has `state: 'in'` but no parsable competitor
+scores opens with the kickoff time in the score slot instead of `1-0`. Real
+ESPN summaries sampled during this review always carried scores, so the
+path is unlikely, and no test covers it.
+**Suggested fix:** Delete the score only when the new status has no score
+(upcoming, postponed, cancelled); for live, halftime, and finished keep
+`match.score` when `toScore` returns undefined. Add one case to the
+"takes status and score from the header" test. No current requirement is lost.
+**Resolution:**
+
+### F-03 [P3] open - Match row button wraps block elements
+
+**File:** src/components/matches/MatchRow.tsx:65
+**Found:** 2026-10-03 by /audit independent (scope: current; lens: quality)
+**Why it matters:** The new row `<button>` contains `<div>` and `<p>`
+elements. HTML allows only phrasing content inside a button, so the markup is
+invalid even though browsers render it and the `aria-label` keeps the
+accessible name correct. HTML validators and some accessibility checkers will
+flag every row.
+**Suggested fix:** Swap the inner `div`/`p` for `span` elements with `block`
+(and the existing truncate/flex classes) so the visual layout is unchanged.
+No current requirement is lost.
+**Resolution:**

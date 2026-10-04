@@ -1,12 +1,13 @@
 import type { Match } from '../../api/types.ts'
 import { formatKickoff } from '../../lib/date.ts'
+import { formatScore, statusLabel } from './status.ts'
 
-interface MatchRowProps {
+interface StatusTextProps {
   match: Match
 }
 
-function StatusCell({ match }: MatchRowProps) {
-  const score = match.score ? `${match.score.home}–${match.score.away}` : null
+export function StatusText({ match }: StatusTextProps) {
+  const score = match.score ? formatScore(match.score) : null
   switch (match.status) {
     case 'live':
       return (
@@ -47,17 +48,29 @@ function StatusCell({ match }: MatchRowProps) {
   }
 }
 
-export function MatchRow({ match }: MatchRowProps) {
+interface MatchRowProps {
+  match: Match
+  onSelect: (match: Match, trigger: HTMLButtonElement) => void
+}
+
+export function MatchRow({ match, onSelect }: MatchRowProps) {
   return (
-    <li className="flex items-center gap-3 px-4 py-2.5">
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-xs text-muted">{match.competition.name}</p>
-        <p className="truncate text-sm text-foreground">{match.homeTeam.name}</p>
-        <p className="truncate text-sm text-foreground">{match.awayTeam.name}</p>
-      </div>
-      <div className="shrink-0 text-right text-sm">
-        <StatusCell match={match} />
-      </div>
+    <li>
+      <button
+        type="button"
+        onClick={(event) => onSelect(match, event.currentTarget)}
+        aria-label={`${match.homeTeam.name} vs ${match.awayTeam.name}, ${statusLabel(match)}`}
+        className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+      >
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-xs text-muted">{match.competition.name}</p>
+          <p className="truncate text-sm text-foreground">{match.homeTeam.name}</p>
+          <p className="truncate text-sm text-foreground">{match.awayTeam.name}</p>
+        </div>
+        <div className="shrink-0 text-right text-sm">
+          <StatusText match={match} />
+        </div>
+      </button>
     </li>
   )
 }

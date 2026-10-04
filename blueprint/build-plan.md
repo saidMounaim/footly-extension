@@ -7,7 +7,7 @@
   - [x] 1a. **Extension Shell** - Turn the Vite app into a loadable Manifest V3 Chrome extension popup with `@crxjs/vite-plugin`, Tailwind CSS, and light/dark tokens that follow the system theme. No host permissions or Chrome APIs yet.
   - [x] 1b. **Upcoming Matches** - Fetch ESPN scoreboards for a fixed top-league set (Premier League, La Liga, Serie A, Bundesliga, Ligue 1, Champions League) for today plus the next 7 days, normalize into the internal `Team`/`Competition`/`Match` models, and list matches by kickoff with competition, teams, time, and status. Fetch directly; add `host_permissions` for `https://site.api.espn.com/*` only if CORS blocks it. No backend.
 
-- [ ] 2. **Match Details & Live Events** - Display live score, goals, yellow/red cards, substitutions, penalties, and other important match events in a clean chronological timeline.
+- [x] 2. **Match Details & Live Events** - Display live score, goals, yellow/red cards, substitutions, penalties, and other important match events in a clean chronological timeline.
 
 - [ ] 3. **Recent Results** - Show completed matches with final scores, key events, and match dates.
 

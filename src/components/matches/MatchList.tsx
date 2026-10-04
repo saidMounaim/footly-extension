@@ -2,14 +2,13 @@ import type { Match } from '../../api/types.ts'
 import type { UpcomingMatchesState } from '../../hooks/useUpcomingMatches.ts'
 import { dayLabel, localDayKey } from '../../lib/date.ts'
 import { MatchRow } from './MatchRow.tsx'
+import { secondaryButtonClass } from './status.ts'
 
 interface MatchListProps {
   state: UpcomingMatchesState
   onRetry: () => void
+  onSelect: (match: Match, trigger: HTMLButtonElement) => void
 }
-
-const retryClass =
-  'rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent'
 
 function groupByDay(matches: Match[]): Match[][] {
   const groups = new Map<string, Match[]>()
@@ -40,7 +39,7 @@ function Skeleton() {
   )
 }
 
-export function MatchList({ state, onRetry }: MatchListProps) {
+export function MatchList({ state, onRetry, onSelect }: MatchListProps) {
   if (state.status === 'loading') return <Skeleton />
 
   if (state.status === 'error') {
@@ -48,7 +47,7 @@ export function MatchList({ state, onRetry }: MatchListProps) {
       <div role="alert" className="flex flex-col items-center gap-3 px-6 py-12 text-center">
         <p className="text-sm text-foreground">Couldn't load match data.</p>
         <p className="text-sm text-muted">Check your connection and try again.</p>
-        <button type="button" onClick={onRetry} className={retryClass}>
+        <button type="button" onClick={onRetry} className={secondaryButtonClass}>
           Retry
         </button>
       </div>
@@ -64,7 +63,7 @@ export function MatchList({ state, onRetry }: MatchListProps) {
           className="flex items-center justify-between gap-3 border-b border-border px-4 py-2"
         >
           <p className="text-xs text-muted">Some competitions couldn't be loaded.</p>
-          <button type="button" onClick={onRetry} className={retryClass}>
+          <button type="button" onClick={onRetry} className={secondaryButtonClass}>
             Retry
           </button>
         </div>
@@ -84,7 +83,7 @@ export function MatchList({ state, onRetry }: MatchListProps) {
             </h2>
             <ul className="divide-y divide-border">
               {group.map((match) => (
-                <MatchRow key={match.id} match={match} />
+                <MatchRow key={match.id} match={match} onSelect={onSelect} />
               ))}
             </ul>
           </section>

@@ -1,0 +1,571 @@
+{
+  "header": {
+    "id": "401879272",
+    "competitions": [
+      {
+        "id": "401879272",
+        "date": "2026-09-20T13:00Z",
+        "status": {
+          "type": {
+            "id": "28",
+            "name": "STATUS_FULL_TIME",
+            "state": "post",
+            "completed": true,
+            "description": "Full Time",
+            "detail": "FT",
+            "shortDetail": "FT"
+          }
+        },
+        "competitors": [
+          {
+            "id": "382",
+            "homeAway": "home",
+            "score": "5",
+            "team": {
+              "id": "382",
+              "displayName": "Manchester City",
+              "shortDisplayName": "Man City"
+            }
+          },
+          {
+            "id": "366",
+            "homeAway": "away",
+            "score": "3",
+            "team": {
+              "id": "366",
+              "displayName": "Sunderland",
+              "shortDisplayName": "Sunderland"
+            }
+          }
+        ]
+      }
+    ]
+  },
+  "keyEvents": [
+    {
+      "id": "52705499",
+      "type": {
+        "id": "80",
+        "text": "Kickoff",
+        "type": "kickoff"
+      },
+      "clock": {
+        "value": 0,
+        "displayValue": ""
+      },
+      "scoringPlay": false
+    },
+    {
+      "id": "52707122",
+      "type": {
+        "id": "94",
+        "text": "Yellow Card",
+        "type": "yellow-card"
+      },
+      "clock": {
+        "value": 467,
+        "displayValue": "8'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Dayann Methalie"
+          }
+        }
+      ],
+      "shortText": "Dayann Methalie Yellow Card"
+    },
+    {
+      "id": "52707123",
+      "type": {
+        "id": "138",
+        "text": "Goal - Free-kick",
+        "type": "goal---free-kick"
+      },
+      "clock": {
+        "value": 532,
+        "displayValue": "9'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Enzo Fernández"
+          }
+        }
+      ],
+      "shortText": "Enzo Fernández Goal - Free-kick"
+    },
+    {
+      "id": "52707572",
+      "type": {
+        "id": "70",
+        "text": "Goal",
+        "type": "goal"
+      },
+      "clock": {
+        "value": 674,
+        "displayValue": "12'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Brian Brobbey"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Enzo Le Fée"
+          }
+        }
+      ],
+      "shortText": "Brian Brobbey Goal"
+    },
+    {
+      "id": "52710812",
+      "type": {
+        "id": "70",
+        "text": "Goal",
+        "type": "goal"
+      },
+      "clock": {
+        "value": 1735,
+        "displayValue": "29'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Rayan Cherki"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Antoine Semenyo"
+          }
+        }
+      ],
+      "shortText": "Rayan Cherki Goal"
+    },
+    {
+      "id": "52711393",
+      "type": {
+        "id": "70",
+        "text": "Goal",
+        "type": "goal"
+      },
+      "clock": {
+        "value": 1956,
+        "displayValue": "33'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Brian Brobbey"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Thomas Meunier"
+          }
+        }
+      ],
+      "shortText": "Brian Brobbey Goal"
+    },
+    {
+      "id": "52711862",
+      "type": {
+        "id": "129",
+        "text": "Start Delay",
+        "type": "start-delay"
+      },
+      "clock": {
+        "value": 1958,
+        "displayValue": "33'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      }
+    },
+    {
+      "id": "52711864",
+      "type": {
+        "id": "130",
+        "text": "End Delay",
+        "type": "end-delay"
+      },
+      "clock": {
+        "value": 2161,
+        "displayValue": "37'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      }
+    },
+    {
+      "id": "52713240",
+      "type": {
+        "id": "70",
+        "text": "Goal",
+        "type": "goal"
+      },
+      "clock": {
+        "value": 2560,
+        "displayValue": "43'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Antoine Semenyo"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Marc Guéhi"
+          }
+        }
+      ],
+      "shortText": "Antoine Semenyo Goal"
+    },
+    {
+      "id": "52714454",
+      "type": {
+        "id": "81",
+        "text": "Halftime",
+        "type": "halftime"
+      },
+      "clock": {
+        "value": 2700,
+        "displayValue": "45'+6'"
+      },
+      "scoringPlay": false
+    },
+    {
+      "id": "52716319",
+      "type": {
+        "id": "82",
+        "text": "Start 2nd Half",
+        "type": "start-2nd-half"
+      },
+      "clock": {
+        "value": 2700,
+        "displayValue": "45'"
+      },
+      "scoringPlay": false
+    },
+    {
+      "id": "52718815",
+      "type": {
+        "id": "70",
+        "text": "Goal",
+        "type": "goal"
+      },
+      "clock": {
+        "value": 3367,
+        "displayValue": "57'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Antoine Semenyo"
+          }
+        }
+      ],
+      "shortText": "Antoine Semenyo Goal"
+    },
+    {
+      "id": "52719340",
+      "type": {
+        "id": "70",
+        "text": "Goal",
+        "type": "goal"
+      },
+      "clock": {
+        "value": 3523,
+        "displayValue": "59'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Brian Brobbey"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Nilson Angulo"
+          }
+        }
+      ],
+      "shortText": "Brian Brobbey Goal"
+    },
+    {
+      "id": "52719549",
+      "type": {
+        "id": "76",
+        "text": "Substitution",
+        "type": "substitution"
+      },
+      "clock": {
+        "value": 3580,
+        "displayValue": "60'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Malick Fofana"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Nilson Angulo"
+          }
+        }
+      ],
+      "shortText": "Malick Fofana Substitution"
+    },
+    {
+      "id": "52721162",
+      "type": {
+        "id": "76",
+        "text": "Substitution",
+        "type": "substitution"
+      },
+      "clock": {
+        "value": 4078,
+        "displayValue": "68'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Wilson Isidor"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Noah Sadiki"
+          }
+        }
+      ],
+      "shortText": "Wilson Isidor Substitution"
+    },
+    {
+      "id": "52722323",
+      "type": {
+        "id": "76",
+        "text": "Substitution",
+        "type": "substitution"
+      },
+      "clock": {
+        "value": 4452,
+        "displayValue": "75'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Jérémy Doku"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Iliman Ndiaye"
+          }
+        }
+      ],
+      "shortText": "Jérémy Doku Substitution"
+    },
+    {
+      "id": "52723189",
+      "type": {
+        "id": "76",
+        "text": "Substitution",
+        "type": "substitution"
+      },
+      "clock": {
+        "value": 4714,
+        "displayValue": "79'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "366",
+        "displayName": "Sunderland"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Trai Hume"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Thomas Meunier"
+          }
+        }
+      ],
+      "shortText": "Trai Hume Substitution"
+    },
+    {
+      "id": "52723975",
+      "type": {
+        "id": "70",
+        "text": "Goal",
+        "type": "goal"
+      },
+      "clock": {
+        "value": 4858,
+        "displayValue": "81'"
+      },
+      "scoringPlay": true,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Erling Haaland"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Josko Gvardiol"
+          }
+        }
+      ],
+      "shortText": "Erling Haaland Goal"
+    },
+    {
+      "id": "52723976",
+      "type": {
+        "id": "129",
+        "text": "Start Delay",
+        "type": "start-delay"
+      },
+      "clock": {
+        "value": 4936,
+        "displayValue": "83'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      }
+    },
+    {
+      "id": "52723978",
+      "type": {
+        "id": "130",
+        "text": "End Delay",
+        "type": "end-delay"
+      },
+      "clock": {
+        "value": 4950,
+        "displayValue": "83'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      }
+    },
+    {
+      "id": "52724380",
+      "type": {
+        "id": "76",
+        "text": "Substitution",
+        "type": "substitution"
+      },
+      "clock": {
+        "value": 5083,
+        "displayValue": "85'"
+      },
+      "scoringPlay": false,
+      "team": {
+        "id": "382",
+        "displayName": "Manchester City"
+      },
+      "participants": [
+        {
+          "athlete": {
+            "displayName": "Nico O'Reilly"
+          }
+        },
+        {
+          "athlete": {
+            "displayName": "Rayan Cherki"
+          }
+        }
+      ],
+      "shortText": "Nico O'Reilly Substitution"
+    },
+    {
+      "id": "52726352",
+      "type": {
+        "id": "83",
+        "text": "End Regular Time",
+        "type": "end-regular-time"
+      },
+      "clock": {
+        "value": 5400,
+        "displayValue": "90'+6'"
+      },
+      "scoringPlay": false
+    }
+  ]
+}

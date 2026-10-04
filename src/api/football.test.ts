@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { COMPETITIONS, getUpcomingMatches } from './football.ts'
+import { COMPETITIONS, getMatchDetails, getUpcomingMatches, MatchDetailsError } from './football.ts'
+import type { Match } from './types.ts'
 
 const NOW = new Date('2026-10-20T12:00:00Z') // window: 2026-10-19T23:00Z to 2026-10-28T00:00Z
 
@@ -157,5 +158,78 @@ describe('getUpcomingMatches', () => {
       matches: [],
       failedCompetitionIds: COMPETITIONS.map((c) => c.id),
     })
+  })
+})
+
+describe('getMatchDetails', () => {
+  const match: Match = {
+    id: '401879272',
+    homeTeam: { id: '382', name: 'Manchester City' },
+    awayTeam: { id: '366', name: 'Sunderland' },
+    competition: { id: 'eng.1', name: 'English Premier League' },
+    startTime: '2026-09-20T13:00:00.000Z',
+    status: 'live',
+    events: [],
+  }
+  const summary = {
+    header: {
+      competitions: [
+        {
+          status: { type: { name: 'STATUS_SECOND_HALF', state: 'in' } },
+          competitors: [
+            { homeAway: 'home', score: '1' },
+            { homeAway: 'away', score: '0' },
+          ],
+        },
+      ],
+    },
+    keyEvents: [
+      {
+        id: 'g1',
+        type: { type: 'goal' },
+        clock: { value: 600, displayValue: "10'" },
+        team: { id: '382' },
+        scoringPlay: true,
+        participants: [{ athlete: { displayName: 'Erling Haaland' } }],
+      },
+    ],
+  }
+
+  it('requests the summary for the match over HTTPS and normalizes it', async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(JSON.stringify(summary)))
+    const details = await getMatchDetails(match, { fetchImpl })
+    expect(fetchImpl).toHaveBeenCalledOnce()
+    expect(String(fetchImpl.mock.calls[0][0])).toBe(
+      'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/summary?event=401879272',
+    )
+    expect(details).toMatchObject({
+      status: 'live',
+      score: { home: 1, away: 0 },
+      events: [{ id: 'g1', type: 'goal', minute: "10'", teamId: '382', player: 'Erling Haaland' }],
+    })
+  })
+
+  it.each([
+    ['a network error', () => Promise.reject(new TypeError('Failed to fetch'))],
+    ['a timeout', () => Promise.reject(new DOMException('Timed out', 'TimeoutError'))],
+    ['an HTTP error', async () => new Response('', { status: 404 })],
+    ['invalid JSON', async () => new Response('{nope')],
+    ['an unusable body', async () => new Response('[]')],
+  ])('throws MatchDetailsError for %s', async (_label, reply) => {
+    await expect(getMatchDetails(match, { fetchImpl: vi.fn(reply) })).rejects.toBeInstanceOf(
+      MatchDetailsError,
+    )
+  })
+
+  it('does not wrap unexpected errors', async () => {
+    const bug = new RangeError('bug')
+    const broken = {
+      ...match,
+      get homeTeam(): Match['homeTeam'] {
+        throw bug
+      },
+    }
+    const fetchImpl = vi.fn(async () => new Response(JSON.stringify(summary)))
+    await expect(getMatchDetails(broken, { fetchImpl })).rejects.toBe(bug)
   })
 })

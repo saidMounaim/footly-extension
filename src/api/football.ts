@@ -1,5 +1,11 @@
 import { monthsToRequest, upcomingWindow } from '../lib/date.ts'
-import { EspnResponseError, normalizeScoreboard, scoreboardUrl } from './espn.ts'
+import {
+  EspnResponseError,
+  normalizeScoreboard,
+  normalizeSummary,
+  scoreboardUrl,
+  summaryUrl,
+} from './espn.ts'
 import type { Match } from './types.ts'
 
 /** Competitions shown before favorites exist, in display tie-break order. */
@@ -25,34 +31,40 @@ interface UpcomingMatchesOptions {
 }
 
 /** A request that failed for an expected reason: network, timeout, HTTP status, or body. */
-class ScoreboardRequestError extends Error {
+class ProviderRequestError extends Error {
   constructor(message: string, options?: ErrorOptions) {
     super(message, options)
-    this.name = 'ScoreboardRequestError'
+    this.name = 'ProviderRequestError'
   }
 }
 
-async function fetchScoreboard(url: string, fetchImpl: typeof fetch): Promise<Match[]> {
+/** Thrown by getMatchDetails when the details could not be loaded for an expected reason. */
+export class MatchDetailsError extends Error {
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options)
+    this.name = 'MatchDetailsError'
+  }
+}
+
+async function fetchJson(url: string, fetchImpl: typeof fetch): Promise<unknown> {
   let response: Response
   try {
     response = await fetchImpl(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
   } catch (cause) {
-    throw new ScoreboardRequestError(`Request failed: ${url}`, { cause })
+    throw new ProviderRequestError(`Request failed: ${url}`, { cause })
   }
   if (!response.ok) {
-    throw new ScoreboardRequestError(`HTTP ${response.status}: ${url}`)
+    throw new ProviderRequestError(`HTTP ${response.status}: ${url}`)
   }
-  let body: unknown
   try {
-    body = await response.json()
+    return await response.json()
   } catch (cause) {
-    throw new ScoreboardRequestError(`Invalid JSON: ${url}`, { cause })
+    throw new ProviderRequestError(`Invalid JSON: ${url}`, { cause })
   }
-  return normalizeScoreboard(body)
 }
 
 function isExpectedFailure(reason: unknown): boolean {
-  return reason instanceof ScoreboardRequestError || reason instanceof EspnResponseError
+  return reason instanceof ProviderRequestError || reason instanceof EspnResponseError
 }
 
 /**
@@ -70,7 +82,12 @@ export async function getUpcomingMatches({
   const results = await Promise.allSettled(
     COMPETITIONS.map(async (competition) => {
       const pages = await Promise.all(
-        months.map((month) => fetchScoreboard(scoreboardUrl(competition.id, month), fetchImpl)),
+        months.map(async (month) =>
+          normalizeScoreboard(
+            await fetchJson(scoreboardUrl(competition.id, month), fetchImpl),
+            competition.id,
+          ),
+        ),
       )
       return pages.flat()
     }),
@@ -106,4 +123,23 @@ export async function getUpcomingMatches({
     )
 
   return { matches: upcoming, failedCompetitionIds }
+}
+
+/**
+ * Loads one match's current score, status, and event timeline. Expected
+ * failures throw MatchDetailsError; unexpected errors propagate unchanged.
+ */
+export async function getMatchDetails(
+  match: Match,
+  { fetchImpl = (input, init) => fetch(input, init) }: { fetchImpl?: typeof fetch } = {},
+): Promise<Match> {
+  try {
+    const body = await fetchJson(summaryUrl(match.competition.id, match.id), fetchImpl)
+    return normalizeSummary(body, match)
+  } catch (error) {
+    if (isExpectedFailure(error)) {
+      throw new MatchDetailsError(`Couldn't load details for match ${match.id}`, { cause: error })
+    }
+    throw error
+  }
 }

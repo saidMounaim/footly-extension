@@ -19,9 +19,26 @@ export type MatchStatus =
   | 'postponed'
   | 'cancelled'
 
-// Placeholder until feature 2 defines match events.
+export type MatchEventType =
+  | 'goal'
+  | 'own-goal'
+  | 'penalty-goal'
+  | 'penalty-missed'
+  | 'yellow-card'
+  | 'red-card'
+  | 'substitution'
+
 export interface MatchEvent {
   id: string
+  type: MatchEventType
+  /** Provider display minute, e.g. "23'" or "90'+4'". */
+  minute: string
+  /** Id of the home or away team, when the provider names one of them. */
+  teamId?: string
+  /** Scorer, carded player, or substitute coming on. */
+  player?: string
+  /** Substitutions only: the player going off. */
+  playerOff?: string
 }
 
 export interface Match {
@@ -34,5 +51,6 @@ export interface Match {
   status: MatchStatus
   /** Only set for live, halftime, and finished matches. */
   score?: { home: number; away: number }
+  /** Chronological; empty when unknown or not loaded. */
   events: MatchEvent[]
 }
