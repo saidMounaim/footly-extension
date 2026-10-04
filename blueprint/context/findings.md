@@ -26,7 +26,7 @@ path is unlikely, and no test covers it.
 "takes status and score from the header" test. No current requirement is lost.
 **Resolution:** Fixed on fix/keep-list-score-when-summary-score-is-unusable: `normalizeSummary` now removes the score only for statuses without one (upcoming, postponed, cancelled) and keeps the list score for live, halftime, and finished when the summary's scores are unusable; four new tests cover missing and malformed scores. Awaiting /audit re-review.
 
-### F-03 [P3] open - Match row button wraps block elements
+### F-03 [P3] fixed - Match row button wraps block elements
 
 **File:** src/components/matches/MatchRow.tsx:65
 **Found:** 2026-10-03 by /audit independent (scope: current; lens: quality)
@@ -38,4 +38,4 @@ flag every row.
 **Suggested fix:** Swap the inner `div`/`p` for `span` elements with `block`
 (and the existing truncate/flex classes) so the visual layout is unchanged.
 No current requirement is lost.
-**Resolution:**
+**Resolution:** Fixed on fix/phrasing-content-in-match-row-button: the row button's inner `div`/`p` elements are now `span`s with `block`, keeping the same classes; no `div` or `p` remains inside the button. Awaiting /audit re-review.

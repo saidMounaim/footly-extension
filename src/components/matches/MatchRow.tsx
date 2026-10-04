@@ -62,14 +62,14 @@ export function MatchRow({ match, onSelect }: MatchRowProps) {
         aria-label={`${match.homeTeam.name} vs ${match.awayTeam.name}, ${statusLabel(match)}`}
         className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
       >
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-xs text-muted">{match.competition.name}</p>
-          <p className="truncate text-sm text-foreground">{match.homeTeam.name}</p>
-          <p className="truncate text-sm text-foreground">{match.awayTeam.name}</p>
-        </div>
-        <div className="shrink-0 text-right text-sm">
+        <span className="block min-w-0 flex-1">
+          <span className="block truncate text-xs text-muted">{match.competition.name}</span>
+          <span className="block truncate text-sm text-foreground">{match.homeTeam.name}</span>
+          <span className="block truncate text-sm text-foreground">{match.awayTeam.name}</span>
+        </span>
+        <span className="block shrink-0 text-right text-sm">
           <StatusText match={match} />
-        </div>
+        </span>
       </button>
     </li>
   )
