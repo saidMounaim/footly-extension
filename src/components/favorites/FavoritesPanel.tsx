@@ -29,7 +29,7 @@ function NotificationsSwitch({ notifications }: { notifications: NotificationsSe
           Match notifications
         </p>
         <p id="notifications-help" className="text-xs text-muted">
-          Kick-off, half-time, and full-time alerts for your favorite teams.
+          Kick-off, half-time, full-time, goal, and red card alerts for your favorite teams.
         </p>
       </div>
       <button

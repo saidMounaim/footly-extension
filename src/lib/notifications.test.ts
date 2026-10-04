@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import type { Match, MatchStatus } from '../api/types.ts'
+import type { Match, MatchEvent as TimelineEvent, MatchStatus } from '../api/types.ts'
 import type { StorageArea } from './favorites.ts'
 import { FavoritesStorageError } from './favorites.ts'
 import {
   NOTIFICATIONS_ENABLED_KEY,
+  eventAlerts,
+  eventNotificationContent,
+  eventNotificationId,
   WATCHED_MATCHES_KEY,
   loadNotificationsEnabled,
   loadWatchedMatches,
@@ -99,6 +102,19 @@ describe('parseWatchedMatches', () => {
     expect(parseWatchedMatches(stored)).toEqual([good])
   })
 
+  it('keeps valid seen event ids and treats anything else as not fetched yet', () => {
+    const [kept] = parseWatchedMatches([watched({ seenEventIds: ['e1', 'e2'] })])
+    expect(kept.seenEventIds).toEqual(['e1', 'e2'])
+    const [cleaned] = parseWatchedMatches([
+      { ...watched(), seenEventIds: ['e1', 42, '', 'e1', 'e2'] },
+    ])
+    expect(cleaned.seenEventIds).toEqual(['e1', 'e2'])
+    const [missing] = parseWatchedMatches([watched()])
+    expect(missing).not.toHaveProperty('seenEventIds')
+    const [invalid] = parseWatchedMatches([{ ...watched(), seenEventIds: 'e1' }])
+    expect(invalid).not.toHaveProperty('seenEventIds')
+  })
+
   it('reads what the worker stores', async () => {
     const { area } = memoryArea({ [WATCHED_MATCHES_KEY]: [watched({ status: 'live' })] })
     expect(await loadWatchedMatches(area)).toEqual([watched({ status: 'live' })])
@@ -127,6 +143,16 @@ describe('mergePlan', () => {
       at(0),
     )
     expect(plan).toEqual([watched({ status: 'upcoming', startTime: moved })])
+  })
+
+  it('keeps the seen event ids of a known match', () => {
+    const plan = mergePlan(
+      [watched({ status: 'live', seenEventIds: ['e1'] })],
+      [match({ status: 'live' })],
+      favorites,
+      at(10 * MIN),
+    )
+    expect(plan).toEqual([watched({ status: 'live', seenEventIds: ['e1'] })])
   })
 
   it('keeps a known match that left the upcoming list until its cutoff', () => {
@@ -220,5 +246,92 @@ describe('notificationContent', () => {
 
   it('uses one id per match and event', () => {
     expect(notificationId('m1', 'halftime')).toBe('footly:m1:halftime')
+  })
+})
+
+describe('eventAlerts', () => {
+  const event = (id: string, type: TimelineEvent['type'], extra: Partial<TimelineEvent> = {}) =>
+    ({ id, type, minute: "10'", ...extra }) as TimelineEvent
+  const events = [
+    event('e1', 'goal'),
+    event('e2', 'yellow-card'),
+    event('e3', 'substitution'),
+    event('e4', 'red-card'),
+    event('e5', 'penalty-missed'),
+    event('e6', 'own-goal'),
+    event('e7', 'penalty-goal'),
+  ]
+
+  it('records the first fetch silently', () => {
+    expect(eventAlerts(watched({ status: 'live' }), match({ status: 'live', events }))).toEqual({
+      alerts: [],
+      seenEventIds: ['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7'],
+    })
+  })
+
+  it('alerts unseen goals and red cards in timeline order', () => {
+    const result = eventAlerts(
+      watched({ status: 'live', seenEventIds: ['e1'] }),
+      match({ status: 'live', events }),
+    )
+    expect(result.alerts.map((alert) => alert.id)).toEqual(['e4', 'e6', 'e7'])
+    expect(result.seenEventIds).toEqual(['e1', 'e2', 'e3', 'e4', 'e5', 'e6', 'e7'])
+  })
+
+  it('keeps ids no longer in the summary', () => {
+    const result = eventAlerts(
+      watched({ status: 'live', seenEventIds: ['gone'] }),
+      match({ status: 'live', events: [event('e1', 'goal')] }),
+    )
+    expect(result.seenEventIds).toEqual(['gone', 'e1'])
+  })
+
+  it.each(['finished', 'postponed', 'cancelled'] as MatchStatus[])(
+    'records new events silently once the match is %s',
+    (status) => {
+      const result = eventAlerts(watched({ status: 'live', seenEventIds: [] }), match({ status, events }))
+      expect(result.alerts).toEqual([])
+      expect(result.seenEventIds).toHaveLength(7)
+    },
+  )
+})
+
+describe('eventNotificationContent', () => {
+  const scored = match({ status: 'live', score: { home: 1, away: 0 } })
+  const event = (extra: Partial<TimelineEvent>) =>
+    ({ id: 'e1', type: 'goal', minute: "23'", ...extra }) as TimelineEvent
+
+  it('describes goals with the score, scorer, and minute', () => {
+    expect(eventNotificationContent(scored, event({ player: 'Saka' }))).toEqual({
+      title: 'Goal! Arsenal 1–0 Chelsea',
+      message: "Saka 23' · Premier League",
+    })
+    expect(eventNotificationContent(scored, event({ type: 'penalty-goal', player: 'Saka' })).message).toBe(
+      "Saka (pen) 23' · Premier League",
+    )
+    expect(eventNotificationContent(scored, event({ type: 'own-goal', player: 'White' })).message).toBe(
+      "White (OG) 23' · Premier League",
+    )
+  })
+
+  it('names the team shown a red card', () => {
+    expect(
+      eventNotificationContent(scored, event({ type: 'red-card', teamId: '363', player: 'James', minute: "67'" })),
+    ).toEqual({ title: 'Red card: Chelsea', message: "James 67' · Premier League" })
+    expect(eventNotificationContent(scored, event({ type: 'red-card', teamId: '359' })).title).toBe(
+      'Red card: Arsenal',
+    )
+  })
+
+  it('falls back without a score, player, or team', () => {
+    expect(eventNotificationContent(match(), event({})).title).toBe('Goal! Arsenal vs Chelsea')
+    expect(eventNotificationContent(scored, event({})).message).toBe("23' · Premier League")
+    expect(eventNotificationContent(scored, event({ type: 'red-card' })).title).toBe(
+      'Red card: Arsenal vs Chelsea',
+    )
+  })
+
+  it('uses one id per match event', () => {
+    expect(eventNotificationId('m1', 'e9')).toBe('footly:m1:event:e9')
   })
 })

@@ -1,5 +1,5 @@
 import { COMPETITIONS } from '../api/football.ts'
-import type { Match, MatchStatus } from '../api/types.ts'
+import type { Match, MatchStatus, MatchEvent as TimelineEvent } from '../api/types.ts'
 import { formatScore } from '../components/matches/status.ts'
 import { readStoredKey, writeStoredKey, type StorageArea } from './favorites.ts'
 
@@ -25,6 +25,12 @@ const STATUSES: ReadonlySet<string> = new Set<MatchStatus>([
   'cancelled',
 ])
 const DONE: ReadonlySet<MatchStatus> = new Set<MatchStatus>(['finished', 'postponed', 'cancelled'])
+const ALERT_EVENT_TYPES: ReadonlySet<TimelineEvent['type']> = new Set<TimelineEvent['type']>([
+  'goal',
+  'own-goal',
+  'penalty-goal',
+  'red-card',
+])
 
 export type MatchEvent = 'kickoff' | 'halftime' | 'fulltime'
 
@@ -39,6 +45,8 @@ export interface WatchedMatch {
   away: { id: string; name: string }
   /** The last status Footly saw and acted on. */
   status: MatchStatus
+  /** Event ids already recorded; missing until the first summary is fetched. */
+  seenEventIds?: string[]
 }
 
 function nonEmptyString(value: unknown): value is string {
@@ -49,6 +57,12 @@ function parseSide(value: unknown): { id: string; name: string } | undefined {
   if (typeof value !== 'object' || value === null) return undefined
   const { id, name } = value as Record<string, unknown>
   return nonEmptyString(id) && nonEmptyString(name) ? { id, name } : undefined
+}
+
+/** Valid seen event ids, or undefined (not fetched yet) when the value isn't a string array. */
+function parseSeenEventIds(value: unknown): string[] | undefined {
+  if (!Array.isArray(value)) return undefined
+  return [...new Set(value.filter(nonEmptyString))]
 }
 
 /** The switch is off only when exactly `false` is stored. */
@@ -63,10 +77,8 @@ export function parseWatchedMatches(value: unknown): WatchedMatch[] {
   const watched: WatchedMatch[] = []
   for (const entry of value) {
     if (typeof entry !== 'object' || entry === null) continue
-    const { id, competitionId, competitionName, startTime, home, away, status } = entry as Record<
-      string,
-      unknown
-    >
+    const { id, competitionId, competitionName, startTime, home, away, status, seenEventIds } =
+      entry as Record<string, unknown>
     const homeSide = parseSide(home)
     const awaySide = parseSide(away)
     if (
@@ -85,6 +97,7 @@ export function parseWatchedMatches(value: unknown): WatchedMatch[] {
       continue
     }
     seen.add(id)
+    const seenIds = parseSeenEventIds(seenEventIds)
     watched.push({
       id,
       competitionId,
@@ -93,6 +106,7 @@ export function parseWatchedMatches(value: unknown): WatchedMatch[] {
       home: homeSide,
       away: awaySide,
       status: status as MatchStatus,
+      ...(seenIds && { seenEventIds: seenIds }),
     })
   }
   return watched
@@ -146,8 +160,8 @@ const involves = (watched: WatchedMatch, teamIds: ReadonlySet<string>) =>
 /**
  * The watched list after an hourly plan: favorite teams' matches from `matches`
  * are added with their current status (no alert for a first sighting) or keep
- * their stored status; matches no longer involving a favorite team, or more
- * than 4 hours past kickoff, are dropped.
+ * their stored status and seen events; matches no longer involving a favorite
+ * team, or more than 4 hours past kickoff, are dropped.
  */
 export function mergePlan(
   watched: WatchedMatch[],
@@ -161,7 +175,16 @@ export function mergePlan(
     const fresh = toWatchedMatch(match)
     if (!involves(fresh, favoriteTeamIds)) continue
     const known = merged.get(fresh.id)
-    merged.set(fresh.id, known ? { ...fresh, status: known.status } : fresh)
+    merged.set(
+      fresh.id,
+      known
+        ? {
+            ...fresh,
+            status: known.status,
+            ...(known.seenEventIds && { seenEventIds: known.seenEventIds }),
+          }
+        : fresh,
+    )
   }
   return [...merged.values()].filter(
     (entry) =>
@@ -231,4 +254,50 @@ export function notificationContent(
 /** One id per match and event, so a repeat replaces the earlier notification. */
 export function notificationId(matchId: string, event: MatchEvent): string {
   return `footly:${matchId}:${event}`
+}
+
+/**
+ * Goals and red cards in `fresh` not yet seen for this match, in timeline
+ * order, plus the updated seen ids. The first fetch and a finished, postponed,
+ * or cancelled match record events without alerting.
+ */
+export function eventAlerts(
+  watched: WatchedMatch,
+  fresh: Match,
+): { alerts: TimelineEvent[]; seenEventIds: string[] } {
+  const freshIds = fresh.events.map((event) => event.id)
+  if (!watched.seenEventIds) return { alerts: [], seenEventIds: [...new Set(freshIds)] }
+  const seen = new Set(watched.seenEventIds)
+  const alerts = DONE.has(fresh.status)
+    ? []
+    : fresh.events.filter((event) => ALERT_EVENT_TYPES.has(event.type) && !seen.has(event.id))
+  return { alerts, seenEventIds: [...new Set([...watched.seenEventIds, ...freshIds])] }
+}
+
+const GOAL_SUFFIX: Partial<Record<TimelineEvent['type'], string>> = {
+  'penalty-goal': ' (pen)',
+  'own-goal': ' (OG)',
+}
+
+/** Plain-text notification for a goal or red card. */
+export function eventNotificationContent(
+  match: Match,
+  event: TimelineEvent,
+): { title: string; message: string } {
+  const home = match.homeTeam.name
+  const away = match.awayTeam.name
+  const who = event.player ? `${event.player}${GOAL_SUFFIX[event.type] ?? ''} ` : ''
+  const message = `${who}${event.minute} · ${match.competition.name}`
+  if (event.type === 'red-card') {
+    const team =
+      event.teamId === match.homeTeam.id ? home : event.teamId === match.awayTeam.id ? away : null
+    return { title: `Red card: ${team ?? `${home} vs ${away}`}`, message }
+  }
+  const teams = match.score ? `${home} ${formatScore(match.score)} ${away}` : `${home} vs ${away}`
+  return { title: `Goal! ${teams}`, message }
+}
+
+/** One id per match event, so an event is never shown twice. */
+export function eventNotificationId(matchId: string, eventId: string): string {
+  return `footly:${matchId}:event:${eventId}`
 }
