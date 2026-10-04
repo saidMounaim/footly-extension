@@ -15,13 +15,13 @@
 **Suggested fix:** Add one test where `fetchImpl` throws a non-network error and assert `getTeamCatalog` rejects with that same error. Requirement lost: none.
 **Resolution:**
 
-### F-03 [P2] open - Detail kickoff refresh can be overwritten by the slower foreground load
+### F-03 [P2] fixed - Detail kickoff refresh can be overwritten by the slower foreground load
 
 **File:** src/hooks/useMatchDetails.ts:53
 **Found:** 2026-10-04 by /audit independent (scope: current; lens: quality)
 **Why it matters:** `useKickoffChecks` in `MatchDetail` schedules from `shown`, which falls back to the `match` prop while the details load is still in flight, so a kickoff check can fire during that load (for example, the detail opened a few seconds before kickoff + 1, or a detail Retry just before a check, with a request taking up to the 10 s timeout). `refresh` and the foreground load then write `settled` for the same key with no ordering guard. If the background refresh lands first, the older foreground response overwrites it: a stale "upcoming" result undoes the Live switch until the next check, and a foreground failure replaces the freshly loaded details with the full "Couldn't load match details." error. This contradicts the spec intent that an old response never overwrites newer data. The list hook is not affected because it only schedules checks after a successful load.
 **Suggested fix:** In `useMatchDetails.refresh`, skip the refetch while the current key has not settled yet (the in-flight load already returns fresh data), for example by tracking the settled key in a ref and returning early when it differs from `currentKey.current`. Requirement lost: none.
-**Resolution:**
+**Resolution:** Fixed on fix/detail-refresh-overwritten-by-first-load: `useMatchDetails` records the key of the last settled foreground load in `settledKey`, and `refresh` returns without a request until the current key has settled, so a background refresh can no longer race the first load. Awaiting re-review.
 
 ### F-04 [P3] open - Ellipsis character in new countdown doc comment
 

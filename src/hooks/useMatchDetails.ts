@@ -29,17 +29,23 @@ export function useMatchDetails(match: Match): {
   const [settled, setSettled] = useState<Settled | null>(null)
   const key = `${match.competition.id}/${match.id}#${attempt}`
   const currentKey = useRef(key)
+  // Key of the last foreground load that settled; refresh waits for the current one.
+  const settledKey = useRef('')
 
   useEffect(() => {
     currentKey.current = key
     let cancelled = false
     getMatchDetails(match).then(
       (details) => {
-        if (!cancelled) setSettled({ key, status: 'success', match: details })
+        if (cancelled) return
+        settledKey.current = key
+        setSettled({ key, status: 'success', match: details })
       },
       (error: unknown) => {
         reportUnexpected(error)
-        if (!cancelled) setSettled({ key, status: 'error' })
+        if (cancelled) return
+        settledKey.current = key
+        setSettled({ key, status: 'error' })
       },
     )
     return () => {
@@ -52,9 +58,11 @@ export function useMatchDetails(match: Match): {
 
   const refresh = useCallback(async () => {
     const started = currentKey.current
+    // The foreground load still in flight already returns fresh details.
+    if (!started || settledKey.current !== started) return
     try {
       const details = await getMatchDetails(match)
-      if (started && started === currentKey.current) {
+      if (started === currentKey.current) {
         setSettled({ key: started, status: 'success', match: details })
       }
     } catch (error) {
