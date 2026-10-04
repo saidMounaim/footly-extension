@@ -28,7 +28,7 @@
 
 - [x] 10. **Match Center** - Provide a focused match view with score, timeline, teams, lineups, statistics, and other available match information.
 
-- [ ] 11. **Smart Data Refresh & Caching** - Refresh live matches intelligently while caching stable data to minimize API requests, battery usage, and extension resource consumption.
+- [x] 11. **Smart Data Refresh & Caching** - Refresh live matches intelligently while caching stable data to minimize API requests, battery usage, and extension resource consumption.
 
 - [ ] 12. **Personalized Home** - Build a simple personalized dashboard that prioritizes favorite teams, live matches, and the next important games.
 

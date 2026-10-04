@@ -20,7 +20,7 @@ function reportUnexpected(error: unknown) {
 }
 
 /** chrome.storage.local when running as an extension; undefined on a plain page. */
-function extensionStorage(): StorageArea | undefined {
+export function extensionStorage(): StorageArea | undefined {
   return typeof chrome === 'undefined' ? undefined : chrome.storage?.local
 }
 

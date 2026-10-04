@@ -9,6 +9,7 @@ import { SearchPanel } from './components/search/SearchPanel.tsx'
 import { useFavoriteCompetitions } from './hooks/useFavoriteCompetitions.ts'
 import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
 import { useKickoffChecks } from './hooks/useKickoffChecks.ts'
+import { useLiveRefresh } from './hooks/useLiveRefresh.ts'
 import { useMatchList } from './hooks/useMatchList.ts'
 import { useNotificationsSetting } from './hooks/useNotificationsSetting.ts'
 import { useNow } from './hooks/useNow.ts'
@@ -24,6 +25,7 @@ function App() {
     [state],
   )
   useKickoffChecks(upcoming, refresh)
+  useLiveRefresh(upcoming, refresh)
   const favorites = useFavoriteTeams()
   const competitions = useFavoriteCompetitions()
   const notifications = useNotificationsSetting()

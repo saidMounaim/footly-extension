@@ -3,6 +3,7 @@ import type { Match } from '../../api/types.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
 import { useKickoffChecks } from '../../hooks/useKickoffChecks.ts'
+import { useLiveRefresh } from '../../hooks/useLiveRefresh.ts'
 import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
 import { useNow } from '../../hooks/useNow.ts'
 import { detailCountdown } from '../../lib/countdown.ts'
@@ -69,6 +70,7 @@ export function MatchDetail({ match, favorites, onBack }: MatchDetailProps) {
   const shown = state.status === 'success' ? state.match : match
   const checked = useMemo(() => [shown], [shown])
   useKickoffChecks(checked, refresh)
+  useLiveRefresh(checked, refresh)
 
   useEffect(() => {
     headingRef.current?.focus()

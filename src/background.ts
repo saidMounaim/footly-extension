@@ -1,6 +1,12 @@
 import { COMPETITIONS, getMatchDetails, getMatchList, MatchDetailsError } from './api/football.ts'
 import type { MatchStatus } from './api/types.ts'
-import { FAVORITE_TEAMS_KEY, loadFavoriteTeams, type StorageArea } from './lib/favorites.ts'
+import { loadMatchListSnapshot, matchListFreshness, saveMatchListSnapshot } from './lib/cache.ts'
+import {
+  FAVORITE_TEAMS_KEY,
+  FavoritesStorageError,
+  loadFavoriteTeams,
+  type StorageArea,
+} from './lib/favorites.ts'
 import {
   NOTIFICATIONS_ENABLED_KEY,
   eventAlerts,
@@ -60,6 +66,25 @@ async function stopWatching() {
   await saveWatchedMatches(storage, [])
 }
 
+function reportUnexpectedCacheError(error: unknown) {
+  if (!(error instanceof FavoritesStorageError)) {
+    console.error('Unexpected error while accessing the match cache', error)
+  }
+}
+
+/** The fresh saved match list when there is one, otherwise a fetched list that is then saved. */
+async function currentMatchList() {
+  try {
+    const snapshot = await loadMatchListSnapshot(storage)
+    if (snapshot && matchListFreshness(snapshot, new Date()) === 'fresh') return snapshot.result
+  } catch (error) {
+    reportUnexpectedCacheError(error)
+  }
+  const result = await getMatchList()
+  await saveMatchListSnapshot(storage, result, new Date()).catch(reportUnexpectedCacheError)
+  return result
+}
+
 async function plan() {
   const [enabled, favorites] = await Promise.all([
     loadNotificationsEnabled(storage),
@@ -69,7 +94,7 @@ async function plan() {
     await stopWatching()
     return
   }
-  const [result, watched] = await Promise.all([getMatchList(), loadWatchedMatches(storage)])
+  const [result, watched] = await Promise.all([currentMatchList(), loadWatchedMatches(storage)])
   const now = new Date()
   if (result.failedCompetitionIds.length === COMPETITIONS.length) {
     await scheduleWatch(watched, now)
