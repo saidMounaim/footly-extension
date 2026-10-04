@@ -7,7 +7,7 @@
 > finding is `open` or `fixed`, then archives resolved findings with the work
 > and resets this file.
 
-### F-02 [P3] open - Summary with a valid status but unusable score drops the list's score
+### F-02 [P3] fixed - Summary with a valid status but unusable score drops the list's score
 
 **File:** src/api/espn.ts:231
 **Found:** 2026-10-03 by /audit independent (scope: current; lens: quality)
@@ -24,7 +24,7 @@ path is unlikely, and no test covers it.
 (upcoming, postponed, cancelled); for live, halftime, and finished keep
 `match.score` when `toScore` returns undefined. Add one case to the
 "takes status and score from the header" test. No current requirement is lost.
-**Resolution:**
+**Resolution:** Fixed on fix/keep-list-score-when-summary-score-is-unusable: `normalizeSummary` now removes the score only for statuses without one (upcoming, postponed, cancelled) and keeps the list score for live, halftime, and finished when the summary's scores are unusable; four new tests cover missing and malformed scores. Awaiting /audit re-review.
 
 ### F-03 [P3] open - Match row button wraps block elements
 

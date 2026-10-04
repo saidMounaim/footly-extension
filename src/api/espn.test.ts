@@ -349,6 +349,35 @@ describe('normalizeSummary', () => {
   })
 
   it.each([
+    ['STATUS_SECOND_HALF', 'in', 'live', undefined, undefined],
+    ['STATUS_HALFTIME', 'in', 'halftime', undefined, undefined],
+    ['STATUS_FIRST_HALF', 'in', 'live', '-', '0'],
+    ['STATUS_FULL_TIME', 'post', 'finished', '2', 'x'],
+  ])(
+    'keeps the list score when a %s summary has unusable scores',
+    (name, state, expected, homeScore, awayScore) => {
+      const match = normalizeSummary(
+        {
+          header: {
+            competitions: [
+              {
+                status: { type: { name, state } },
+                competitors: [
+                  { homeAway: 'home', score: homeScore },
+                  { homeAway: 'away', score: awayScore },
+                ],
+              },
+            ],
+          },
+        },
+        { ...listMatch, status: 'live', score: { home: 1, away: 0 } },
+      )
+      expect(match.status).toBe(expected)
+      expect(match.score).toEqual({ home: 1, away: 0 })
+    },
+  )
+
+  it.each([
     ['null', null],
     ['an array', []],
     ['a string', 'oops'],

@@ -228,6 +228,8 @@ export function normalizeSummary(json: unknown, match: Match): Match {
   updated.status = status
   const score = toScore(status, home, away)
   if (score) updated.score = score
-  else delete updated.score
+  else if (status !== 'live' && status !== 'halftime' && status !== 'finished') {
+    delete updated.score
+  }
   return updated
 }
