@@ -1,9 +1,10 @@
 import type { Match } from '../../api/types.ts'
-import { formatKickoff } from '../../lib/date.ts'
-import { formatScore, statusLabel } from './status.ts'
+import { formatScore, statusLabel, upcomingLabel } from './status.ts'
 
 interface StatusTextProps {
   match: Match
+  /** Enables the "in N min" countdown for upcoming matches. */
+  now?: Date
 }
 
 const pillClass = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs'
@@ -18,7 +19,7 @@ function Score({ score }: { score: string | null }) {
   )
 }
 
-export function StatusText({ match }: StatusTextProps) {
+export function StatusText({ match, now }: StatusTextProps) {
   const score = match.score ? formatScore(match.score) : null
   switch (match.status) {
     case 'live':
@@ -69,7 +70,7 @@ export function StatusText({ match }: StatusTextProps) {
     case 'upcoming':
       return (
         <time className="tabular-nums text-foreground" dateTime={match.startTime}>
-          {formatKickoff(new Date(match.startTime))}
+          {upcomingLabel(match, now)}
         </time>
       )
   }
@@ -78,16 +79,17 @@ export function StatusText({ match }: StatusTextProps) {
 interface MatchRowProps {
   match: Match
   favorite?: boolean
+  now?: Date
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
 }
 
-export function MatchRow({ match, favorite = false, onSelect }: MatchRowProps) {
+export function MatchRow({ match, favorite = false, now, onSelect }: MatchRowProps) {
   return (
     <li>
       <button
         type="button"
         onClick={(event) => onSelect(match, event.currentTarget)}
-        aria-label={`${match.homeTeam.name} vs ${match.awayTeam.name}, ${statusLabel(match)}${
+        aria-label={`${match.homeTeam.name} vs ${match.awayTeam.name}, ${statusLabel(match, now)}${
           favorite ? ', favorite team' : ''
         }`}
         className="flex w-full items-center gap-3 px-4 py-2.5 text-left hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
@@ -108,7 +110,7 @@ export function MatchRow({ match, favorite = false, onSelect }: MatchRowProps) {
           <span className="block truncate text-sm text-foreground">{match.awayTeam.name}</span>
         </span>
         <span className="block shrink-0 text-right text-sm">
-          <StatusText match={match} />
+          <StatusText match={match} now={now} />
         </span>
       </button>
     </li>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { getMatchDetails, MatchDetailsError } from '../api/football.ts'
 import type { Match } from '../api/types.ts'
 
@@ -9,35 +9,63 @@ export type MatchDetailsState =
 
 type Settled = { key: string } & ({ status: 'success'; match: Match } | { status: 'error' })
 
-/** Loads the open match's details; responses for a match no longer open are ignored. */
-export function useMatchDetails(match: Match): { state: MatchDetailsState; retry: () => void } {
+function reportUnexpected(error: unknown) {
+  if (!(error instanceof MatchDetailsError)) {
+    console.error('Unexpected error while loading match details', error)
+  }
+}
+
+/**
+ * Loads the open match's details; responses for a match no longer open are
+ * ignored. `refresh` refetches in the background and keeps the shown details
+ * when it fails.
+ */
+export function useMatchDetails(match: Match): {
+  state: MatchDetailsState
+  retry: () => void
+  refresh: () => Promise<void>
+} {
   const [attempt, setAttempt] = useState(0)
   const [settled, setSettled] = useState<Settled | null>(null)
   const key = `${match.competition.id}/${match.id}#${attempt}`
+  const currentKey = useRef(key)
 
   useEffect(() => {
+    currentKey.current = key
     let cancelled = false
     getMatchDetails(match).then(
       (details) => {
         if (!cancelled) setSettled({ key, status: 'success', match: details })
       },
       (error: unknown) => {
-        if (!(error instanceof MatchDetailsError)) {
-          console.error('Unexpected error while loading match details', error)
-        }
+        reportUnexpected(error)
         if (!cancelled) setSettled({ key, status: 'error' })
       },
     )
     return () => {
       cancelled = true
+      currentKey.current = ''
     }
   }, [match, key])
 
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
 
-  if (!settled || settled.key !== key) return { state: { status: 'loading' }, retry }
+  const refresh = useCallback(async () => {
+    const started = currentKey.current
+    try {
+      const details = await getMatchDetails(match)
+      if (started && started === currentKey.current) {
+        setSettled({ key: started, status: 'success', match: details })
+      }
+    } catch (error) {
+      reportUnexpected(error)
+    }
+  }, [match])
+
+  if (!settled || settled.key !== key) return { state: { status: 'loading' }, retry, refresh }
   return {
     state: settled.status === 'success' ? { status: 'success', match: settled.match } : { status: 'error' },
     retry,
+    refresh,
   }
 }

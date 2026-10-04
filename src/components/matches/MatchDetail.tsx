@@ -1,8 +1,11 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import type { Match } from '../../api/types.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
+import { useKickoffChecks } from '../../hooks/useKickoffChecks.ts'
 import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
+import { useNow } from '../../hooks/useNow.ts'
+import { detailCountdown } from '../../lib/countdown.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
 import { StatusText } from './MatchRow.tsx'
 import { MatchTimeline, MatchTimelineSkeleton } from './MatchTimeline.tsx'
@@ -15,6 +18,8 @@ interface MatchDetailProps {
 }
 
 function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTeamsApi }) {
+  const upcoming = match.status === 'upcoming'
+  const now = useNow(upcoming ? 1000 : null)
   return (
     <div className="flex flex-col items-center gap-1 border-b border-border px-4 py-5">
       <div className="flex w-full items-center gap-3">
@@ -42,7 +47,12 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
       </div>
       <p className="text-sm">
         {match.status === 'upcoming' ? (
-          <span className="text-muted">{dayLabel(new Date(match.startTime), new Date())}</span>
+          <span className="flex flex-col items-center">
+            <span className="text-muted">{dayLabel(new Date(match.startTime), now)}</span>
+            <span className="tabular-nums text-foreground">
+              {detailCountdown(new Date(match.startTime), now)}
+            </span>
+          </span>
         ) : (
           <StatusText match={match} />
         )}
@@ -52,9 +62,11 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
 }
 
 export function MatchDetail({ match, favorites, onBack }: MatchDetailProps) {
-  const { state, retry } = useMatchDetails(match)
+  const { state, retry, refresh } = useMatchDetails(match)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const shown = state.status === 'success' ? state.match : match
+  const checked = useMemo(() => [shown], [shown])
+  useKickoffChecks(checked, refresh)
 
   useEffect(() => {
     headingRef.current?.focus()

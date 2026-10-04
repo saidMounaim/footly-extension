@@ -16,6 +16,8 @@ interface MatchListProps {
   view: ListTab
   favoriteIds: ReadonlySet<string>
   competitionIds: ReadonlySet<string>
+  /** Current time for upcoming countdowns. */
+  now: Date
   onRetry: () => void
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
 }
@@ -54,6 +56,7 @@ export function MatchList({
   view,
   favoriteIds,
   competitionIds,
+  now,
   onRetry,
   onSelect,
 }: MatchListProps) {
@@ -101,7 +104,7 @@ export function MatchList({
               </h2>
               <ul className="divide-y divide-border">
                 {favorites.map((match) => (
-                  <MatchRow key={match.id} match={match} favorite onSelect={onSelect} />
+                  <MatchRow key={match.id} match={match} favorite now={now} onSelect={onSelect} />
                 ))}
               </ul>
             </section>
@@ -113,7 +116,7 @@ export function MatchList({
               </h2>
               <ul className="divide-y divide-border">
                 {followed.map((match) => (
-                  <MatchRow key={match.id} match={match} onSelect={onSelect} />
+                  <MatchRow key={match.id} match={match} now={now} onSelect={onSelect} />
                 ))}
               </ul>
             </section>
@@ -125,7 +128,7 @@ export function MatchList({
               </h2>
               <ul className="divide-y divide-border">
                 {group.map((match) => (
-                  <MatchRow key={match.id} match={match} onSelect={onSelect} />
+                  <MatchRow key={match.id} match={match} now={now} onSelect={onSelect} />
                 ))}
               </ul>
             </section>

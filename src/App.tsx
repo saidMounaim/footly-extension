@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState } from 'react'
 import type { Match } from './api/types.ts'
 import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
 import { MatchDetail } from './components/matches/MatchDetail.tsx'
@@ -7,11 +7,21 @@ import { MatchTabs } from './components/matches/MatchTabs.tsx'
 import { MATCH_TABS, panelId, tabId, type MatchTab } from './components/matches/tabs.ts'
 import { useFavoriteCompetitions } from './hooks/useFavoriteCompetitions.ts'
 import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
+import { useKickoffChecks } from './hooks/useKickoffChecks.ts'
 import { useMatchList } from './hooks/useMatchList.ts'
+import { useNow } from './hooks/useNow.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 
+const NO_MATCHES: Match[] = []
+
 function App() {
-  const { state, retry } = useMatchList()
+  const { state, retry, refresh } = useMatchList()
+  const now = useNow(30_000)
+  const upcoming = useMemo(
+    () => (state.status === 'success' ? state.result.upcoming : NO_MATCHES),
+    [state],
+  )
+  useKickoffChecks(upcoming, refresh)
   const favorites = useFavoriteTeams()
   const competitions = useFavoriteCompetitions()
   const [tab, setTab] = useState<MatchTab>('upcoming')
@@ -73,6 +83,7 @@ function App() {
                   view={id}
                   favoriteIds={favorites.favoriteIds}
                   competitionIds={competitions.idSet}
+                  now={now}
                   onRetry={retry}
                   onSelect={openMatch}
                 />

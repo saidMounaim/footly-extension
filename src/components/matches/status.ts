@@ -1,4 +1,5 @@
 import type { Match } from '../../api/types.ts'
+import { rowCountdown } from '../../lib/countdown.ts'
 import { formatKickoff } from '../../lib/date.ts'
 
 /** Shared look for Retry and similar secondary buttons. */
@@ -9,8 +10,14 @@ export function formatScore(score: NonNullable<Match['score']>): string {
   return `${score.home}–${score.away}`
 }
 
-/** Plain-text status, used for accessible names: "Live 2–1", "Postponed", "15:00". */
-export function statusLabel(match: Match): string {
+/** Upcoming row text: the countdown within the hour when `now` is given, otherwise the kickoff time. */
+export function upcomingLabel(match: Match, now?: Date): string {
+  const kickoff = new Date(match.startTime)
+  return (now && rowCountdown(kickoff, now)) ?? formatKickoff(kickoff)
+}
+
+/** Plain-text status, used for accessible names: "Live 2–1", "Postponed", "15:00", "in 23 min". */
+export function statusLabel(match: Match, now?: Date): string {
   const score = match.score ? ` ${formatScore(match.score)}` : ''
   switch (match.status) {
     case 'live':
@@ -24,6 +31,6 @@ export function statusLabel(match: Match): string {
     case 'cancelled':
       return 'Cancelled'
     case 'upcoming':
-      return formatKickoff(new Date(match.startTime))
+      return upcomingLabel(match, now)
   }
 }

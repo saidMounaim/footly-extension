@@ -17,7 +17,7 @@
 
 - [x] 6. **Live Match Status** - Clearly distinguish upcoming, live, halftime, postponed, cancelled, and completed matches with compact status indicators.
 
-- [ ] 7. **Match Countdown** - Show a live countdown for upcoming matches and automatically switch to live match information when the game starts.
+- [x] 7. **Match Countdown** - Show a live countdown for upcoming matches and automatically switch to live match information when the game starts.
 
 - [ ] 8. **Goal & Match Notifications** - Notify users about goals, cards, match starts, halftime, and full-time results for their favorite teams.
 
