@@ -24,6 +24,13 @@ import {
   watchWindow,
   type WatchedMatch,
 } from './lib/notifications.ts'
+import {
+  NOTIFICATION_TYPES_KEY,
+  anyAlertsEnabled,
+  eventAlertAllowed,
+  loadNotificationTypes,
+  statusAlertAllowed,
+} from './lib/settings.ts'
 
 const PLAN_ALARM = 'footly-plan'
 const WATCH_ALARM = 'footly-watch'
@@ -86,11 +93,12 @@ async function currentMatchList() {
 }
 
 async function plan() {
-  const [enabled, favorites] = await Promise.all([
+  const [enabled, types, favorites] = await Promise.all([
     loadNotificationsEnabled(storage),
+    loadNotificationTypes(storage),
     loadFavoriteTeams(storage),
   ])
-  if (!enabled || favorites.length === 0) {
+  if (!enabled || !anyAlertsEnabled(types) || favorites.length === 0) {
     await stopWatching()
     return
   }
@@ -107,7 +115,11 @@ async function plan() {
 }
 
 async function watch() {
-  if (!(await loadNotificationsEnabled(storage))) {
+  const [enabled, types] = await Promise.all([
+    loadNotificationsEnabled(storage),
+    loadNotificationTypes(storage),
+  ])
+  if (!enabled || !anyAlertsEnabled(types)) {
     await stopWatching()
     return
   }
@@ -118,9 +130,12 @@ async function watch() {
       try {
         const fresh = await getMatchDetails(toMatch(entry))
         const event = statusEvent(entry.status, fresh.status)
-        if (event) await notify(notificationId(entry.id, event), notificationContent(fresh, event))
+        // Disabled types still update the stored status and seen ids, so they never replay later.
+        if (event && statusAlertAllowed(types, event)) {
+          await notify(notificationId(entry.id, event), notificationContent(fresh, event))
+        }
         const { alerts, seenEventIds } = eventAlerts(entry, fresh)
-        for (const alert of alerts) {
+        for (const alert of alerts.filter((found) => eventAlertAllowed(types, found.type))) {
           await notify(eventNotificationId(entry.id, alert.id), eventNotificationContent(fresh, alert))
         }
         updates.set(entry.id, { status: fresh.status, seenEventIds })
@@ -151,7 +166,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 })
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && (FAVORITE_TEAMS_KEY in changes || NOTIFICATIONS_ENABLED_KEY in changes)) {
+  const replan =
+    FAVORITE_TEAMS_KEY in changes ||
+    NOTIFICATIONS_ENABLED_KEY in changes ||
+    NOTIFICATION_TYPES_KEY in changes
+  if (area === 'local' && replan) {
     enqueue(plan)
   }
 })

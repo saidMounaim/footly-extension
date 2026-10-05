@@ -22,6 +22,8 @@ interface HomePanelProps {
   now: Date
   /** False while Home or the list is hidden; featured events then unmount and stop fetching. */
   active: boolean
+  /** How often featured live events refresh. */
+  liveRefreshMs: number
   onRetry: () => void
   onSelect: SelectMatch
   onOpenFavorites: () => void
@@ -39,11 +41,11 @@ function NoFavorites({ onOpenFavorites }: { onOpenFavorites: () => void }) {
 }
 
 /** Recent events of the featured live match, kept fresh while mounted. */
-function FeaturedEvents({ match }: { match: Match }) {
+function FeaturedEvents({ match, liveRefreshMs }: { match: Match; liveRefreshMs: number }) {
   const { state, retry, refresh } = useMatchDetails(match)
   const shown = state.status === 'success' ? state.match : match
   const checked = useMemo(() => [shown], [shown])
-  useLiveRefresh(checked, refresh)
+  useLiveRefresh(checked, refresh, liveRefreshMs)
   const events = recentEvents(shown.events, RECENT_EVENT_COUNT)
 
   return (
@@ -110,6 +112,7 @@ export function HomePanel({
   competitionIds,
   now,
   active,
+  liveRefreshMs,
   onRetry,
   onSelect,
   onOpenFavorites,
@@ -149,7 +152,9 @@ export function HomePanel({
           <ul className="divide-y divide-border">
             <MatchRow match={live[0]} favorite={isFavorite(live[0])} onSelect={onSelect} />
           </ul>
-          {active && <FeaturedEvents key={live[0].id} match={live[0]} />}
+          {active && (
+            <FeaturedEvents key={live[0].id} match={live[0]} liveRefreshMs={liveRefreshMs} />
+          )}
           <div className="border-b border-border px-4 pb-3 pt-1">
             <button
               type="button"

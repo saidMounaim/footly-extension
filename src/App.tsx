@@ -7,12 +7,15 @@ import { MatchList } from './components/matches/MatchList.tsx'
 import { MatchTabs } from './components/matches/MatchTabs.tsx'
 import { MATCH_TABS, panelId, tabId, type MatchTab } from './components/matches/tabs.ts'
 import { SearchPanel } from './components/search/SearchPanel.tsx'
+import { SettingsPanel } from './components/settings/SettingsPanel.tsx'
 import { useFavoriteCompetitions } from './hooks/useFavoriteCompetitions.ts'
 import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
 import { useKickoffChecks } from './hooks/useKickoffChecks.ts'
 import { useLiveRefresh } from './hooks/useLiveRefresh.ts'
+import { useLiveRefreshSetting } from './hooks/useLiveRefreshSetting.ts'
 import { useMatchList } from './hooks/useMatchList.ts'
 import { useNotificationsSetting } from './hooks/useNotificationsSetting.ts'
+import { useNotificationTypes } from './hooks/useNotificationTypes.ts'
 import { useNow } from './hooks/useNow.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 
@@ -26,10 +29,15 @@ function App() {
     [state],
   )
   useKickoffChecks(upcoming, refresh)
-  useLiveRefresh(upcoming, refresh)
   const favorites = useFavoriteTeams()
   const competitions = useFavoriteCompetitions()
   const notifications = useNotificationsSetting()
+  const notificationTypes = useNotificationTypes()
+  const liveRefresh = useLiveRefreshSetting()
+  const liveRefreshMs = liveRefresh.minutes * 60_000
+  useLiveRefresh(upcoming, refresh, liveRefreshMs)
+  const [settingsOpen, setSettingsOpen] = useState(false)
+  const settingsButton = useRef<HTMLButtonElement>(null)
   const [tab, setTab] = useState<MatchTab>('home')
   const [searchFocus, setSearchFocus] = useState(0)
   const catalog = useTeamCatalog(tab === 'favorites')
@@ -49,6 +57,22 @@ function App() {
 
   const openFavorites = useCallback(() => changeTab('favorites', 'click'), [changeTab])
 
+  const openSettings = useCallback(() => setSettingsOpen(true), [])
+
+  const closeSettings = useCallback(() => {
+    setSettingsOpen(false)
+    // Wait for the gear to be shown again before focusing it.
+    requestAnimationFrame(() => settingsButton.current?.focus())
+  }, [])
+
+  const manageFavorites = useCallback(() => {
+    setSettingsOpen(false)
+    setSelected(null)
+    returnTo.current = null
+    changeTab('favorites', 'click')
+    requestAnimationFrame(() => document.getElementById(tabId('favorites'))?.focus())
+  }, [changeTab])
+
   const closeMatch = useCallback(() => {
     setSelected(null)
     const target = returnTo.current
@@ -63,18 +87,32 @@ function App() {
 
   return (
     <div className="flex min-h-[480px] flex-col">
-      <header className="border-b border-border bg-surface px-4 py-3">
+      <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
         <h1 className="text-lg font-semibold tracking-tight text-foreground">
           Foot<span className="text-accent">ly</span>
         </h1>
+        <button
+          ref={settingsButton}
+          type="button"
+          onClick={openSettings}
+          hidden={settingsOpen}
+          aria-label="Settings"
+          className="rounded-md px-2 py-1 text-lg leading-none text-muted hover:bg-background hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
+        >
+          <span aria-hidden="true">⚙</span>
+        </button>
       </header>
       <main className="flex flex-1 flex-col">
-        {(favorites.saveError || competitions.saveError || notifications.saveError) && (
+        {(favorites.saveError ||
+          competitions.saveError ||
+          notifications.saveError ||
+          notificationTypes.saveError ||
+          liveRefresh.saveError) && (
           <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
-            Couldn't save your favorites. Try again.
+            Couldn't save your changes. Try again.
           </p>
         )}
-        <div className={selected ? 'hidden' : 'flex flex-1 flex-col'}>
+        <div className={selected || settingsOpen ? 'hidden' : 'flex flex-1 flex-col'}>
           {MATCH_TABS.map(({ id }) => (
             <div
               key={id}
@@ -90,7 +128,8 @@ function App() {
                   favoriteIds={favorites.favoriteIds}
                   competitionIds={competitions.idSet}
                   now={now}
-                  active={tab === 'home' && selected === null}
+                  active={tab === 'home' && selected === null && !settingsOpen}
+                  liveRefreshMs={liveRefreshMs}
                   onRetry={retry}
                   onSelect={openMatch}
                   onOpenFavorites={openFavorites}
@@ -99,7 +138,6 @@ function App() {
                 <FavoritesPanel
                   favorites={favorites}
                   competitions={competitions}
-                  notifications={notifications}
                   catalog={catalog.state}
                   onRetryCatalog={catalog.retry}
                 />
@@ -128,11 +166,23 @@ function App() {
           ))}
           <MatchTabs active={tab} onChange={changeTab} />
         </div>
-        {selected && (
+        {settingsOpen && (
+          <SettingsPanel
+            notifications={notifications}
+            types={notificationTypes}
+            refresh={liveRefresh}
+            favorites={favorites}
+            competitions={competitions}
+            onBack={closeSettings}
+            onManageFavorites={manageFavorites}
+          />
+        )}
+        {selected && !settingsOpen && (
           <MatchDetail
             key={selected.id}
             match={selected}
             favorites={favorites}
+            liveRefreshMs={liveRefreshMs}
             onBack={closeMatch}
           />
         )}

@@ -4,9 +4,13 @@ import { hasLiveMatch, LIVE_REFRESH_MS } from '../lib/cache.ts'
 
 /**
  * While any of `matches` is live or at halftime, calls `refresh` every
- * LIVE_REFRESH_MS, waiting for each call to settle before scheduling the next.
+ * `intervalMs`, waiting for each call to settle before scheduling the next.
  */
-export function useLiveRefresh(matches: Match[], refresh: () => Promise<void>) {
+export function useLiveRefresh(
+  matches: Match[],
+  refresh: () => Promise<void>,
+  intervalMs: number = LIVE_REFRESH_MS,
+) {
   const live = hasLiveMatch(matches)
   const [ticks, setTicks] = useState(0)
 
@@ -17,10 +21,10 @@ export function useLiveRefresh(matches: Match[], refresh: () => Promise<void>) {
       refresh().finally(() => {
         if (!cancelled) setTicks((n) => n + 1)
       })
-    }, LIVE_REFRESH_MS)
+    }, intervalMs)
     return () => {
       cancelled = true
       clearTimeout(timer)
     }
-  }, [live, refresh, ticks])
+  }, [live, refresh, ticks, intervalMs])
 }

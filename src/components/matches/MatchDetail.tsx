@@ -17,6 +17,8 @@ import { formatScore, secondaryButtonClass } from './status.ts'
 interface MatchDetailProps {
   match: Match
   favorites: FavoriteTeamsApi
+  /** How often the open match refreshes while live. */
+  liveRefreshMs: number
   onBack: () => void
 }
 
@@ -64,13 +66,13 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
   )
 }
 
-export function MatchDetail({ match, favorites, onBack }: MatchDetailProps) {
+export function MatchDetail({ match, favorites, liveRefreshMs, onBack }: MatchDetailProps) {
   const { state, retry, refresh } = useMatchDetails(match)
   const headingRef = useRef<HTMLHeadingElement>(null)
   const shown = state.status === 'success' ? state.match : match
   const checked = useMemo(() => [shown], [shown])
   useKickoffChecks(checked, refresh)
-  useLiveRefresh(checked, refresh)
+  useLiveRefresh(checked, refresh, liveRefreshMs)
 
   useEffect(() => {
     headingRef.current?.focus()

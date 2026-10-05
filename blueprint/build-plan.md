@@ -32,7 +32,7 @@
 
 - [x] 12. **Personalized Home** - Build a simple personalized dashboard that prioritizes favorite teams, live matches, and the next important games.
 
-- [ ] 13. **Extension Settings** - Provide lightweight settings for notification preferences, refresh behavior, favorite content, and appearance.
+- [x] 13. **Extension Settings** - Provide lightweight settings for notification preferences, refresh behavior, favorite content, and appearance.
 
 - [ ] 14. **Dark & Light Themes** - Support a polished dark and light interface that follows the user's preferred system or extension theme.
 
