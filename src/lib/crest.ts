@@ -45,3 +45,17 @@ export function collectLogos(matches: Match[], teams: Team[] = []): LogoLookup {
   teams.forEach(addTeam)
   return { teams: teamLogos, competitions: competitionLogos }
 }
+
+const ESPN_IMAGE_HOST = 'a.espncdn.com'
+
+/**
+ * ESPN images through ESPN's resizer at `px` square, so a 20px crest doesn't
+ * download a 500px PNG; any other safe URL is returned unchanged.
+ */
+export function sizedCrestUrl(url: string, px: number): string {
+  const parsed = new URL(url)
+  if (parsed.protocol !== 'https:' || parsed.host !== ESPN_IMAGE_HOST) return url
+  if (!parsed.pathname.startsWith('/i/')) return url
+  const query = new URLSearchParams({ img: parsed.pathname, w: String(px), h: String(px) })
+  return `https://${ESPN_IMAGE_HOST}/combiner/i?${query}`
+}

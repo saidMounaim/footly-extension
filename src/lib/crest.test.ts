@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Match } from '../api/types.ts'
-import { collectLogos, initials, safeImageUrl } from './crest.ts'
+import { collectLogos, initials, safeImageUrl, sizedCrestUrl } from './crest.ts'
 
 describe('safeImageUrl', () => {
   it('accepts https URLs', () => {
@@ -62,5 +62,34 @@ describe('collectLogos', () => {
     )
     expect([...teams.keys()]).toEqual(['a'])
     expect(competitions.size).toBe(0)
+  })
+})
+
+describe('sizedCrestUrl', () => {
+  it('requests a team logo through the resizer', () => {
+    expect(sizedCrestUrl('https://a.espncdn.com/i/teamlogos/soccer/500/359.png', 40)).toBe(
+      'https://a.espncdn.com/combiner/i?img=%2Fi%2Fteamlogos%2Fsoccer%2F500%2F359.png&w=40&h=40',
+    )
+  })
+
+  it('requests a league logo through the resizer', () => {
+    expect(sizedCrestUrl('https://a.espncdn.com/i/leaguelogos/soccer/500/23.png', 32)).toBe(
+      'https://a.espncdn.com/combiner/i?img=%2Fi%2Fleaguelogos%2Fsoccer%2F500%2F23.png&w=32&h=32',
+    )
+  })
+
+  it.each([32, 40, 80])('uses %d px for both sides', (px) => {
+    const sized = new URL(sizedCrestUrl('https://a.espncdn.com/i/teamlogos/soccer/500/1.png', px))
+    expect(sized.searchParams.get('w')).toBe(String(px))
+    expect(sized.searchParams.get('h')).toBe(String(px))
+    expect(sized.searchParams.get('img')).toBe('/i/teamlogos/soccer/500/1.png')
+  })
+
+  it.each([
+    'https://example.com/i/teamlogos/soccer/500/359.png',
+    'https://a.espncdn.com/other/359.png',
+    'https://a.espncdn.com.evil.test/i/359.png',
+  ])('leaves %s unchanged', (url) => {
+    expect(sizedCrestUrl(url, 40)).toBe(url)
   })
 })

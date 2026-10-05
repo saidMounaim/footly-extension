@@ -40,7 +40,7 @@
 
 - [x] 19. **UI Refresh: Icons & Team Crests** - Replace emoji with one consistent icon set, add icons to the bottom tabs, and show club crests and competition logos in match rows, the next-match card, match detail, competition headings, and favorites.
 
-- [ ] 16. **Performance & Extension Optimization** - Minimize popup load time, memory usage, background activity, API requests, and unnecessary Chrome permissions.
+- [x] 16. **Performance & Extension Optimization** - Minimize popup load time, memory usage, background activity, API requests, and unnecessary Chrome permissions.
 
 - [ ] 17. **Privacy & Permissions** - Keep permissions minimal, clearly explain why each permission is required, and avoid collecting unnecessary user data.
 

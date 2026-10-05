@@ -1,13 +1,14 @@
 import { Trophy } from 'lucide-react'
 import { useState } from 'react'
-import { initials, safeImageUrl } from '../../lib/crest.ts'
+import { initials, safeImageUrl, sizedCrestUrl } from '../../lib/crest.ts'
 
 type CrestSize = 'sm' | 'md' | 'lg'
 
-const SIZE_CLASS: Record<CrestSize, string> = {
-  sm: 'size-4 text-[7px]',
-  md: 'size-5 text-[8px]',
-  lg: 'size-10 text-xs',
+/** Display classes and the requested image size (2× the 16, 20, and 40px display) from one map. */
+const SIZES: Record<CrestSize, { className: string; px: number }> = {
+  sm: { className: 'size-4 text-[7px]', px: 32 },
+  md: { className: 'size-5 text-[8px]', px: 40 },
+  lg: { className: 'size-10 text-xs', px: 80 },
 }
 
 interface CrestProps {
@@ -27,7 +28,7 @@ const frameClass = 'inline-flex shrink-0 items-center justify-center overflow-hi
  */
 export function Crest({ src, name, size = 'md', kind = 'team' }: CrestProps) {
   const url = safeImageUrl(src)
-  // Keyed by URL so a reused row never keeps an earlier image's failed state.
+  // Keyed by URL so a reused row never keeps an earlier image's fallback stage.
   return <CrestImage key={url ?? ''} url={url} name={name} size={size} kind={kind} />
 }
 
@@ -42,20 +43,23 @@ function CrestImage({
   size: CrestSize
   kind: 'team' | 'competition'
 }) {
-  const [failed, setFailed] = useState(false)
-  if (url && !failed) {
+  // Resized image first, then the original once, then the fallback.
+  const [stage, setStage] = useState<'sized' | 'original' | 'failed'>('sized')
+  if (url && stage !== 'failed') {
+    const imageUrl = stage === 'sized' ? sizedCrestUrl(url, SIZES[size].px) : url
+    const next = stage === 'sized' && imageUrl !== url ? 'original' : 'failed'
     return (
       <span
         aria-hidden="true"
-        className={`${frameClass} ${SIZE_CLASS[size]} border-border bg-crest-backdrop`}
+        className={`${frameClass} ${SIZES[size].className} border-border bg-crest-backdrop`}
       >
         <img
-          src={url}
+          src={imageUrl}
           alt=""
           loading="lazy"
           decoding="async"
           referrerPolicy="no-referrer"
-          onError={() => setFailed(true)}
+          onError={() => setStage(next)}
           className="size-[80%] object-contain"
         />
       </span>
@@ -64,7 +68,7 @@ function CrestImage({
   return (
     <span
       aria-hidden="true"
-      className={`${frameClass} ${SIZE_CLASS[size]} border-border bg-surface font-semibold text-muted`}
+      className={`${frameClass} ${SIZES[size].className} border-border bg-surface font-semibold text-muted`}
     >
       {kind === 'competition' ? <Trophy className="size-[65%]" /> : initials(name)}
     </span>

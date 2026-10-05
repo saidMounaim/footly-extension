@@ -92,6 +92,13 @@ async function currentMatchList() {
   return result
 }
 
+/** Creates the hourly plan alarm unless it exists; recreating it would push back its next run. */
+async function ensurePlanAlarm() {
+  if (!(await chrome.alarms.get(PLAN_ALARM))) {
+    await chrome.alarms.create(PLAN_ALARM, { periodInMinutes: 60 })
+  }
+}
+
 async function plan() {
   const [enabled, types, favorites] = await Promise.all([
     loadNotificationsEnabled(storage),
@@ -99,9 +106,12 @@ async function plan() {
     loadFavoriteTeams(storage),
   ])
   if (!enabled || !anyAlertsEnabled(types) || favorites.length === 0) {
+    // Nothing can notify, so stop waking up hourly; a settings change re-plans.
+    await chrome.alarms.clear(PLAN_ALARM)
     await stopWatching()
     return
   }
+  await ensurePlanAlarm()
   const [result, watched] = await Promise.all([currentMatchList(), loadWatchedMatches(storage)])
   const now = new Date()
   if (result.failedCompetitionIds.length === COMPETITIONS.length) {
@@ -152,8 +162,8 @@ async function watch() {
   await scheduleWatch(next, new Date())
 }
 
+/** Plan creates or clears the hourly alarm depending on whether anything can notify. */
 function start() {
-  chrome.alarms.create(PLAN_ALARM, { periodInMinutes: 60 })
   enqueue(plan)
 }
 
