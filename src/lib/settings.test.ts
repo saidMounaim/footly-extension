@@ -5,6 +5,10 @@ import {
   DEFAULT_NOTIFICATION_TYPES,
   eventAlertAllowed,
   LIVE_REFRESH_KEY,
+  loadTheme,
+  parseTheme,
+  saveTheme,
+  THEME_KEY,
   loadLiveRefreshMinutes,
   loadNotificationTypes,
   NOTIFICATION_TYPES_KEY,
@@ -130,5 +134,27 @@ describe('alert filters', () => {
     expect(anyAlertsEnabled(DEFAULT_NOTIFICATION_TYPES)).toBe(true)
     expect(anyAlertsEnabled({ ...allOff, redCards: true })).toBe(true)
     expect(anyAlertsEnabled(allOff)).toBe(false)
+  })
+})
+
+describe('theme setting', () => {
+  it.each(['system', 'light', 'dark'])('keeps %s', (value) => {
+    expect(parseTheme(value)).toBe(value)
+  })
+
+  it.each([undefined, null, '', 'Dark', 'blue', 1, {}])('gives system for %j', (value) => {
+    expect(parseTheme(value)).toBe('system')
+  })
+
+  it('round-trips the stored theme', async () => {
+    const { area, data } = memoryArea()
+    expect(await loadTheme(area)).toBe('system')
+    await saveTheme(area, 'dark')
+    expect(data[THEME_KEY]).toBe('dark')
+    expect(await loadTheme(area)).toBe('dark')
+  })
+
+  it('wraps storage failures in FavoritesStorageError', async () => {
+    await expect(loadTheme(failingArea)).rejects.toBeInstanceOf(FavoritesStorageError)
   })
 })

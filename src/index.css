@@ -12,8 +12,9 @@
   color-scheme: light dark;
 }
 
+/* System theme: follow the OS unless the user forced light. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --background: #0b0f14;
     --surface: #151b23;
     --foreground: #f3f4f6;
@@ -22,6 +23,22 @@
     --accent: #4ade80;
     --warning: #fbbf24;
   }
+}
+
+/* Forced themes, chosen in Settings. Keep these dark tokens identical to the block above. */
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --background: #0b0f14;
+  --surface: #151b23;
+  --foreground: #f3f4f6;
+  --muted: #9ca3af;
+  --border: #273140;
+  --accent: #4ade80;
+  --warning: #fbbf24;
 }
 
 @theme inline {

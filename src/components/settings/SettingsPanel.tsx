@@ -4,11 +4,13 @@ import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { LiveRefreshSettingApi } from '../../hooks/useLiveRefreshSetting.ts'
 import type { NotificationsSettingApi } from '../../hooks/useNotificationsSetting.ts'
 import type { NotificationTypesApi } from '../../hooks/useNotificationTypes.ts'
-import { LIVE_REFRESH_OPTIONS, type NotificationType } from '../../lib/settings.ts'
+import type { ThemeSettingApi } from '../../hooks/useThemeSetting.ts'
+import { LIVE_REFRESH_OPTIONS, THEME_OPTIONS, type NotificationType, type Theme } from '../../lib/settings.ts'
 import { sectionHeadingClass, secondaryButtonClass } from '../matches/status.ts'
 import { SettingSwitch } from './SettingSwitch.tsx'
 
 interface SettingsPanelProps {
+  theme: ThemeSettingApi
   notifications: NotificationsSettingApi
   types: NotificationTypesApi
   refresh: LiveRefreshSettingApi
@@ -24,6 +26,8 @@ const TYPE_SWITCHES: { type: NotificationType; label: string; description: strin
   { type: 'redCards', label: 'Red cards', description: 'Sending-offs for either team.' },
 ]
 
+const THEME_LABEL: Record<Theme, string> = { system: 'System', light: 'Light', dark: 'Dark' }
+
 const MASTER_OFF_HELP = 'Turn on match notifications to choose types.'
 
 function LoadError() {
@@ -37,6 +41,7 @@ function LoadError() {
 const plural = (count: number, word: string) => `${count} ${word}${count === 1 ? '' : 's'}`
 
 export function SettingsPanel({
+  theme,
   notifications,
   types,
   refresh,
@@ -70,6 +75,32 @@ export function SettingsPanel({
           Settings
         </h2>
       </div>
+
+      <section aria-labelledby="settings-appearance">
+        <h3 id="settings-appearance" className={sectionHeadingClass}>
+          Appearance
+        </h3>
+        {theme.loadError && <LoadError />}
+        <fieldset disabled={!theme.ready} className="px-4 py-3 disabled:opacity-50">
+          <legend className="text-sm font-medium text-foreground">Theme</legend>
+          <p className="text-xs text-muted">System follows your device's light or dark setting.</p>
+          <div className="mt-2 flex gap-4">
+            {THEME_OPTIONS.map((option) => (
+              <label key={option} className="flex items-center gap-1.5 text-sm text-foreground">
+                <input
+                  type="radio"
+                  name="settings-theme"
+                  value={option}
+                  checked={theme.theme === option}
+                  onChange={() => theme.select(option)}
+                  className="accent-accent"
+                />
+                {THEME_LABEL[option]}
+              </label>
+            ))}
+          </div>
+        </fieldset>
+      </section>
 
       <section aria-labelledby="settings-notifications">
         <h3 id="settings-notifications" className={sectionHeadingClass}>

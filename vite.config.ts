@@ -11,5 +11,7 @@ export default defineConfig({
   test: {
     // Pin the timezone so local-day window and DST tests are deterministic.
     env: { TZ: 'Europe/London' },
+    // The contrast test reads the theme tokens from the real stylesheet.
+    css: { include: [/src\/index\.css/] },
   },
 })

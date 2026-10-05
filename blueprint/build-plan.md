@@ -34,7 +34,7 @@
 
 - [x] 13. **Extension Settings** - Provide lightweight settings for notification preferences, refresh behavior, favorite content, and appearance.
 
-- [ ] 14. **Dark & Light Themes** - Support a polished dark and light interface that follows the user's preferred system or extension theme.
+- [x] 14. **Dark & Light Themes** - Support a polished dark and light interface that follows the user's preferred system or extension theme.
 
 - [ ] 15. **API Error & Offline States** - Handle unavailable data, API errors, rate limits, network failures, and temporary offline states with clear recovery actions.
 

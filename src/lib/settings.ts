@@ -96,3 +96,25 @@ export function eventAlertAllowed(types: NotificationTypes, type: TimelineEvent[
 export function anyAlertsEnabled(types: NotificationTypes): boolean {
   return types.matchUpdates || types.goals || types.redCards
 }
+
+/** Key in chrome.storage.local for the popup theme. */
+export const THEME_KEY = 'theme'
+
+export const THEME_OPTIONS = ['system', 'light', 'dark'] as const
+
+export type Theme = (typeof THEME_OPTIONS)[number]
+
+export const DEFAULT_THEME: Theme = 'system'
+
+/** Validates the untrusted stored value: anything but a known theme follows the system. */
+export function parseTheme(value: unknown): Theme {
+  return THEME_OPTIONS.find((option) => option === value) ?? DEFAULT_THEME
+}
+
+export async function loadTheme(area: StorageArea): Promise<Theme> {
+  return parseTheme(await readStoredKey(area, THEME_KEY))
+}
+
+export async function saveTheme(area: StorageArea, theme: Theme): Promise<void> {
+  await writeStoredKey(area, THEME_KEY, theme)
+}

@@ -18,6 +18,7 @@ import { useNotificationsSetting } from './hooks/useNotificationsSetting.ts'
 import { useNotificationTypes } from './hooks/useNotificationTypes.ts'
 import { useNow } from './hooks/useNow.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
+import { useThemeSetting } from './hooks/useThemeSetting.ts'
 
 const NO_MATCHES: Match[] = []
 
@@ -34,6 +35,7 @@ function App() {
   const notifications = useNotificationsSetting()
   const notificationTypes = useNotificationTypes()
   const liveRefresh = useLiveRefreshSetting()
+  const theme = useThemeSetting()
   const liveRefreshMs = liveRefresh.minutes * 60_000
   useLiveRefresh(upcoming, refresh, liveRefreshMs)
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -107,7 +109,8 @@ function App() {
           competitions.saveError ||
           notifications.saveError ||
           notificationTypes.saveError ||
-          liveRefresh.saveError) && (
+          liveRefresh.saveError ||
+          theme.saveError) && (
           <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
             Couldn't save your changes. Try again.
           </p>
@@ -168,6 +171,7 @@ function App() {
         </div>
         {settingsOpen && (
           <SettingsPanel
+            theme={theme}
             notifications={notifications}
             types={notificationTypes}
             refresh={liveRefresh}
