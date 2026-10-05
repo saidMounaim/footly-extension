@@ -3,6 +3,7 @@ import { COMPETITIONS, type MatchListResult } from '../api/football.ts'
 import type { Match, MatchStatus } from '../api/types.ts'
 import {
   hasLiveMatch,
+  isSnapshotFromToday,
   isTeamCatalogFresh,
   loadMatchListSnapshot,
   loadTeamCatalogSnapshot,
@@ -230,5 +231,25 @@ describe('team catalog cache', () => {
 
   it('wraps read failures in FavoritesStorageError', async () => {
     await expect(loadTeamCatalogSnapshot(failingArea)).rejects.toBeInstanceOf(FavoritesStorageError)
+  })
+})
+
+describe('isSnapshotFromToday', () => {
+  const saved = (iso: string) => snapshot({}, new Date(iso))
+
+  it('accepts any age earlier the same local day', () => {
+    const now = new Date('2026-10-05T22:30:00+01:00')
+    expect(isSnapshotFromToday(saved('2026-10-05T00:05:00+01:00'), now)).toBe(true)
+    expect(isSnapshotFromToday(saved('2026-10-05T22:29:00+01:00'), now)).toBe(true)
+  })
+
+  it('rejects a snapshot from the previous local day', () => {
+    const now = new Date('2026-10-05T00:10:00+01:00')
+    expect(isSnapshotFromToday(saved('2026-10-04T23:55:00+01:00'), now)).toBe(false)
+  })
+
+  it('rejects a snapshot saved in the future', () => {
+    const now = new Date('2026-10-05T10:00:00+01:00')
+    expect(isSnapshotFromToday(saved('2026-10-05T10:01:00+01:00'), now)).toBe(false)
   })
 })

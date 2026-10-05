@@ -5,7 +5,8 @@ import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
 import { buildHome, recentEvents } from '../../lib/home.ts'
-import { MatchListError, MatchListSkeleton, PartialFailureBanner } from '../matches/MatchList.tsx'
+import { failureMessage } from '../../lib/errors.ts'
+import { ListBanner, MatchListError, MatchListSkeleton } from '../matches/MatchList.tsx'
 import { MatchRow } from '../matches/MatchRow.tsx'
 import { EventRow, MatchTimelineSkeleton } from '../matches/MatchTimeline.tsx'
 import { sectionHeadingClass, secondaryButtonClass, upcomingLabel } from '../matches/status.ts'
@@ -54,7 +55,7 @@ function FeaturedEvents({ match, liveRefreshMs }: { match: Match; liveRefreshMs:
       {state.status === 'loading' && <MatchTimelineSkeleton />}
       {state.status === 'error' && (
         <div role="alert" className="flex items-center justify-between gap-3 px-4 py-2">
-          <p className="text-xs text-muted">Couldn't load match events.</p>
+          <p className="text-xs text-muted">{failureMessage(state.reason).title}</p>
           <button type="button" onClick={retry} className={secondaryButtonClass}>
             Retry
           </button>
@@ -122,15 +123,14 @@ export function HomePanel({
     [state, favoriteIds, competitionIds],
   )
   if (state.status === 'loading') return <MatchListSkeleton />
-  if (state.status === 'error' || !home) return <MatchListError onRetry={onRetry} />
+  if (state.status === 'error') return <MatchListError reason={state.reason} onRetry={onRetry} />
+  if (!home) return <MatchListError reason="unexpected" onRetry={onRetry} />
 
   const { live, nextMatch, nextUp } = home
   const hasFavorites = favoriteIds.size > 0
   const isFavorite = (match: Match) =>
     favoriteIds.has(match.homeTeam.id) || favoriteIds.has(match.awayTeam.id)
-  const banner = state.result.failedCompetitionIds.length > 0 && (
-    <PartialFailureBanner onRetry={onRetry} />
-  )
+  const banner = <ListBanner state={state} onRetry={onRetry} />
 
   if (!hasFavorites && live.length === 0 && nextUp.length === 0) {
     return (

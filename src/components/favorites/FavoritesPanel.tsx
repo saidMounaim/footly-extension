@@ -4,6 +4,7 @@ import type { Team } from '../../api/types.ts'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { TeamCatalogState } from '../../hooks/useTeamCatalog.ts'
+import { failureMessage } from '../../lib/errors.ts'
 import { searchTeams } from '../../lib/search.ts'
 import { secondaryButtonClass } from '../matches/status.ts'
 import { FavoriteToggle } from './FavoriteToggle.tsx'
@@ -151,7 +152,7 @@ export function FavoritesPanel({
         {catalog.status === 'loading' && <CatalogSkeleton />}
         {catalog.status === 'error' && (
           <div role="alert" className="flex flex-col items-center gap-3 px-6 py-6 text-center">
-            <p className="text-sm text-foreground">Couldn't load teams.</p>
+            <p className="text-sm text-foreground">{failureMessage(catalog.reason).title}</p>
             <button type="button" onClick={onRetryCatalog} className={secondaryButtonClass}>
               Retry
             </button>

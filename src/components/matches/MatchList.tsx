@@ -1,6 +1,7 @@
 import type { Match } from '../../api/types.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
-import { dayLabel, localDayKey } from '../../lib/date.ts'
+import { dayLabel, formatKickoff, localDayKey } from '../../lib/date.ts'
+import { failureMessage, type LoadFailure } from '../../lib/errors.ts'
 import { splitByCompetitions, splitByFavorites } from '../../lib/favorites.ts'
 import { MatchRow } from './MatchRow.tsx'
 import type { ListTab } from './tabs.ts'
@@ -51,11 +52,12 @@ export function MatchListSkeleton() {
   )
 }
 
-export function MatchListError({ onRetry }: { onRetry: () => void }) {
+export function MatchListError({ reason, onRetry }: { reason: LoadFailure; onRetry: () => void }) {
+  const { title, hint } = failureMessage(reason)
   return (
     <div role="alert" className="flex flex-col items-center gap-3 px-6 py-12 text-center">
-      <p className="text-sm text-foreground">Couldn't load match data.</p>
-      <p className="text-sm text-muted">Check your connection and try again.</p>
+      <p className="text-sm text-foreground">{title}</p>
+      <p className="text-sm text-muted">{hint}</p>
       <button type="button" onClick={onRetry} className={secondaryButtonClass}>
         Retry
       </button>
@@ -77,6 +79,44 @@ export function PartialFailureBanner({ onRetry }: { onRetry: () => void }) {
   )
 }
 
+interface StaleBannerProps {
+  loadedAt: Date
+  reason: LoadFailure
+  onRetry: () => void
+}
+
+/** Shown over a list that couldn't be updated, so old scores aren't mistaken for live ones. */
+export function StaleBanner({ loadedAt, reason, onRetry }: StaleBannerProps) {
+  return (
+    <div
+      role="status"
+      className="flex items-center justify-between gap-3 border-b border-border px-4 py-2"
+    >
+      <p className="text-xs text-muted">
+        Showing matches from {formatKickoff(loadedAt)}. {failureMessage(reason).title}
+      </p>
+      <button type="button" onClick={onRetry} className={secondaryButtonClass}>
+        Retry
+      </button>
+    </div>
+  )
+}
+
+/** The stale banner when the list couldn't be updated, otherwise the partial-failure banner if needed. */
+export function ListBanner({
+  state,
+  onRetry,
+}: {
+  state: Extract<MatchListState, { status: 'success' }>
+  onRetry: () => void
+}) {
+  if (state.stale) {
+    return <StaleBanner loadedAt={state.loadedAt} reason={state.stale.reason} onRetry={onRetry} />
+  }
+  if (state.result.failedCompetitionIds.length > 0) return <PartialFailureBanner onRetry={onRetry} />
+  return null
+}
+
 export function MatchList({
   state,
   view,
@@ -87,7 +127,7 @@ export function MatchList({
   onSelect,
 }: MatchListProps) {
   if (state.status === 'loading') return <MatchListSkeleton />
-  if (state.status === 'error') return <MatchListError onRetry={onRetry} />
+  if (state.status === 'error') return <MatchListError reason={state.reason} onRetry={onRetry} />
 
   const { result, loadedAt } = state
   const matches = result[view]
@@ -97,7 +137,7 @@ export function MatchList({
     'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
   return (
     <div>
-      {result.failedCompetitionIds.length > 0 && <PartialFailureBanner onRetry={onRetry} />}
+      <ListBanner state={state} onRetry={onRetry} />
       {matches.length === 0 ? (
         <p className="px-6 py-12 text-center text-sm text-muted">{EMPTY_MESSAGE[view]}</p>
       ) : (

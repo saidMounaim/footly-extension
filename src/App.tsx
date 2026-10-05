@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Match } from './api/types.ts'
 import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
 import { HomePanel } from './components/home/HomePanel.tsx'
@@ -17,6 +17,7 @@ import { useMatchList } from './hooks/useMatchList.ts'
 import { useNotificationsSetting } from './hooks/useNotificationsSetting.ts'
 import { useNotificationTypes } from './hooks/useNotificationTypes.ts'
 import { useNow } from './hooks/useNow.ts'
+import { useOnlineStatus } from './hooks/useOnlineStatus.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 import { useThemeSetting } from './hooks/useThemeSetting.ts'
 
@@ -24,6 +25,24 @@ const NO_MATCHES: Match[] = []
 
 function App() {
   const { state, retry, refresh } = useMatchList()
+  const online = useOnlineStatus()
+  const listStatus = state.status === 'success' && state.stale ? 'stale' : state.status
+  const wasOnline = useRef(online)
+  const latest = useRef({ listStatus, retry, refresh })
+  useEffect(() => {
+    latest.current = { listStatus, retry, refresh }
+  })
+
+  // Reload by itself once the connection is back; only that transition triggers it.
+  useEffect(() => {
+    const reconnected = online && !wasOnline.current
+    wasOnline.current = online
+    if (!reconnected) return
+    const current = latest.current
+    if (current.listStatus === 'error') current.retry()
+    else if (current.listStatus === 'stale') void current.refresh()
+  }, [online])
+
   const now = useNow(30_000)
   const upcoming = useMemo(
     () => (state.status === 'success' ? state.result.upcoming : NO_MATCHES),
@@ -105,6 +124,11 @@ function App() {
         </button>
       </header>
       <main className="flex flex-1 flex-col">
+        {!online && (listStatus === 'success' || listStatus === 'loading') && (
+          <p role="status" className="border-b border-border px-4 py-2 text-xs text-muted">
+            You're offline. Scores won't update until you reconnect.
+          </p>
+        )}
         {(favorites.saveError ||
           competitions.saveError ||
           notifications.saveError ||

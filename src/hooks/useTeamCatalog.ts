@@ -1,15 +1,19 @@
 import { useCallback, useEffect, useState } from 'react'
 import { COMPETITIONS, getTeamCatalog, type TeamCatalogResult } from '../api/football.ts'
 import { isTeamCatalogFresh, loadTeamCatalogSnapshot, saveTeamCatalogSnapshot } from '../lib/cache.ts'
+import type { LoadFailure } from '../lib/errors.ts'
 import { FavoritesStorageError } from '../lib/favorites.ts'
 import { extensionStorage } from './useSavedValue.ts'
 
 export type TeamCatalogState =
   | { status: 'loading' }
   | { status: 'success'; result: TeamCatalogResult }
-  | { status: 'error' }
+  | { status: 'error'; reason: LoadFailure }
 
-type Settled = { attempt: number } & ({ status: 'success'; result: TeamCatalogResult } | { status: 'error' })
+type Settled = { attempt: number } & (
+  | { status: 'success'; result: TeamCatalogResult }
+  | { status: 'error'; reason: LoadFailure }
+)
 
 function reportUnexpectedCacheError(error: unknown) {
   if (!(error instanceof FavoritesStorageError)) {
@@ -54,7 +58,7 @@ export function useTeamCatalog(enabled: boolean): { state: TeamCatalogState; ret
       const result = await getTeamCatalog()
       if (cancelled) return
       if (result.failedCompetitionIds.length === COMPETITIONS.length) {
-        setSettled({ attempt, status: 'error' })
+        setSettled({ attempt, status: 'error', reason: result.failureReason ?? 'unexpected' })
         return
       }
       setSettled({ attempt, status: 'success', result })
@@ -63,7 +67,7 @@ export function useTeamCatalog(enabled: boolean): { state: TeamCatalogState; ret
     }
     load().catch((error: unknown) => {
       console.error('Unexpected error while loading teams', error)
-      if (!cancelled) setSettled({ attempt, status: 'error' })
+      if (!cancelled) setSettled({ attempt, status: 'error', reason: 'unexpected' })
     })
     return () => {
       cancelled = true
@@ -74,7 +78,10 @@ export function useTeamCatalog(enabled: boolean): { state: TeamCatalogState; ret
 
   if (!settled || settled.attempt !== attempt) return { state: { status: 'loading' }, retry }
   return {
-    state: settled.status === 'success' ? { status: 'success', result: settled.result } : { status: 'error' },
+    state:
+      settled.status === 'success'
+        ? { status: 'success', result: settled.result }
+        : { status: 'error', reason: settled.reason },
     retry,
   }
 }

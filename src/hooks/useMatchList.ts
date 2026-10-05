@@ -1,18 +1,31 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { COMPETITIONS, getMatchList, type MatchListResult } from '../api/football.ts'
 import {
+  isSnapshotFromToday,
   loadMatchListSnapshot,
   matchListFreshness,
   saveMatchListSnapshot,
   type MatchListSnapshot,
 } from '../lib/cache.ts'
+import type { LoadFailure } from '../lib/errors.ts'
 import { FavoritesStorageError } from '../lib/favorites.ts'
 import { extensionStorage } from './useSavedValue.ts'
 
 export type MatchListState =
   | { status: 'loading' }
-  | { status: 'success'; result: MatchListResult; loadedAt: Date }
-  | { status: 'error' }
+  | {
+      status: 'success'
+      result: MatchListResult
+      loadedAt: Date
+      /** Set while the list couldn't be updated; `loadedAt` then says how old it is. */
+      stale?: { reason: LoadFailure }
+    }
+  | { status: 'error'; reason: LoadFailure }
+
+const allFailed = (result: MatchListResult) =>
+  result.failedCompetitionIds.length === COMPETITIONS.length
+
+const reasonOf = (result: MatchListResult): LoadFailure => result.failureReason ?? 'unexpected'
 
 function reportUnexpectedCacheError(error: unknown) {
   if (!(error instanceof FavoritesStorageError)) {
@@ -41,8 +54,8 @@ function writeSnapshot(result: MatchListResult, savedAt: Date) {
 /**
  * Loads upcoming matches and recent results once, starting from the saved
  * snapshot when it is still usable; `retry` reloads both from the network with
- * the loading state, `refresh` reloads in the background and keeps the current
- * list when every competition fails.
+ * the loading state, `refresh` reloads in the background. When every
+ * competition fails, today's last list (saved or shown) stays up marked stale.
  */
 export function useMatchList(): {
   state: MatchListState
@@ -56,20 +69,41 @@ export function useMatchList(): {
 
   const refresh = useCallback(async () => {
     const started = generation.current
+    const markStale = (reason: LoadFailure) =>
+      setState((current) => (current.status === 'success' ? { ...current, stale: { reason } } : current))
     try {
       const result = await getMatchList()
       if (started !== generation.current) return
-      if (result.failedCompetitionIds.length === COMPETITIONS.length) return
+      if (allFailed(result)) {
+        markStale(reasonOf(result))
+        return
+      }
       const loadedAt = new Date()
       setState({ status: 'success', result, loadedAt })
       writeSnapshot(result, loadedAt)
     } catch (error) {
       console.error('Unexpected error while refreshing matches', error)
+      if (started === generation.current) markStale('unexpected')
     }
   }, [])
 
   useEffect(() => {
     let cancelled = false
+    /** Today's saved list marked stale, otherwise the error state. */
+    const fallBack = async (reason: LoadFailure) => {
+      const snapshot = await readSnapshot()
+      if (cancelled) return
+      if (snapshot && isSnapshotFromToday(snapshot, new Date())) {
+        setState({
+          status: 'success',
+          result: snapshot.result,
+          loadedAt: snapshot.savedAt,
+          stale: { reason },
+        })
+      } else {
+        setState({ status: 'error', reason })
+      }
+    }
     const load = async () => {
       // Only the first load may come from the cache; a retry always fetches.
       if (attempt === 0) {
@@ -84,8 +118,8 @@ export function useMatchList(): {
       }
       const result = await getMatchList()
       if (cancelled) return
-      if (result.failedCompetitionIds.length === COMPETITIONS.length) {
-        setState({ status: 'error' })
+      if (allFailed(result)) {
+        await fallBack(reasonOf(result))
       } else {
         const loadedAt = new Date()
         setState({ status: 'success', result, loadedAt })
@@ -94,7 +128,7 @@ export function useMatchList(): {
     }
     load().catch((error: unknown) => {
       console.error('Unexpected error while loading matches', error)
-      if (!cancelled) setState({ status: 'error' })
+      if (!cancelled) void fallBack('unexpected')
     })
     return () => {
       cancelled = true

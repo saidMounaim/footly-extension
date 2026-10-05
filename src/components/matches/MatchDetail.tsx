@@ -8,6 +8,7 @@ import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
 import { useNow } from '../../hooks/useNow.ts'
 import { detailCountdown } from '../../lib/countdown.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
+import { failureMessage } from '../../lib/errors.ts'
 import { MatchLineups } from './MatchLineups.tsx'
 import { StatusText } from './MatchRow.tsx'
 import { MatchStats } from './MatchStats.tsx'
@@ -99,7 +100,7 @@ export function MatchDetail({ match, favorites, liveRefreshMs, onBack }: MatchDe
         {state.status === 'loading' && <MatchTimelineSkeleton />}
         {state.status === 'error' && (
           <div role="alert" className="flex flex-col items-center gap-3 px-6 py-8 text-center">
-            <p className="text-sm text-foreground">Couldn't load match details.</p>
+            <p className="text-sm text-foreground">{failureMessage(state.reason).title}</p>
             <button type="button" onClick={retry} className={secondaryButtonClass}>
               Retry
             </button>

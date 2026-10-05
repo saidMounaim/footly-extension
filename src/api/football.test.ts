@@ -165,7 +165,49 @@ describe('getMatchList upcoming', () => {
       upcoming: [],
       results: [],
       failedCompetitionIds: COMPETITIONS.map((c) => c.id),
+      failureReason: 'unavailable',
     })
+  })
+})
+
+describe('failure reasons', () => {
+  const online = () => true
+  const offline = () => false
+
+  it.each([
+    ['a network error while online', new TypeError('Failed to fetch'), online, 'unavailable'],
+    ['a network error while offline', new TypeError('Failed to fetch'), offline, 'offline'],
+    ['a timeout while online', new DOMException('Timed out', 'TimeoutError'), online, 'unavailable'],
+    ['a timeout while offline', new DOMException('Timed out', 'TimeoutError'), offline, 'offline'],
+    ['HTTP 429', 429, online, 'rate-limited'],
+    ['HTTP 503', 503, online, 'unavailable'],
+    ['HTTP 404', 404, online, 'unavailable'],
+    ['invalid JSON', 'bad-json', online, 'invalid'],
+    ['an unusable body', 'bad-shape', online, 'invalid'],
+  ] as const)('classifies %s in the match list', async (_label, reply, isOnline, reason) => {
+    const result = await getMatchList({ now: NOW, isOnline, fetchImpl: fakeFetch({ 'eng.1': reply }) })
+    expect(result.failedCompetitionIds).toEqual(['eng.1'])
+    expect(result.failureReason).toBe(reason)
+  })
+
+  it('reports the most relevant reason when competitions fail differently', async () => {
+    const replies = (extra: Record<string, Reply>): Record<string, Reply> => ({
+      'eng.1': 'bad-json',
+      'esp.1': 503,
+      ...extra,
+    })
+    const reasonFor = async (extra: Record<string, Reply>, isOnline = online) =>
+      (await getMatchList({ now: NOW, isOnline, fetchImpl: fakeFetch(replies(extra)) })).failureReason
+    expect(await reasonFor({})).toBe('unavailable')
+    expect(await reasonFor({ 'ita.1': 429 })).toBe('rate-limited')
+    expect(await reasonFor({ 'ita.1': 429, 'ger.1': new TypeError('Failed') }, offline)).toBe(
+      'offline',
+    )
+  })
+
+  it('leaves the reason out when nothing failed', async () => {
+    const result = await getMatchList({ now: NOW, fetchImpl: fakeFetch({}) })
+    expect(result).not.toHaveProperty('failureReason')
   })
 })
 
@@ -293,6 +335,22 @@ describe('getMatchDetails', () => {
     )
   })
 
+  it.each([
+    ['a network error while offline', () => Promise.reject(new TypeError('Failed')), false, 'offline'],
+    ['a network error while online', () => Promise.reject(new TypeError('Failed')), true, 'unavailable'],
+    ['HTTP 429', async () => new Response('', { status: 429 }), true, 'rate-limited'],
+    ['HTTP 500', async () => new Response('', { status: 500 }), true, 'unavailable'],
+    ['invalid JSON', async () => new Response('{nope'), true, 'invalid'],
+    ['an unusable body', async () => new Response('[]'), true, 'invalid'],
+  ] as const)('gives the reason for %s', async (_label, reply, connected, reason) => {
+    const error = await getMatchDetails(match, {
+      fetchImpl: vi.fn(reply),
+      isOnline: () => connected,
+    }).catch((caught: unknown) => caught)
+    expect(error).toBeInstanceOf(MatchDetailsError)
+    expect((error as MatchDetailsError).reason).toBe(reason)
+  })
+
   it('does not wrap unexpected errors', async () => {
     const bug = new RangeError('bug')
     const broken = {
@@ -357,6 +415,14 @@ describe('getTeamCatalog', () => {
     })
     expect(result.teams.map((t) => t.id)).toEqual(['359'])
     expect(result.failedCompetitionIds).toEqual(['esp.1'])
+    expect(result.failureReason).toBe('unavailable')
+  })
+
+  it('reports rate limiting and leaves the reason out when nothing failed', async () => {
+    expect((await getTeamCatalog({ fetchImpl: teamsFetch({ 'eng.1': 429 }) })).failureReason).toBe(
+      'rate-limited',
+    )
+    expect(await getTeamCatalog({ fetchImpl: teamsFetch({}) })).not.toHaveProperty('failureReason')
   })
 
   it('reports every competition when all fail', async () => {
@@ -365,7 +431,11 @@ describe('getTeamCatalog', () => {
         throw new TypeError('Failed to fetch')
       }),
     })
-    expect(result).toEqual({ teams: [], failedCompetitionIds: COMPETITIONS.map((c) => c.id) })
+    expect(result).toEqual({
+      teams: [],
+      failedCompetitionIds: COMPETITIONS.map((c) => c.id),
+      failureReason: 'unavailable',
+    })
   })
 
   it('does not fold unexpected errors into failed competitions', async () => {

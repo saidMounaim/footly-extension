@@ -135,6 +135,14 @@ export function matchListFreshness({ savedAt, result }: MatchListSnapshot, now: 
   return age < limit ? 'fresh' : 'stale'
 }
 
+/** True when the snapshot was saved earlier on the same local day, at any age. */
+export function isSnapshotFromToday({ savedAt }: MatchListSnapshot, now: Date): boolean {
+  return (
+    savedAt.getTime() <= now.getTime() &&
+    startOfLocalDay(savedAt).getTime() === startOfLocalDay(now).getTime()
+  )
+}
+
 /** A catalog is reused only while it is under a day old. */
 export function isTeamCatalogFresh({ savedAt }: TeamCatalogSnapshot, now: Date): boolean {
   const age = now.getTime() - savedAt.getTime()
@@ -155,7 +163,9 @@ export async function saveMatchListSnapshot(
   await writeStoredKey(area, MATCH_LIST_CACHE_KEY, {
     version: CACHE_VERSION,
     savedAt: savedAt.toISOString(),
-    ...result,
+    upcoming: result.upcoming,
+    results: result.results,
+    failedCompetitionIds: result.failedCompetitionIds,
   })
 }
 

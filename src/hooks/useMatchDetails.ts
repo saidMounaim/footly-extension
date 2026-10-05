@@ -1,13 +1,17 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { getMatchDetails, MatchDetailsError } from '../api/football.ts'
 import type { Match } from '../api/types.ts'
+import type { LoadFailure } from '../lib/errors.ts'
 
 export type MatchDetailsState =
   | { status: 'loading' }
   | { status: 'success'; match: Match }
-  | { status: 'error' }
+  | { status: 'error'; reason: LoadFailure }
 
-type Settled = { key: string } & ({ status: 'success'; match: Match } | { status: 'error' })
+type Settled = { key: string } & (
+  | { status: 'success'; match: Match }
+  | { status: 'error'; reason: LoadFailure }
+)
 
 function reportUnexpected(error: unknown) {
   if (!(error instanceof MatchDetailsError)) {
@@ -45,7 +49,8 @@ export function useMatchDetails(match: Match): {
         reportUnexpected(error)
         if (cancelled) return
         settledKey.current = key
-        setSettled({ key, status: 'error' })
+        const reason = error instanceof MatchDetailsError ? error.reason : 'unexpected'
+        setSettled({ key, status: 'error', reason })
       },
     )
     return () => {
@@ -72,7 +77,10 @@ export function useMatchDetails(match: Match): {
 
   if (!settled || settled.key !== key) return { state: { status: 'loading' }, retry, refresh }
   return {
-    state: settled.status === 'success' ? { status: 'success', match: settled.match } : { status: 'error' },
+    state:
+      settled.status === 'success'
+        ? { status: 'success', match: settled.match }
+        : { status: 'error', reason: settled.reason },
     retry,
     refresh,
   }

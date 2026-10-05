@@ -6,7 +6,7 @@ import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { searchCompetitions, searchMatches, searchTeams, teamsInMatches } from '../../lib/search.ts'
 import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
-import { MatchListError, MatchListSkeleton } from '../matches/MatchList.tsx'
+import { MatchListError, MatchListSkeleton, StaleBanner } from '../matches/MatchList.tsx'
 import { MatchRow } from '../matches/MatchRow.tsx'
 
 interface SearchPanelProps {
@@ -94,6 +94,9 @@ export function SearchPanel({
 
   return (
     <div>
+      {state.status === 'success' && state.stale && (
+        <StaleBanner loadedAt={state.loadedAt} reason={state.stale.reason} onRetry={onRetry} />
+      )}
       <div className="px-4 py-3">
         <label htmlFor={inputId} className="mb-1 block text-xs font-medium text-muted">
           Search teams, competitions, and matches
@@ -138,7 +141,7 @@ export function SearchPanel({
           )}
 
           {state.status === 'loading' && <MatchListSkeleton />}
-          {state.status === 'error' && <MatchListError onRetry={onRetry} />}
+          {state.status === 'error' && <MatchListError reason={state.reason} onRetry={onRetry} />}
 
           {foundTeams.length > 0 && (
             <section aria-labelledby="search-teams">

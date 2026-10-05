@@ -22,54 +22,93 @@ export const COMPETITIONS = [
 
 const REQUEST_TIMEOUT_MS = 10_000
 
+/** Why an expected provider request failed. */
+export type FailureReason = 'offline' | 'rate-limited' | 'unavailable' | 'invalid'
+
+/** Most useful first: what the user can act on comes before what they can only wait out. */
+const REASON_PRIORITY: FailureReason[] = ['offline', 'rate-limited', 'unavailable', 'invalid']
+
 export interface MatchListResult {
   /** Today through the next 7 days, everything except finished, kickoff ascending. */
   upcoming: Match[]
   /** Finished matches from today and the previous 7 days, newest first. */
   results: Match[]
   failedCompetitionIds: string[]
+  /** The most relevant reason a competition failed; set only when one did. Never saved. */
+  failureReason?: FailureReason
 }
 
-interface MatchListOptions {
-  now?: Date
+interface RequestOptions {
   fetchImpl?: typeof fetch
+  /** Whether the browser reports a connection; injectable for tests. */
+  isOnline?: () => boolean
 }
+
+interface MatchListOptions extends RequestOptions {
+  now?: Date
+}
+
+const defaultFetch: typeof fetch = (input, init) => fetch(input, init)
+
+/** A missing navigator counts as online; only an explicit `false` means offline. */
+const browserOnline = () => globalThis.navigator?.onLine !== false
 
 /** A request that failed for an expected reason: network, timeout, HTTP status, or body. */
 class ProviderRequestError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
+  readonly reason: FailureReason
+
+  constructor(reason: FailureReason, message: string, options?: ErrorOptions) {
     super(message, options)
     this.name = 'ProviderRequestError'
+    this.reason = reason
   }
 }
 
 /** Thrown by getMatchDetails when the details could not be loaded for an expected reason. */
 export class MatchDetailsError extends Error {
-  constructor(message: string, options?: ErrorOptions) {
+  readonly reason: FailureReason
+
+  constructor(reason: FailureReason, message: string, options?: ErrorOptions) {
     super(message, options)
     this.name = 'MatchDetailsError'
+    this.reason = reason
   }
 }
 
-async function fetchJson(url: string, fetchImpl: typeof fetch): Promise<unknown> {
+async function fetchJson(
+  url: string,
+  fetchImpl: typeof fetch,
+  isOnline: () => boolean,
+): Promise<unknown> {
   let response: Response
   try {
     response = await fetchImpl(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
   } catch (cause) {
-    throw new ProviderRequestError(`Request failed: ${url}`, { cause })
+    // Being "online" doesn't prove connectivity, so only an explicit offline report counts.
+    const reason = isOnline() ? 'unavailable' : 'offline'
+    throw new ProviderRequestError(reason, `Request failed: ${url}`, { cause })
   }
   if (!response.ok) {
-    throw new ProviderRequestError(`HTTP ${response.status}: ${url}`)
+    const reason = response.status === 429 ? 'rate-limited' : 'unavailable'
+    throw new ProviderRequestError(reason, `HTTP ${response.status}: ${url}`)
   }
   try {
     return await response.json()
   } catch (cause) {
-    throw new ProviderRequestError(`Invalid JSON: ${url}`, { cause })
+    throw new ProviderRequestError('invalid', `Invalid JSON: ${url}`, { cause })
   }
 }
 
-function isExpectedFailure(reason: unknown): boolean {
-  return reason instanceof ProviderRequestError || reason instanceof EspnResponseError
+/** The reason for an expected failure, or null for an unexpected error. */
+function expectedReason(error: unknown): FailureReason | null {
+  if (error instanceof ProviderRequestError) return error.reason
+  if (error instanceof EspnResponseError) return 'invalid'
+  return null
+}
+
+/** The highest-priority reason among `reasons`, or undefined when there are none. */
+function mostRelevant(reasons: FailureReason[]): FailureReason | undefined {
+  return REASON_PRIORITY.find((reason) => reasons.includes(reason))
 }
 
 /**
@@ -79,7 +118,8 @@ function isExpectedFailure(reason: unknown): boolean {
  */
 export async function getMatchList({
   now = new Date(),
-  fetchImpl = (input, init) => fetch(input, init),
+  fetchImpl = defaultFetch,
+  isOnline = browserOnline,
 }: MatchListOptions = {}): Promise<MatchListResult> {
   const window = matchListWindow(now)
   const months = monthsToRequest({ start: window.resultsStart, end: window.upcomingEnd })
@@ -89,7 +129,7 @@ export async function getMatchList({
       const pages = await Promise.all(
         months.map(async (month) =>
           normalizeScoreboard(
-            await fetchJson(scoreboardUrl(competition.id, month), fetchImpl),
+            await fetchJson(scoreboardUrl(competition.id, month), fetchImpl, isOnline),
             competition.id,
           ),
         ),
@@ -99,12 +139,15 @@ export async function getMatchList({
   )
 
   const failedCompetitionIds: string[] = []
+  const reasons: FailureReason[] = []
   const order = new Map<string, number>()
   const matches: Match[] = []
   settled.forEach((result, index) => {
     if (result.status === 'rejected') {
-      if (!isExpectedFailure(result.reason)) throw result.reason
+      const reason = expectedReason(result.reason)
+      if (!reason) throw result.reason
       failedCompetitionIds.push(COMPETITIONS[index].id)
+      reasons.push(reason)
       return
     }
     for (const match of result.value) {
@@ -126,7 +169,8 @@ export async function getMatchList({
     .filter((m) => m.status === 'finished' && within(m, window.resultsStart, window.tomorrowStart))
     .sort((a, b) => kickoff(b) - kickoff(a) || competitionOrder(a, b))
 
-  return { upcoming, results, failedCompetitionIds }
+  const failureReason = mostRelevant(reasons)
+  return { upcoming, results, failedCompetitionIds, ...(failureReason && { failureReason }) }
 }
 
 /**
@@ -135,14 +179,17 @@ export async function getMatchList({
  */
 export async function getMatchDetails(
   match: Match,
-  { fetchImpl = (input, init) => fetch(input, init) }: { fetchImpl?: typeof fetch } = {},
+  { fetchImpl = defaultFetch, isOnline = browserOnline }: RequestOptions = {},
 ): Promise<Match> {
   try {
-    const body = await fetchJson(summaryUrl(match.competition.id, match.id), fetchImpl)
+    const body = await fetchJson(summaryUrl(match.competition.id, match.id), fetchImpl, isOnline)
     return normalizeSummary(body, match)
   } catch (error) {
-    if (isExpectedFailure(error)) {
-      throw new MatchDetailsError(`Couldn't load details for match ${match.id}`, { cause: error })
+    const reason = expectedReason(error)
+    if (reason) {
+      throw new MatchDetailsError(reason, `Couldn't load details for match ${match.id}`, {
+        cause: error,
+      })
     }
     throw error
   }
@@ -152,6 +199,8 @@ export interface TeamCatalogResult {
   /** Clubs in the fixed competitions, unique by id, sorted by name. */
   teams: Team[]
   failedCompetitionIds: string[]
+  /** The most relevant reason a competition failed; set only when one did. */
+  failureReason?: FailureReason
 }
 
 /**
@@ -159,20 +208,24 @@ export interface TeamCatalogResult {
  * reported in `failedCompetitionIds`; unexpected errors are rethrown.
  */
 export async function getTeamCatalog({
-  fetchImpl = (input, init) => fetch(input, init),
-}: { fetchImpl?: typeof fetch } = {}): Promise<TeamCatalogResult> {
+  fetchImpl = defaultFetch,
+  isOnline = browserOnline,
+}: RequestOptions = {}): Promise<TeamCatalogResult> {
   const settled = await Promise.allSettled(
     COMPETITIONS.map(async (competition) =>
-      normalizeTeams(await fetchJson(standingsUrl(competition.id), fetchImpl)),
+      normalizeTeams(await fetchJson(standingsUrl(competition.id), fetchImpl, isOnline)),
     ),
   )
 
   const failedCompetitionIds: string[] = []
+  const reasons: FailureReason[] = []
   const byId = new Map<string, Team>()
   settled.forEach((result, index) => {
     if (result.status === 'rejected') {
-      if (!isExpectedFailure(result.reason)) throw result.reason
+      const reason = expectedReason(result.reason)
+      if (!reason) throw result.reason
       failedCompetitionIds.push(COMPETITIONS[index].id)
+      reasons.push(reason)
       return
     }
     for (const team of result.value) {
@@ -181,5 +234,6 @@ export async function getTeamCatalog({
   })
 
   const teams = [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
-  return { teams, failedCompetitionIds }
+  const failureReason = mostRelevant(reasons)
+  return { teams, failedCompetitionIds, ...(failureReason && { failureReason }) }
 }
