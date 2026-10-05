@@ -6,6 +6,7 @@ import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
 import { buildHome, recentEvents } from '../../lib/home.ts'
 import { failureMessage } from '../../lib/errors.ts'
+import { Crest } from '../common/Crest.tsx'
 import { ListBanner, MatchListError, MatchListSkeleton } from '../matches/MatchList.tsx'
 import { MatchRow } from '../matches/MatchRow.tsx'
 import { EventRow, MatchTimelineSkeleton } from '../matches/MatchTimeline.tsx'
@@ -75,6 +76,15 @@ function FeaturedEvents({ match, liveRefreshMs }: { match: Match; liveRefreshMs:
   )
 }
 
+function CardTeam({ name, logo }: { name: string; logo: string | undefined }) {
+  return (
+    <span className="flex min-w-0 flex-col items-center gap-2 text-center">
+      <Crest src={logo} name={name} size="lg" />
+      <span className="line-clamp-2 text-sm font-semibold text-foreground">{name}</span>
+    </span>
+  )
+}
+
 function NextMatchCard({ match, now, onSelect }: { match: Match; now: Date; onSelect: SelectMatch }) {
   const kickoff = new Date(match.startTime)
   const when = `${dayLabel(kickoff, now)} ${formatKickoff(kickoff)}`
@@ -86,16 +96,23 @@ function NextMatchCard({ match, now, onSelect }: { match: Match; now: Date; onSe
       aria-label={`${match.homeTeam.name} vs ${match.awayTeam.name}, ${when}${
         countdown === formatKickoff(kickoff) ? '' : `, ${countdown}`
       }`}
-      className="m-3 block w-[calc(100%-1.5rem)] rounded-lg border border-border px-4 py-3 text-left hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="m-3 block w-[calc(100%-1.5rem)] rounded-xl border border-border p-4 text-left shadow-sm transition-colors hover:border-accent hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
-      <span className="block truncate text-xs text-muted">{match.competition.name}</span>
-      <span className="mt-1 block truncate text-base font-semibold text-foreground">
-        {match.homeTeam.name}
+      <span className="flex min-w-0 items-center gap-1.5 text-xs text-muted">
+        <Crest
+          src={match.competition.logo}
+          name={match.competition.name}
+          size="sm"
+          kind="competition"
+        />
+        <span className="min-w-0 truncate">{match.competition.name}</span>
       </span>
-      <span className="block truncate text-base font-semibold text-foreground">
-        {match.awayTeam.name}
+      <span className="mt-4 grid grid-cols-[1fr_auto_1fr] items-start gap-4">
+        <CardTeam name={match.homeTeam.name} logo={match.homeTeam.logo} />
+        <span className="pt-3 text-xs font-medium text-muted">vs</span>
+        <CardTeam name={match.awayTeam.name} logo={match.awayTeam.logo} />
       </span>
-      <span className="mt-2 flex items-center justify-between text-sm">
+      <span className="mt-4 flex items-center justify-between border-t border-border pt-3 text-sm">
         <time className="tabular-nums text-foreground" dateTime={match.startTime}>
           {when}
         </time>
@@ -149,7 +166,7 @@ export function HomePanel({
           <h2 id="home-live" className={sectionHeadingClass}>
             Live now
           </h2>
-          <ul className="divide-y divide-border">
+          <ul className="py-1.5">
             <MatchRow match={live[0]} favorite={isFavorite(live[0])} onSelect={onSelect} />
           </ul>
           {active && (
@@ -166,7 +183,7 @@ export function HomePanel({
             </button>
           </div>
           {live.length > 1 && (
-            <ul className="divide-y divide-border">
+            <ul className="py-1.5">
               {live.slice(1).map((match) => (
                 <MatchRow key={match.id} match={match} favorite={isFavorite(match)} onSelect={onSelect} />
               ))}
@@ -193,7 +210,7 @@ export function HomePanel({
           <h2 id="home-next-up" className={sectionHeadingClass}>
             Next up
           </h2>
-          <ul className="divide-y divide-border">
+          <ul className="py-1.5">
             {nextUp.map((match) => (
               <MatchRow
                 key={match.id}

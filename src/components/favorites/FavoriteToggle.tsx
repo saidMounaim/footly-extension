@@ -1,3 +1,6 @@
+import { Star } from 'lucide-react'
+import type { ReactNode } from 'react'
+
 interface FavoriteToggleProps {
   /** Team or competition name, used in the label. */
   name: string
@@ -6,6 +9,8 @@ interface FavoriteToggleProps {
   onToggle: () => void
   /** Show the name next to the star (lists) or only the star. */
   showName?: boolean
+  /** Decorative crest or logo shown before the name in lists. */
+  icon?: ReactNode
 }
 
 function favoriteLabel(name: string, pressed: boolean): string {
@@ -18,6 +23,7 @@ export function FavoriteToggle({
   disabled = false,
   onToggle,
   showName = false,
+  icon,
 }: FavoriteToggleProps) {
   return (
     <button
@@ -30,10 +36,12 @@ export function FavoriteToggle({
         showName ? 'w-full px-4 py-2 text-left' : 'shrink-0 px-1.5 py-0.5'
       }`}
     >
+      {showName && icon}
       {showName && <span className="min-w-0 flex-1 truncate text-foreground">{name}</span>}
-      <span aria-hidden="true" className={pressed ? 'text-accent' : 'text-muted'}>
-        {pressed ? '★' : '☆'}
-      </span>
+      <Star
+        aria-hidden="true"
+        className={`size-4 shrink-0 ${pressed ? 'fill-current text-accent' : 'text-muted'}`}
+      />
     </button>
   )
 }

@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useRef } from 'react'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
@@ -65,7 +66,7 @@ export function SettingsPanel({
           aria-label="Back from settings"
           className="rounded-md px-2 py-1 text-sm font-medium text-foreground hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
         >
-          <span aria-hidden="true">←</span> Back
+          <ArrowLeft aria-hidden="true" className="inline size-4 align-[-3px]" /> Back
         </button>
         <h2
           ref={headingRef}

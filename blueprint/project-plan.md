@@ -190,6 +190,7 @@ The exact data model can evolve as more football features are implemented.
 - Tailwind CSS.
 - Lightweight custom components.
 - Optional shadcn/ui components where they improve the interface without unnecessarily increasing complexity.
+- lucide-react for one consistent line-icon set; only imported icons are bundled.
 
 The extension should avoid a large UI framework when a simple component can do the job.
 
@@ -320,6 +321,12 @@ Footly should feel like a **modern, compact football companion**, not a miniatur
 - Clear live status.
 - Excellent dark mode.
 - Responsive within the Chrome popup dimensions.
+
+### Crests and icons
+
+- Club crests and competition logos from the data provider appear in match rows, the next-match card, match detail, competition headings, and favorites.
+- Crests are decorative because names stay visible, sit on a neutral backdrop so they read in both themes, and fall back to the team's initials when missing or broken.
+- Icons come from one consistent line-icon set instead of emoji, always with a text label or accessible name.
 
 ### Popup structure
 

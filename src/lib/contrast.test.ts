@@ -1,7 +1,20 @@
 import { describe, expect, it } from 'vitest'
 import css from '../index.css?raw'
 
-const TOKENS = ['background', 'surface', 'foreground', 'muted', 'border', 'accent', 'warning']
+// card-yellow, card-red, and crest-backdrop are decorative (always beside a text label), so they
+// are not contrast-checked.
+const TOKENS = [
+  'background',
+  'surface',
+  'foreground',
+  'muted',
+  'border',
+  'accent',
+  'warning',
+  'card-yellow',
+  'card-red',
+  'crest-backdrop',
+]
 
 /** The custom property values declared directly in the block opened by `selector`. */
 function tokensIn(selector: string): Record<string, string> {

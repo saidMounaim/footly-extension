@@ -4,7 +4,9 @@ import type { Match } from '../../api/types.ts'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
+import type { LogoLookup } from '../../lib/crest.ts'
 import { searchCompetitions, searchMatches, searchTeams, teamsInMatches } from '../../lib/search.ts'
+import { Crest } from '../common/Crest.tsx'
 import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
 import { MatchListError, MatchListSkeleton, StaleBanner } from '../matches/MatchList.tsx'
 import { MatchRow } from '../matches/MatchRow.tsx'
@@ -15,6 +17,8 @@ interface SearchPanelProps {
   now: Date
   favorites: FavoriteTeamsApi
   competitions: FavoriteCompetitionsApi
+  /** Competition logos from the loaded list. */
+  logos: LogoLookup
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
   /** Changes each time the Search tab is clicked, to move focus to the field. */
   focusRequest: number
@@ -47,7 +51,7 @@ function MatchGroup({
       <h3 id={id} className={subheadingClass}>
         {label}
       </h3>
-      <ul className="divide-y divide-border">
+      <ul className="py-1.5">
         {matches.map((match) => (
           <MatchRow
             key={match.id}
@@ -68,6 +72,7 @@ export function SearchPanel({
   now,
   favorites,
   competitions,
+  logos,
   onSelect,
   focusRequest,
 }: SearchPanelProps) {
@@ -133,6 +138,13 @@ export function SearchPanel({
                       disabled={!competitions.ready}
                       onToggle={() => competitions.toggle(competition.id)}
                       showName
+                      icon={
+                        <Crest
+                          src={logos.competitions.get(competition.id)}
+                          name={competition.name}
+                          kind="competition"
+                        />
+                      }
                     />
                   </li>
                 ))}
@@ -157,6 +169,7 @@ export function SearchPanel({
                       disabled={!favorites.ready}
                       onToggle={() => favorites.toggle(team)}
                       showName
+                      icon={<Crest src={team.logo} name={team.name} />}
                     />
                   </li>
                 ))}

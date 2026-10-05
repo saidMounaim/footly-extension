@@ -1,5 +1,6 @@
 import { COMPETITIONS } from '../api/football.ts'
 import type { Match, Team } from '../api/types.ts'
+import { safeImageUrl } from './crest.ts'
 
 /** Key in chrome.storage.local holding the favorite teams array. */
 export const FAVORITE_TEAMS_KEY = 'favoriteTeams'
@@ -9,8 +10,8 @@ export const FAVORITE_COMPETITIONS_KEY = 'favoriteCompetitions'
 
 const COMPETITION_IDS: ReadonlySet<string> = new Set(COMPETITIONS.map((competition) => competition.id))
 
-/** What is saved per favorite team: enough to list it without a network request. */
-export type FavoriteTeam = Pick<Team, 'id' | 'name' | 'shortName'>
+/** What is saved per favorite team: enough to list it, crest included, without a network request. */
+export type FavoriteTeam = Pick<Team, 'id' | 'name' | 'shortName' | 'logo'>
 
 /** The part of a chrome.storage area used here; injectable for tests. */
 export interface StorageArea {
@@ -37,10 +38,16 @@ export function parseFavoriteTeams(value: unknown): FavoriteTeam[] {
   const teams: FavoriteTeam[] = []
   for (const entry of value) {
     if (typeof entry !== 'object' || entry === null) continue
-    const { id, name, shortName } = entry as Record<string, unknown>
+    const { id, name, shortName, logo } = entry as Record<string, unknown>
     if (!nonEmptyString(id) || !nonEmptyString(name) || seen.has(id)) continue
     seen.add(id)
-    teams.push({ id, name, ...(nonEmptyString(shortName) && { shortName }) })
+    const safeLogo = safeImageUrl(logo)
+    teams.push({
+      id,
+      name,
+      ...(nonEmptyString(shortName) && { shortName }),
+      ...(safeLogo && { logo: safeLogo }),
+    })
   }
   return teams
 }
@@ -81,10 +88,11 @@ export async function loadFavoriteTeams(area: StorageArea): Promise<FavoriteTeam
 }
 
 export async function saveFavoriteTeams(area: StorageArea, teams: FavoriteTeam[]): Promise<void> {
-  const value = teams.map(({ id, name, shortName }) => ({
+  const value = teams.map(({ id, name, shortName, logo }) => ({
     id,
     name,
     ...(shortName && { shortName }),
+    ...(logo && { logo }),
   }))
   await writeStoredKey(area, FAVORITE_TEAMS_KEY, value)
 }
@@ -108,7 +116,8 @@ export function toggleFavorite(teams: FavoriteTeam[], team: Team | FavoriteTeam)
     return teams.filter((favorite) => favorite.id !== team.id)
   }
   const { id, name, shortName } = team
-  return [...teams, { id, name, ...(shortName && { shortName }) }]
+  const logo = safeImageUrl(team.logo)
+  return [...teams, { id, name, ...(shortName && { shortName }), ...(logo && { logo }) }]
 }
 
 /** Splits matches into those involving a favorite team and the rest, keeping order. */

@@ -1,13 +1,22 @@
+import { ArrowLeftRight, CircleX, Goal } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { Match, MatchEvent, MatchEventType } from '../../api/types.ts'
 
-const EVENT_DISPLAY: Record<MatchEventType, { icon: string; label: string }> = {
-  goal: { icon: '⚽', label: 'Goal' },
-  'own-goal': { icon: '⚽', label: 'Own goal' },
-  'penalty-goal': { icon: '⚽', label: 'Penalty goal' },
-  'penalty-missed': { icon: '❌', label: 'Missed penalty' },
-  'yellow-card': { icon: '🟨', label: 'Yellow card' },
-  'red-card': { icon: '🟥', label: 'Red card' },
-  substitution: { icon: '🔄', label: 'Substitution' },
+const iconClass = 'size-4 text-muted'
+
+/** A small card shape; the event label beside it names the card. */
+function Card({ color }: { color: 'bg-card-yellow' | 'bg-card-red' }) {
+  return <span className={`inline-block h-3.5 w-2.5 rounded-[2px] ${color}`} />
+}
+
+const EVENT_DISPLAY: Record<MatchEventType, { icon: ReactNode; label: string }> = {
+  goal: { icon: <Goal className={iconClass} />, label: 'Goal' },
+  'own-goal': { icon: <Goal className={iconClass} />, label: 'Own goal' },
+  'penalty-goal': { icon: <Goal className={iconClass} />, label: 'Penalty goal' },
+  'penalty-missed': { icon: <CircleX className={iconClass} />, label: 'Missed penalty' },
+  'yellow-card': { icon: <Card color="bg-card-yellow" />, label: 'Yellow card' },
+  'red-card': { icon: <Card color="bg-card-red" />, label: 'Red card' },
+  substitution: { icon: <ArrowLeftRight className={iconClass} />, label: 'Substitution' },
 }
 
 const SUFFIX: Partial<Record<MatchEventType, string>> = {
@@ -26,7 +35,7 @@ export function EventRow({ event, match }: { event: MatchEvent; match: Match }) 
   return (
     <li className="flex items-start gap-3 px-4 py-2 text-sm">
       <span className="w-12 shrink-0 tabular-nums text-muted">{event.minute}</span>
-      <span aria-hidden="true" className="shrink-0">
+      <span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center">
         {icon}
       </span>
       <span className="sr-only">{label}:</span>

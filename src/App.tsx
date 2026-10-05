@@ -1,5 +1,6 @@
+import { Settings } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import type { Match } from './api/types.ts'
+import type { Match, Team } from './api/types.ts'
 import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
 import { HomePanel } from './components/home/HomePanel.tsx'
 import { MatchDetail } from './components/matches/MatchDetail.tsx'
@@ -20,8 +21,10 @@ import { useNow } from './hooks/useNow.ts'
 import { useOnlineStatus } from './hooks/useOnlineStatus.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 import { useThemeSetting } from './hooks/useThemeSetting.ts'
+import { collectLogos } from './lib/crest.ts'
 
 const NO_MATCHES: Match[] = []
+const NO_TEAMS: Team[] = []
 
 function App() {
   const { state, retry, refresh } = useMatchList()
@@ -62,6 +65,16 @@ function App() {
   const [tab, setTab] = useState<MatchTab>('home')
   const [searchFocus, setSearchFocus] = useState(0)
   const catalog = useTeamCatalog(tab === 'favorites')
+  // The catalog hook returns a fresh state object each render, so depend on its stable teams array.
+  const catalogTeams = catalog.state.status === 'success' ? catalog.state.result.teams : NO_TEAMS
+  const logos = useMemo(
+    () =>
+      collectLogos(
+        state.status === 'success' ? [...state.result.upcoming, ...state.result.results] : NO_MATCHES,
+        catalogTeams,
+      ),
+    [state, catalogTeams],
+  )
   const [selected, setSelected] = useState<Match | null>(null)
   const returnTo = useRef<{ trigger: HTMLButtonElement; scrollY: number } | null>(null)
 
@@ -118,9 +131,9 @@ function App() {
           onClick={openSettings}
           hidden={settingsOpen}
           aria-label="Settings"
-          className="rounded-md px-2 py-1 text-lg leading-none text-muted hover:bg-background hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
+          className="rounded-md p-1.5 text-muted hover:bg-background hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
         >
-          <span aria-hidden="true">⚙</span>
+          <Settings aria-hidden="true" className="size-5" />
         </button>
       </header>
       <main className="flex flex-1 flex-col">
@@ -166,6 +179,7 @@ function App() {
                   favorites={favorites}
                   competitions={competitions}
                   catalog={catalog.state}
+                  logos={logos}
                   onRetryCatalog={catalog.retry}
                 />
               ) : id === 'search' ? (
@@ -175,6 +189,7 @@ function App() {
                   now={now}
                   favorites={favorites}
                   competitions={competitions}
+                  logos={logos}
                   onSelect={openMatch}
                   focusRequest={searchFocus}
                 />

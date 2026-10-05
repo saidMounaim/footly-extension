@@ -4,22 +4,26 @@ import type { Team } from '../../api/types.ts'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { TeamCatalogState } from '../../hooks/useTeamCatalog.ts'
+import type { LogoLookup } from '../../lib/crest.ts'
 import { failureMessage } from '../../lib/errors.ts'
 import { searchTeams } from '../../lib/search.ts'
 import { secondaryButtonClass } from '../matches/status.ts'
+import { Crest } from '../common/Crest.tsx'
 import { FavoriteToggle } from './FavoriteToggle.tsx'
 
 interface FavoritesPanelProps {
   favorites: FavoriteTeamsApi
   competitions: FavoriteCompetitionsApi
   catalog: TeamCatalogState
+  /** Logos from loaded data, for favorites saved without one and for competitions. */
+  logos: LogoLookup
   onRetryCatalog: () => void
 }
 
 const headingClass =
   'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
 
-function YourTeams({ favorites }: { favorites: FavoriteTeamsApi }) {
+function YourTeams({ favorites, logos }: { favorites: FavoriteTeamsApi; logos: LogoLookup }) {
   return (
     <section aria-labelledby="your-teams-heading">
       <h2 id="your-teams-heading" className={headingClass}>
@@ -34,6 +38,7 @@ function YourTeams({ favorites }: { favorites: FavoriteTeamsApi }) {
         <ul className="divide-y divide-border">
           {favorites.teams.map((team) => (
             <li key={team.id} className="flex items-center gap-3 px-4 py-2">
+              <Crest src={team.logo ?? logos.teams.get(team.id)} name={team.name} />
               <span className="min-w-0 flex-1 truncate text-sm text-foreground">{team.name}</span>
               <button
                 type="button"
@@ -52,7 +57,13 @@ function YourTeams({ favorites }: { favorites: FavoriteTeamsApi }) {
   )
 }
 
-function Competitions({ competitions }: { competitions: FavoriteCompetitionsApi }) {
+function Competitions({
+  competitions,
+  logos,
+}: {
+  competitions: FavoriteCompetitionsApi
+  logos: LogoLookup
+}) {
   return (
     <section aria-labelledby="competitions-heading">
       <h2 id="competitions-heading" className={headingClass}>
@@ -67,6 +78,13 @@ function Competitions({ competitions }: { competitions: FavoriteCompetitionsApi 
               disabled={!competitions.ready}
               onToggle={() => competitions.toggle(competition.id)}
               showName
+              icon={
+                <Crest
+                  src={logos.competitions.get(competition.id)}
+                  name={competition.name}
+                  kind="competition"
+                />
+              }
             />
           </li>
         ))}
@@ -104,6 +122,7 @@ function SearchResults({ teams, query, favorites }: { teams: Team[]; query: stri
             disabled={!favorites.ready}
             onToggle={() => favorites.toggle(team)}
             showName
+            icon={<Crest src={team.logo} name={team.name} />}
           />
         </li>
       ))}
@@ -115,6 +134,7 @@ export function FavoritesPanel({
   favorites,
   competitions,
   catalog,
+  logos,
   onRetryCatalog,
 }: FavoritesPanelProps) {
   const [query, setQuery] = useState('')
@@ -128,8 +148,8 @@ export function FavoritesPanel({
           Couldn't load your saved favorites.
         </p>
       )}
-      <YourTeams favorites={favorites} />
-      <Competitions competitions={competitions} />
+      <YourTeams favorites={favorites} logos={logos} />
+      <Competitions competitions={competitions} logos={logos} />
       <section aria-labelledby="find-teams-heading">
         <h2 id="find-teams-heading" className={headingClass}>
           Find teams

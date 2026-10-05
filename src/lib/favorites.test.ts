@@ -88,13 +88,42 @@ describe('saveFavoriteTeams', () => {
   })
 })
 
+describe('favorite crests', () => {
+  it('keeps a valid logo, drops an invalid one, and loads entries without one', async () => {
+    const { area } = memoryArea({
+      [FAVORITE_TEAMS_KEY]: [
+        { id: '359', name: 'Arsenal', logo: 'https://a.espncdn.com/359.png' },
+        { id: '382', name: 'Manchester City', logo: 'http://a.espncdn.com/382.png' },
+        { id: '364', name: 'Liverpool' },
+      ],
+    })
+    expect(await loadFavoriteTeams(area)).toEqual([
+      { id: '359', name: 'Arsenal', logo: 'https://a.espncdn.com/359.png' },
+      { id: '382', name: 'Manchester City' },
+      { id: '364', name: 'Liverpool' },
+    ])
+  })
+
+  it('saves the logo with the team', async () => {
+    const { area, data } = memoryArea()
+    await saveFavoriteTeams(area, [{ id: '359', name: 'Arsenal', logo: 'https://x/359.png' }])
+    expect(data[FAVORITE_TEAMS_KEY]).toEqual([{ id: '359', name: 'Arsenal', logo: 'https://x/359.png' }])
+  })
+})
+
 describe('toggleFavorite', () => {
   const arsenal = { id: '359', name: 'Arsenal', shortName: 'Arsenal', logo: 'https://x/359.png' }
 
-  it('adds to the end without extra fields', () => {
+  it('adds to the end, keeping the crest', () => {
     const first = { id: '1', name: 'First' }
-    expect(toggleFavorite([first], arsenal)).toEqual([
+    expect(toggleFavorite([first], { ...arsenal, extra: 'x' } as typeof arsenal)).toEqual([
       first,
+      { id: '359', name: 'Arsenal', shortName: 'Arsenal', logo: 'https://x/359.png' },
+    ])
+  })
+
+  it('drops an unsafe crest URL when adding', () => {
+    expect(toggleFavorite([], { ...arsenal, logo: 'javascript:alert(1)' })).toEqual([
       { id: '359', name: 'Arsenal', shortName: 'Arsenal' },
     ])
   })

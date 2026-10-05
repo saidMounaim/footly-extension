@@ -1,3 +1,4 @@
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useMemo, useRef } from 'react'
 import type { Match } from '../../api/types.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
@@ -9,6 +10,7 @@ import { useNow } from '../../hooks/useNow.ts'
 import { detailCountdown } from '../../lib/countdown.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
 import { failureMessage } from '../../lib/errors.ts'
+import { Crest } from '../common/Crest.tsx'
 import { MatchLineups } from './MatchLineups.tsx'
 import { StatusText } from './MatchRow.tsx'
 import { MatchStats } from './MatchStats.tsx'
@@ -29,27 +31,33 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
   return (
     <div className="flex flex-col items-center gap-1 border-b border-border px-4 py-5">
       <div className="flex w-full items-center gap-3">
-        <p className="flex flex-1 items-center justify-end gap-1 text-right text-sm font-semibold text-foreground">
-          <span className="min-w-0">{match.homeTeam.name}</span>
-          <FavoriteToggle
-            name={match.homeTeam.name}
-            pressed={favorites.isFavorite(match.homeTeam.id)}
-            disabled={!favorites.ready}
-            onToggle={() => favorites.toggle(match.homeTeam)}
-          />
-        </p>
+        <div className="flex flex-1 flex-col items-end gap-1.5">
+          <Crest src={match.homeTeam.logo} name={match.homeTeam.name} size="lg" />
+          <p className="flex items-center justify-end gap-1 text-right text-sm font-semibold text-foreground">
+            <span className="min-w-0">{match.homeTeam.name}</span>
+            <FavoriteToggle
+              name={match.homeTeam.name}
+              pressed={favorites.isFavorite(match.homeTeam.id)}
+              disabled={!favorites.ready}
+              onToggle={() => favorites.toggle(match.homeTeam)}
+            />
+          </p>
+        </div>
         <p className="shrink-0 text-2xl font-bold tabular-nums text-foreground">
           {match.score ? formatScore(match.score) : formatKickoff(new Date(match.startTime))}
         </p>
-        <p className="flex flex-1 items-center gap-1 text-sm font-semibold text-foreground">
-          <FavoriteToggle
-            name={match.awayTeam.name}
-            pressed={favorites.isFavorite(match.awayTeam.id)}
-            disabled={!favorites.ready}
-            onToggle={() => favorites.toggle(match.awayTeam)}
-          />
-          <span className="min-w-0">{match.awayTeam.name}</span>
-        </p>
+        <div className="flex flex-1 flex-col items-start gap-1.5">
+          <Crest src={match.awayTeam.logo} name={match.awayTeam.name} size="lg" />
+          <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
+            <FavoriteToggle
+              name={match.awayTeam.name}
+              pressed={favorites.isFavorite(match.awayTeam.id)}
+              disabled={!favorites.ready}
+              onToggle={() => favorites.toggle(match.awayTeam)}
+            />
+            <span className="min-w-0">{match.awayTeam.name}</span>
+          </p>
+        </div>
       </div>
       <p className="text-sm">
         {match.status === 'upcoming' ? (
@@ -88,7 +96,7 @@ export function MatchDetail({ match, favorites, liveRefreshMs, onBack }: MatchDe
           aria-label="Back to matches"
           className="rounded-md px-2 py-1 text-sm font-medium text-foreground hover:bg-surface focus-visible:outline-2 focus-visible:outline-accent"
         >
-          <span aria-hidden="true">←</span> Back
+          <ArrowLeft aria-hidden="true" className="inline size-4 align-[-3px]" /> Back
         </button>
         <p className="truncate text-xs text-muted">{match.competition.name}</p>
       </div>

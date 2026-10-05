@@ -147,7 +147,7 @@ export function MatchList({
               <h2 id={`${view}-your-teams`} className={headingClass}>
                 Your teams
               </h2>
-              <ul className="divide-y divide-border">
+              <ul className="py-1.5">
                 {favorites.map((match) => (
                   <MatchRow key={match.id} match={match} favorite now={now} onSelect={onSelect} />
                 ))}
@@ -159,7 +159,7 @@ export function MatchList({
               <h2 id={`${view}-your-competitions`} className={headingClass}>
                 Your competitions
               </h2>
-              <ul className="divide-y divide-border">
+              <ul className="py-1.5">
                 {followed.map((match) => (
                   <MatchRow key={match.id} match={match} now={now} onSelect={onSelect} />
                 ))}
@@ -171,7 +171,7 @@ export function MatchList({
               <h2 id={`${view}-day-${group[0].id}`} className={headingClass}>
                 {dayLabel(new Date(group[0].startTime), loadedAt)}
               </h2>
-              <ul className="divide-y divide-border">
+              <ul className="py-1.5">
                 {group.map((match) => (
                   <MatchRow key={match.id} match={match} now={now} onSelect={onSelect} />
                 ))}

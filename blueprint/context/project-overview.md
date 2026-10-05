@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash 787c058159f59bdb12b958fce753a190787b99b24f4749f2b028840340fde45a -->
+<!-- blueprint:source-hash 3c0ece632079631fc4172190b2bdd2edc60a7aad08b058c7e19e686850892596 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -28,7 +28,7 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 
 ## Features
 
-Build order from `build-plan.md`; features 1 to 9 are done. Headline: the compact popup with next match and live score.
+Build order from `build-plan.md`; features 1 to 15 are done. Feature 19 is listed after 15 and built before 16. Headline: the compact popup with next match and live score.
 
 1. **Match Discovery & Upcoming Games** (done) - upcoming matches with competition, teams, kickoff, status. Split into:
    - **1a. Extension Shell** - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
@@ -43,12 +43,13 @@ Build order from `build-plan.md`; features 1 to 9 are done. Headline: the compac
    - **8a. Match Start & Result Notifications** - first service worker with `chrome.alarms` and `notifications`; kickoff, halftime, full-time alerts, checking only around favorite teams' kickoffs.
    - **8b. Goal & Card Notifications** - goal and card alerts for favorite teams' live matches from match summaries, on 8a's watcher.
 9. **Quick Match Search** (done) - search teams, competitions, matches inside the extension.
-10. **Match Center** - the match detail view (from feature 2) plus basic team statistics and starting lineups when the provider supplies them; hidden when missing.
-11. **Smart Data Refresh & Caching** - state-based refresh, cache stable data, minimize requests.
-12. **Personalized Home** - dashboard prioritizing favorites, live matches, next games.
-13. **Extension Settings** - notifications, refresh behavior, favorites, appearance.
-14. **Dark & Light Themes** - polished themes following system or extension preference.
-15. **API Error & Offline States** - clear handling of errors, rate limits, offline, with retry.
+10. **Match Center** (done) - the match detail view (from feature 2) plus basic team statistics and starting lineups when the provider supplies them; hidden when missing.
+11. **Smart Data Refresh & Caching** (done) - state-based refresh, cache stable data, minimize requests.
+12. **Personalized Home** (done) - dashboard prioritizing favorites, live matches, next games.
+13. **Extension Settings** (done) - notifications, refresh behavior, favorites, appearance.
+14. **Dark & Light Themes** (done) - polished themes following system or extension preference.
+15. **API Error & Offline States** (done) - clear handling of errors, rate limits, offline, with retry.
+19. **UI Refresh: Icons & Team Crests** - one consistent icon set instead of emoji, icons on the bottom tabs, club crests and competition logos in match rows, the next-match card, match detail, competition headings, and favorites.
 16. **Performance & Extension Optimization** - popup load time, memory, background activity, permissions.
 17. **Privacy & Permissions** - minimal, explained permissions; no unnecessary data collection.
 18. **Chrome Web Store Readiness** - Manifest V3 compliance, icons, screenshots, metadata, privacy info, production build.
@@ -114,6 +115,7 @@ Basic team statistics; every field is optional because providers omit some.
 - **TypeScript, React, Vite** - extension UI and build
 - **Manifest V3, `@crxjs/vite-plugin`** - extension packaging and dev workflow
 - **Tailwind CSS** - styling; optional shadcn/ui only where it adds value
+- **lucide-react** - one consistent line-icon set; only imported icons are bundled
 - **Chrome APIs** - `storage` (preferences), `alarms` (scheduled checks), `notifications`, `runtime` (popup/service worker messaging)
 - **ESPN endpoints** - initial data provider, isolated behind an adapter (`src/api/`: `football.ts`, `espn.ts`, `types.ts`); other folders `components/`, `features/`, `hooks/`, `lib/`, `popup/`
 - **Backend** - none for the MVP; if CORS, rate limits, reliability, or notifications require one, use Koora Next (Next.js route handlers, Prisma/PostgreSQL only if persistence is needed)
@@ -134,6 +136,8 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 - Status uses text or icons, not color alone (upcoming neutral, live prominent, halftime label, finished final score, postponed warning, cancelled clear)
 - Events listed chronologically (minute, icon, player)
 - Skeleton loaders, friendly empty states ("No favorite teams yet."), error states with a retry action
+- Crests and logos from the provider in rows, the next-match card, match detail, competition headings, and favorites: decorative (names stay visible), on a neutral backdrop for both themes, with an initials fallback when missing or broken
+- Icons from one line-icon set instead of emoji, always with a text label or accessible name
 - Accessibility: keyboard use, sufficient contrast, labeled icons, no color-only indicators, respect system theme, readable at small size
 
 ## Deployment
@@ -158,4 +162,5 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 - **Search** appears in the plan as team and match search; build plan adds competitions.
 - **Undefined types.** `MatchStatus` and `MatchEvent` shapes are missing. 1b must define `MatchStatus` (it locks the `Match` shape); `MatchEvent` can wait for feature 2.
 - **Default competitions.** The six-league default for 1b lives only in the build plan; how it combines with favorites (features 4, 5, 12) is undecided.
+- **Crest weight.** The provider's crest images are large; feature 19 ships before 16, so feature 16 should account for crest image weight and caching.
 - **Testing.** The plan lists Vitest and React Testing Library; only Vitest is configured (`npm test`), and UI stays out of unit tests by the coding standards.
