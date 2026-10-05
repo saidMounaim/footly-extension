@@ -82,7 +82,11 @@ async function fetchJson(
 ): Promise<unknown> {
   let response: Response
   try {
-    response = await fetchImpl(url, { signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS) })
+    response = await fetchImpl(url, {
+      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      // The provider gets nothing beyond the request itself.
+      referrerPolicy: 'no-referrer',
+    })
   } catch (cause) {
     // Being "online" doesn't prove connectivity, so only an explicit offline report counts.
     const reason = isOnline() ? 'unavailable' : 'offline'

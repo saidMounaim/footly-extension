@@ -8,6 +8,7 @@ import type { NotificationTypesApi } from '../../hooks/useNotificationTypes.ts'
 import type { ThemeSettingApi } from '../../hooks/useThemeSetting.ts'
 import { LIVE_REFRESH_OPTIONS, THEME_OPTIONS, type NotificationType, type Theme } from '../../lib/settings.ts'
 import { sectionHeadingClass, secondaryButtonClass } from '../matches/status.ts'
+import { PrivacySection } from './PrivacySection.tsx'
 import { SettingSwitch } from './SettingSwitch.tsx'
 
 interface SettingsPanelProps {
@@ -170,6 +171,8 @@ export function SettingsPanel({
           </button>
         </div>
       </section>
+
+      <PrivacySection />
     </div>
   )
 }

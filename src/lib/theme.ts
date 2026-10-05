@@ -30,7 +30,7 @@ export function cacheTheme(storage: CacheStorage | undefined, theme: Theme) {
 }
 
 /** window.localStorage, or undefined where accessing it throws or it doesn't exist. */
-export function pageStorage(): CacheStorage | undefined {
+export function pageStorage(): Storage | undefined {
   try {
     return globalThis.localStorage
   } catch {

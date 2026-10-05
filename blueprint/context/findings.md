@@ -14,3 +14,11 @@
 **Why it matters:** `mergePlan` keeps the stored status for a known match and refreshes its `startTime`, and `watchWindow` skips `postponed`. If the provider later reschedules the same match id to a new date within the 7-day list while its stored status is still `postponed`, the watched entry keeps `postponed` and gets no kick-off, half-time, or full-time alerts. This follows the spec's "known matches keep their last notified status" rule literally; whether ESPN reuses ids for rescheduled fixtures within the list window is not verified.
 **Suggested fix:** If confirmed, let `mergePlan` take the fresh status when the stored one is `postponed` and the fresh one is `upcoming` (a silent reset that cannot send a false alert). Requirement lost: none. Needs a spec decision before changing.
 **Resolution:**
+
+### F-07 [P3] unverified - Keyboard focus drops to the page body after a failed erase
+
+**File:** src/components/settings/PrivacySection.tsx:86
+**Found:** 2026-10-06 by /audit independent (scope: current; lens: quality, tests)
+**Why it matters:** Clicking Erase sets state to `erasing`, which disables both the focused Erase button and Cancel. Chrome blurs a focused element when it becomes disabled, so focus likely moves to `body`. If clearing then fails, the confirmation and the `role="alert"` message appear, but Escape no longer reaches the group's `onKeyDown` and a keyboard user must tab back into the control. The spec only requires the confirmation to stay open on failure, so this is an accessibility nicety, not a contract break. Not observed in a browser during this review.
+**Suggested fix:** When entering `failed`, move focus to Cancel (or Erase) in the existing `useEffect`, e.g. treat `failed` like `confirming`. Requirement lost: none.
+**Resolution:**

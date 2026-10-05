@@ -42,6 +42,6 @@
 
 - [x] 16. **Performance & Extension Optimization** - Minimize popup load time, memory usage, background activity, API requests, and unnecessary Chrome permissions.
 
-- [ ] 17. **Privacy & Permissions** - Keep permissions minimal, clearly explain why each permission is required, and avoid collecting unnecessary user data.
+- [x] 17. **Privacy & Permissions** - Keep permissions minimal, clearly explain why each permission is required, and avoid collecting unnecessary user data.
 
 - [ ] 18. **Chrome Web Store Readiness** - Prepare the extension for production with Manifest V3 compliance, icons, screenshots, metadata, privacy information, and production builds.

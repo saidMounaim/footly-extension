@@ -65,6 +65,13 @@ describe('getMatchList upcoming', () => {
     )
   })
 
+  it('sends no referrer', async () => {
+    const fetchImpl = fakeFetch({})
+    await getMatchList({ now: NOW, fetchImpl })
+    const inits = fetchImpl.mock.calls.map((call) => (call as unknown[])[1] as RequestInit)
+    expect(inits.every((init) => init.referrerPolicy === 'no-referrer')).toBe(true)
+  })
+
   it('requests two months per competition near a month boundary', async () => {
     const fetchImpl = fakeFetch({})
     await getMatchList({ now: new Date('2026-10-28T12:00:00Z'), fetchImpl })
