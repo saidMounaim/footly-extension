@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { COMPETITIONS, type MatchListResult } from '../api/football.ts'
+import type { MatchListResult } from '../api/football.ts'
 import type { Match, MatchStatus } from '../api/types.ts'
 import {
+  coversCompetitions,
   hasLiveMatch,
   isSnapshotFromToday,
   isTeamCatalogFresh,
@@ -19,6 +20,7 @@ import {
 import { FavoritesStorageError, type StorageArea } from './favorites.ts'
 
 const MINUTE_MS = 60_000
+const DEFAULT_IDS = ['eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1', 'uefa.champions']
 
 function memoryArea(initial: Record<string, unknown> = {}) {
   const data: Record<string, unknown> = { ...initial }
@@ -54,7 +56,10 @@ const noon = new Date(2026, 9, 4, 12, 0)
 const at = (minutes: number) => new Date(noon.getTime() + minutes * MINUTE_MS)
 
 function snapshot(result: Partial<MatchListResult>, savedAt = noon): MatchListSnapshot {
-  return { savedAt, result: { upcoming: [], results: [], failedCompetitionIds: [], ...result } }
+  return {
+    savedAt,
+    result: { upcoming: [], results: [], failedCompetitionIds: [], competitionIds: DEFAULT_IDS, ...result },
+  }
 }
 
 function stored(result: Partial<MatchListResult>, overrides: Record<string, unknown> = {}) {
@@ -77,7 +82,10 @@ describe('parseMatchListSnapshot', () => {
       parseMatchListSnapshot(
         stored({ upcoming, results, failedCompetitionIds: ['esp.1', 'xxx.9', 3] as string[] }),
       ),
-    ).toEqual({ savedAt: noon, result: { upcoming, results, failedCompetitionIds: ['esp.1'] } })
+    ).toEqual({
+      savedAt: noon,
+      result: { upcoming, results, failedCompetitionIds: ['esp.1'], competitionIds: DEFAULT_IDS },
+    })
   })
 
   it.each([
@@ -166,6 +174,7 @@ describe('match list storage', () => {
     upcoming: [match('1', 'upcoming', at(60))],
     results: [],
     failedCompetitionIds: ['ita.1'],
+    competitionIds: [...DEFAULT_IDS, 'caf.nations'],
   }
 
   it('round-trips a saved snapshot', async () => {
@@ -177,13 +186,39 @@ describe('match list storage', () => {
 
   it('does not save when every competition failed', async () => {
     const { area, data } = memoryArea()
-    const failed = { upcoming: [], results: [], failedCompetitionIds: COMPETITIONS.map((c) => c.id) }
+    const failed = {
+      upcoming: [],
+      results: [],
+      failedCompetitionIds: ['eng.1', 'caf.nations'],
+      competitionIds: ['eng.1', 'caf.nations'],
+    }
     await saveMatchListSnapshot(area, failed, noon)
     expect(data).toEqual({})
   })
 
   it('gives null when nothing valid is stored', async () => {
     expect(await loadMatchListSnapshot(memoryArea().area)).toBeNull()
+  })
+
+  it('reads a snapshot saved before competition ids existed as covering the defaults', async () => {
+    const { area } = memoryArea({
+      [MATCH_LIST_CACHE_KEY]: { version: 1, savedAt: noon.toISOString(), upcoming: [], results: [], failedCompetitionIds: [] },
+    })
+    expect((await loadMatchListSnapshot(area))?.result.competitionIds).toEqual(DEFAULT_IDS)
+  })
+
+  it('drops unknown stored competition ids', async () => {
+    const { area } = memoryArea({
+      [MATCH_LIST_CACHE_KEY]: {
+        version: 1,
+        savedAt: noon.toISOString(),
+        upcoming: [],
+        results: [],
+        failedCompetitionIds: [],
+        competitionIds: ['eng.1', 'mar.1', 42, 'caf.nations'],
+      },
+    })
+    expect((await loadMatchListSnapshot(area))?.result.competitionIds).toEqual(['eng.1', 'caf.nations'])
   })
 
   it('wraps read and write failures in FavoritesStorageError', async () => {
@@ -202,14 +237,26 @@ describe('team catalog cache', () => {
 
   it('round-trips a complete catalog', async () => {
     const { area, data } = memoryArea()
-    await saveTeamCatalogSnapshot(area, { teams, failedCompetitionIds: [] }, noon)
+    await saveTeamCatalogSnapshot(
+      area,
+      { teams, failedCompetitionIds: [], competitionIds: [...DEFAULT_IDS, 'caf.nations'] },
+      noon,
+    )
     expect(data[TEAM_CATALOG_CACHE_KEY]).toMatchObject({ version: 1 })
-    expect(await loadTeamCatalogSnapshot(area)).toEqual({ savedAt: noon, teams })
+    expect(await loadTeamCatalogSnapshot(area)).toEqual({
+      savedAt: noon,
+      teams,
+      competitionIds: [...DEFAULT_IDS, 'caf.nations'],
+    })
   })
 
   it('does not save a partial catalog', async () => {
     const { area, data } = memoryArea()
-    await saveTeamCatalogSnapshot(area, { teams, failedCompetitionIds: ['eng.1'] }, noon)
+    await saveTeamCatalogSnapshot(
+      area,
+      { teams, failedCompetitionIds: ['eng.1'], competitionIds: DEFAULT_IDS },
+      noon,
+    )
     expect(data).toEqual({})
   })
 
@@ -223,7 +270,7 @@ describe('team catalog cache', () => {
   })
 
   it('is fresh under 24 hours and not in the future', () => {
-    const value = { savedAt: noon, teams }
+    const value = { savedAt: noon, teams, competitionIds: DEFAULT_IDS }
     expect(isTeamCatalogFresh(value, at(24 * 60 - 1))).toBe(true)
     expect(isTeamCatalogFresh(value, at(24 * 60))).toBe(false)
     expect(isTeamCatalogFresh(value, at(-1))).toBe(false)
@@ -251,5 +298,24 @@ describe('isSnapshotFromToday', () => {
   it('rejects a snapshot saved in the future', () => {
     const now = new Date('2026-10-05T10:00:00+01:00')
     expect(isSnapshotFromToday(saved('2026-10-05T10:01:00+01:00'), now)).toBe(false)
+  })
+})
+
+describe('competition coverage', () => {
+  it('is unusable when a requested competition is missing from the snapshot', () => {
+    const fresh = snapshot({})
+    expect(matchListFreshness(fresh, at(1))).toBe('fresh')
+    expect(matchListFreshness(fresh, at(1), [...DEFAULT_IDS, 'caf.nations'])).toBe('unusable')
+  })
+
+  it('stays usable when the snapshot covers more than requested', () => {
+    const wide = snapshot({ competitionIds: [...DEFAULT_IDS, 'caf.nations'] })
+    expect(matchListFreshness(wide, at(1), DEFAULT_IDS)).toBe('fresh')
+  })
+
+  it('checks coverage as a subset', () => {
+    expect(coversCompetitions(['a', 'b'], ['b'])).toBe(true)
+    expect(coversCompetitions(['a'], ['a', 'b'])).toBe(false)
+    expect(coversCompetitions([], [])).toBe(true)
   })
 })

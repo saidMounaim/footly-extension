@@ -10,15 +10,41 @@ import {
 } from './espn.ts'
 import type { Match, Team } from './types.ts'
 
-/** Competitions shown before favorites exist, in display tie-break order. */
-export const COMPETITIONS = [
-  { id: 'eng.1', name: 'Premier League' },
-  { id: 'esp.1', name: 'La Liga' },
-  { id: 'ita.1', name: 'Serie A' },
-  { id: 'ger.1', name: 'Bundesliga' },
-  { id: 'fra.1', name: 'Ligue 1' },
-  { id: 'uefa.champions', name: 'Champions League' },
-] as const
+export interface CatalogCompetition {
+  id: string
+  name: string
+  /** Whether ESPN publishes league tables, which the team catalog is built from. */
+  hasStandings: boolean
+}
+
+/** Always loaded, in display tie-break order. */
+export const DEFAULT_COMPETITIONS: readonly CatalogCompetition[] = [
+  { id: 'eng.1', name: 'Premier League', hasStandings: true },
+  { id: 'esp.1', name: 'La Liga', hasStandings: true },
+  { id: 'ita.1', name: 'Serie A', hasStandings: true },
+  { id: 'ger.1', name: 'Bundesliga', hasStandings: true },
+  { id: 'fra.1', name: 'Ligue 1', hasStandings: true },
+  { id: 'uefa.champions', name: 'Champions League', hasStandings: true },
+]
+
+/** Loaded only while followed. Ids confirmed against ESPN; Botola Pro (mar.1) isn't served. */
+export const EXTRA_COMPETITIONS: readonly CatalogCompetition[] = [
+  { id: 'fifa.friendly', name: 'International Friendlies', hasStandings: false },
+  { id: 'fifa.worldq.caf', name: 'World Cup Qualifying (Africa)', hasStandings: true },
+  { id: 'caf.nations', name: 'Africa Cup of Nations', hasStandings: true },
+]
+
+/** Every competition Footly knows, defaults first; used to validate stored ids. */
+export const COMPETITIONS: readonly CatalogCompetition[] = [
+  ...DEFAULT_COMPETITIONS,
+  ...EXTRA_COMPETITIONS,
+]
+
+/** The defaults plus the followed extras, in catalog order; unknown ids are ignored. */
+export function competitionsToLoad(followedIds: Iterable<string>): CatalogCompetition[] {
+  const followed = new Set(followedIds)
+  return [...DEFAULT_COMPETITIONS, ...EXTRA_COMPETITIONS.filter((c) => followed.has(c.id))]
+}
 
 const REQUEST_TIMEOUT_MS = 10_000
 
@@ -34,6 +60,8 @@ export interface MatchListResult {
   /** Finished matches from today and the previous 7 days, newest first. */
   results: Match[]
   failedCompetitionIds: string[]
+  /** The competitions requested for this result, in load order. */
+  competitionIds: string[]
   /** The most relevant reason a competition failed; set only when one did. Never saved. */
   failureReason?: FailureReason
 }
@@ -46,6 +74,16 @@ interface RequestOptions {
 
 interface MatchListOptions extends RequestOptions {
   now?: Date
+  /** What to load; the defaults when omitted. */
+  competitions?: readonly CatalogCompetition[]
+}
+
+/** True when every requested competition failed, so the result holds nothing usable. */
+export function allCompetitionsFailed(result: {
+  failedCompetitionIds: string[]
+  competitionIds: string[]
+}): boolean {
+  return result.failedCompetitionIds.length >= result.competitionIds.length
 }
 
 const defaultFetch: typeof fetch = (input, init) => fetch(input, init)
@@ -116,7 +154,7 @@ function mostRelevant(reasons: FailureReason[]): FailureReason | undefined {
 }
 
 /**
- * Upcoming matches and recent results for the fixed competition set, from one
+ * Upcoming matches and recent results for the requested competitions, from one
  * set of scoreboard requests. Per-competition failures are reported in
  * `failedCompetitionIds`; unexpected errors are rethrown.
  */
@@ -124,12 +162,13 @@ export async function getMatchList({
   now = new Date(),
   fetchImpl = defaultFetch,
   isOnline = browserOnline,
+  competitions = DEFAULT_COMPETITIONS,
 }: MatchListOptions = {}): Promise<MatchListResult> {
   const window = matchListWindow(now)
   const months = monthsToRequest({ start: window.resultsStart, end: window.upcomingEnd })
 
   const settled = await Promise.allSettled(
-    COMPETITIONS.map(async (competition) => {
+    competitions.map(async (competition) => {
       const pages = await Promise.all(
         months.map(async (month) =>
           normalizeScoreboard(
@@ -150,7 +189,7 @@ export async function getMatchList({
     if (result.status === 'rejected') {
       const reason = expectedReason(result.reason)
       if (!reason) throw result.reason
-      failedCompetitionIds.push(COMPETITIONS[index].id)
+      failedCompetitionIds.push(competitions[index].id)
       reasons.push(reason)
       return
     }
@@ -174,7 +213,13 @@ export async function getMatchList({
     .sort((a, b) => kickoff(b) - kickoff(a) || competitionOrder(a, b))
 
   const failureReason = mostRelevant(reasons)
-  return { upcoming, results, failedCompetitionIds, ...(failureReason && { failureReason }) }
+  return {
+    upcoming,
+    results,
+    failedCompetitionIds,
+    competitionIds: competitions.map((competition) => competition.id),
+    ...(failureReason && { failureReason }),
+  }
 }
 
 /**
@@ -203,20 +248,26 @@ export interface TeamCatalogResult {
   /** Clubs in the fixed competitions, unique by id, sorted by name. */
   teams: Team[]
   failedCompetitionIds: string[]
+  /** The competitions whose tables were requested, in load order. */
+  competitionIds: string[]
   /** The most relevant reason a competition failed; set only when one did. */
   failureReason?: FailureReason
 }
 
 /**
- * Loads every club in the fixed competition set. Per-competition failures are
- * reported in `failedCompetitionIds`; unexpected errors are rethrown.
+ * Loads every club in the requested competitions that publish tables.
+ * Per-competition failures are reported in `failedCompetitionIds`; unexpected
+ * errors are rethrown.
  */
 export async function getTeamCatalog({
   fetchImpl = defaultFetch,
   isOnline = browserOnline,
-}: RequestOptions = {}): Promise<TeamCatalogResult> {
+  competitions = DEFAULT_COMPETITIONS,
+}: RequestOptions & { competitions?: readonly CatalogCompetition[] } = {}): Promise<TeamCatalogResult> {
+  // Friendlies and similar have no tables; asking would only add a failure.
+  const withTables = competitions.filter((competition) => competition.hasStandings)
   const settled = await Promise.allSettled(
-    COMPETITIONS.map(async (competition) =>
+    withTables.map(async (competition) =>
       normalizeTeams(await fetchJson(standingsUrl(competition.id), fetchImpl, isOnline)),
     ),
   )
@@ -228,7 +279,7 @@ export async function getTeamCatalog({
     if (result.status === 'rejected') {
       const reason = expectedReason(result.reason)
       if (!reason) throw result.reason
-      failedCompetitionIds.push(COMPETITIONS[index].id)
+      failedCompetitionIds.push(withTables[index].id)
       reasons.push(reason)
       return
     }
@@ -239,5 +290,10 @@ export async function getTeamCatalog({
 
   const teams = [...byId.values()].sort((a, b) => a.name.localeCompare(b.name))
   const failureReason = mostRelevant(reasons)
-  return { teams, failedCompetitionIds, ...(failureReason && { failureReason }) }
+  return {
+    teams,
+    failedCompetitionIds,
+    competitionIds: withTables.map((competition) => competition.id),
+    ...(failureReason && { failureReason }),
+  }
 }

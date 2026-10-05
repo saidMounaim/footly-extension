@@ -1,4 +1,10 @@
-import { COMPETITIONS, type MatchListResult, type TeamCatalogResult } from '../api/football.ts'
+import {
+  allCompetitionsFailed,
+  COMPETITIONS,
+  DEFAULT_COMPETITIONS,
+  type MatchListResult,
+  type TeamCatalogResult,
+} from '../api/football.ts'
 import type { Match, MatchStatus, Team } from '../api/types.ts'
 import { startOfLocalDay } from './date.ts'
 import { readStoredKey, writeStoredKey, type StorageArea } from './favorites.ts'
@@ -41,6 +47,22 @@ export interface MatchListSnapshot {
 export interface TeamCatalogSnapshot {
   savedAt: Date
   teams: Team[]
+  /** Competitions whose tables the teams came from. */
+  competitionIds: string[]
+}
+
+const DEFAULT_IDS: string[] = DEFAULT_COMPETITIONS.map((competition) => competition.id)
+
+/** Known competition ids from an untrusted stored value; snapshots saved before extras existed cover the defaults. */
+function parseCompetitionIds(value: unknown): string[] {
+  if (!Array.isArray(value)) return [...DEFAULT_IDS]
+  return value.filter((id): id is string => typeof id === 'string' && COMPETITION_IDS.has(id))
+}
+
+/** True when the snapshot loaded every competition now requested. */
+export function coversCompetitions(snapshotIds: readonly string[], requestedIds: readonly string[]): boolean {
+  const covered = new Set(snapshotIds)
+  return requestedIds.every((id) => covered.has(id))
 }
 
 export type Freshness = 'fresh' | 'stale' | 'unusable'
@@ -86,7 +108,7 @@ function parseHeader(value: unknown): { record: Record<string, unknown>; savedAt
 export function parseMatchListSnapshot(value: unknown): MatchListSnapshot | null {
   const header = parseHeader(value)
   if (!header) return null
-  const { upcoming, results, failedCompetitionIds } = header.record
+  const { upcoming, results, failedCompetitionIds, competitionIds } = header.record
   if (!Array.isArray(upcoming) || !upcoming.every(isMatch)) return null
   if (!Array.isArray(results) || !results.every(isMatch)) return null
   if (!Array.isArray(failedCompetitionIds)) return null
@@ -98,6 +120,7 @@ export function parseMatchListSnapshot(value: unknown): MatchListSnapshot | null
       failedCompetitionIds: failedCompetitionIds.filter(
         (id): id is string => typeof id === 'string' && COMPETITION_IDS.has(id),
       ),
+      competitionIds: parseCompetitionIds(competitionIds),
     },
   }
 }
@@ -106,9 +129,13 @@ export function parseMatchListSnapshot(value: unknown): MatchListSnapshot | null
 export function parseTeamCatalogSnapshot(value: unknown): TeamCatalogSnapshot | null {
   const header = parseHeader(value)
   if (!header) return null
-  const { teams } = header.record
+  const { teams, competitionIds } = header.record
   if (!Array.isArray(teams) || !teams.every(isNamed)) return null
-  return { savedAt: header.savedAt, teams: teams as Team[] }
+  return {
+    savedAt: header.savedAt,
+    teams: teams as Team[],
+    competitionIds: parseCompetitionIds(competitionIds),
+  }
 }
 
 /** True when any match is live or at halftime. */
@@ -118,11 +145,17 @@ export function hasLiveMatch(matches: Match[]): boolean {
 
 /**
  * Fresh snapshots are shown without a request, stale ones are shown and then
- * refreshed, unusable ones are ignored.
+ * refreshed, unusable ones are ignored, including any that miss a requested
+ * competition (for example, one just followed).
  */
-export function matchListFreshness({ savedAt, result }: MatchListSnapshot, now: Date): Freshness {
+export function matchListFreshness(
+  { savedAt, result }: MatchListSnapshot,
+  now: Date,
+  requestedIds: readonly string[] = DEFAULT_IDS,
+): Freshness {
   const age = now.getTime() - savedAt.getTime()
   if (age < 0 || age > LIST_USABLE_MS) return 'unusable'
+  if (!coversCompetitions(result.competitionIds, requestedIds)) return 'unusable'
   if (startOfLocalDay(savedAt).getTime() !== startOfLocalDay(now).getTime()) return 'unusable'
   if (result.failedCompetitionIds.length > 0) return 'stale'
   const kickedOff = result.upcoming.some((match) => {
@@ -159,13 +192,14 @@ export async function saveMatchListSnapshot(
   result: MatchListResult,
   savedAt: Date,
 ): Promise<void> {
-  if (result.failedCompetitionIds.length === COMPETITIONS.length) return
+  if (allCompetitionsFailed(result)) return
   await writeStoredKey(area, MATCH_LIST_CACHE_KEY, {
     version: CACHE_VERSION,
     savedAt: savedAt.toISOString(),
     upcoming: result.upcoming,
     results: result.results,
     failedCompetitionIds: result.failedCompetitionIds,
+    competitionIds: result.competitionIds,
   })
 }
 
@@ -184,5 +218,6 @@ export async function saveTeamCatalogSnapshot(
     version: CACHE_VERSION,
     savedAt: savedAt.toISOString(),
     teams: result.teams,
+    competitionIds: result.competitionIds,
   })
 }

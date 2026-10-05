@@ -22,7 +22,7 @@ function match(
 }
 
 function result(upcoming: Match[]): MatchListResult {
-  return { upcoming, results: [], failedCompetitionIds: [] }
+  return { upcoming, results: [], failedCompetitionIds: [], competitionIds: ['eng.1'] }
 }
 
 const none: ReadonlySet<string> = new Set()

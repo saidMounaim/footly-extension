@@ -1,5 +1,9 @@
 import { useId, useState } from 'react'
-import { COMPETITIONS } from '../../api/football.ts'
+import {
+  DEFAULT_COMPETITIONS,
+  EXTRA_COMPETITIONS,
+  type CatalogCompetition,
+} from '../../api/football.ts'
 import type { Team } from '../../api/types.ts'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
@@ -57,20 +61,26 @@ function YourTeams({ favorites, logos }: { favorites: FavoriteTeamsApi; logos: L
   )
 }
 
-function Competitions({
+function CompetitionGroup({
+  id,
+  title,
+  list,
   competitions,
   logos,
 }: {
+  id: string
+  title: string
+  list: readonly CatalogCompetition[]
   competitions: FavoriteCompetitionsApi
   logos: LogoLookup
 }) {
   return (
-    <section aria-labelledby="competitions-heading">
-      <h2 id="competitions-heading" className={headingClass}>
-        Competitions
+    <section aria-labelledby={id}>
+      <h2 id={id} className={headingClass}>
+        {title}
       </h2>
       <ul className="divide-y divide-border">
-        {COMPETITIONS.map((competition) => (
+        {list.map((competition) => (
           <li key={competition.id}>
             <FavoriteToggle
               name={competition.name}
@@ -90,6 +100,34 @@ function Competitions({
         ))}
       </ul>
     </section>
+  )
+}
+
+/** The always-loaded leagues, then extras that load once followed. */
+function Competitions({
+  competitions,
+  logos,
+}: {
+  competitions: FavoriteCompetitionsApi
+  logos: LogoLookup
+}) {
+  return (
+    <>
+      <CompetitionGroup
+        id="favorites-leagues"
+        title="Leagues"
+        list={DEFAULT_COMPETITIONS}
+        competitions={competitions}
+        logos={logos}
+      />
+      <CompetitionGroup
+        id="favorites-more-competitions"
+        title="More competitions"
+        list={EXTRA_COMPETITIONS}
+        competitions={competitions}
+        logos={logos}
+      />
+    </>
   )
 }
 

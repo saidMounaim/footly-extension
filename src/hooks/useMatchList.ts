@@ -1,5 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
-import { COMPETITIONS, getMatchList, type MatchListResult } from '../api/football.ts'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  allCompetitionsFailed,
+  competitionsToLoad,
+  getMatchList,
+  type MatchListResult,
+} from '../api/football.ts'
 import {
   isSnapshotFromToday,
   loadMatchListSnapshot,
@@ -21,9 +26,6 @@ export type MatchListState =
       stale?: { reason: LoadFailure }
     }
   | { status: 'error'; reason: LoadFailure }
-
-const allFailed = (result: MatchListResult) =>
-  result.failedCompetitionIds.length === COMPETITIONS.length
 
 const reasonOf = (result: MatchListResult): LoadFailure => result.failureReason ?? 'unexpected'
 
@@ -56,8 +58,10 @@ function writeSnapshot(result: MatchListResult, savedAt: Date) {
  * snapshot when it is still usable; `retry` reloads both from the network with
  * the loading state, `refresh` reloads in the background. When every
  * competition fails, today's last list (saved or shown) stays up marked stale.
+ * Loads the defaults plus `followedIds`' extra competitions, waiting while
+ * `followedIds` is null (still being read); a change reloads in the background.
  */
-export function useMatchList(): {
+export function useMatchList(followedIds: readonly string[] | null): {
   state: MatchListState
   retry: () => void
   refresh: () => Promise<void>
@@ -66,15 +70,27 @@ export function useMatchList(): {
   const [attempt, setAttempt] = useState(0)
   // Bumped by every retry and on unmount so older background responses are dropped.
   const generation = useRef(0)
+  // A stable key, so the list reloads only when the loaded set actually changes.
+  const key =
+    followedIds === null
+      ? null
+      : competitionsToLoad(followedIds)
+          .map((competition) => competition.id)
+          .join(',')
+  const competitions = useMemo(
+    () => (key === null ? null : competitionsToLoad(key.split(','))),
+    [key],
+  )
 
   const refresh = useCallback(async () => {
     const started = generation.current
     const markStale = (reason: LoadFailure) =>
       setState((current) => (current.status === 'success' ? { ...current, stale: { reason } } : current))
     try {
-      const result = await getMatchList()
+      if (!competitions) return
+      const result = await getMatchList({ competitions })
       if (started !== generation.current) return
-      if (allFailed(result)) {
+      if (allCompetitionsFailed(result)) {
         markStale(reasonOf(result))
         return
       }
@@ -85,9 +101,11 @@ export function useMatchList(): {
       console.error('Unexpected error while refreshing matches', error)
       if (started === generation.current) markStale('unexpected')
     }
-  }, [])
+  }, [competitions])
 
   useEffect(() => {
+    if (!competitions) return
+    const requestedIds = competitions.map((competition) => competition.id)
     let cancelled = false
     /** Today's saved list marked stale, otherwise the error state. */
     const fallBack = async (reason: LoadFailure) => {
@@ -109,16 +127,18 @@ export function useMatchList(): {
       if (attempt === 0) {
         const snapshot = await readSnapshot()
         if (cancelled) return
-        const freshness = snapshot ? matchListFreshness(snapshot, new Date()) : 'unusable'
+        const freshness = snapshot
+          ? matchListFreshness(snapshot, new Date(), requestedIds)
+          : 'unusable'
         if (snapshot && freshness !== 'unusable') {
           setState({ status: 'success', result: snapshot.result, loadedAt: snapshot.savedAt })
           if (freshness === 'stale') void refresh()
           return
         }
       }
-      const result = await getMatchList()
+      const result = await getMatchList({ competitions })
       if (cancelled) return
-      if (allFailed(result)) {
+      if (allCompetitionsFailed(result)) {
         await fallBack(reasonOf(result))
       } else {
         const loadedAt = new Date()
@@ -133,7 +153,7 @@ export function useMatchList(): {
     return () => {
       cancelled = true
     }
-  }, [attempt, refresh])
+  }, [attempt, refresh, competitions])
 
   useEffect(
     () => () => {

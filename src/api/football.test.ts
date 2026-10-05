@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
+  allCompetitionsFailed,
   COMPETITIONS,
+  competitionsToLoad,
+  DEFAULT_COMPETITIONS,
+  EXTRA_COMPETITIONS,
   getMatchDetails,
   getMatchList,
   getTeamCatalog,
@@ -58,7 +62,7 @@ describe('getMatchList upcoming', () => {
     await getMatchList({ now: NOW, fetchImpl })
     const urls = fetchImpl.mock.calls.map(([input]) => String(input))
     expect(urls).toEqual(
-      COMPETITIONS.map(
+      DEFAULT_COMPETITIONS.map(
         (c) =>
           `https://site.api.espn.com/apis/site/v2/sports/soccer/${c.id}/scoreboard?dates=202610`,
       ),
@@ -75,7 +79,7 @@ describe('getMatchList upcoming', () => {
   it('requests two months per competition near a month boundary', async () => {
     const fetchImpl = fakeFetch({})
     await getMatchList({ now: new Date('2026-10-28T12:00:00Z'), fetchImpl })
-    expect(fetchImpl).toHaveBeenCalledTimes(COMPETITIONS.length * 2)
+    expect(fetchImpl).toHaveBeenCalledTimes(DEFAULT_COMPETITIONS.length * 2)
   })
 
   it('keeps only matches inside the local window', async () => {
@@ -171,7 +175,8 @@ describe('getMatchList upcoming', () => {
     expect(result).toEqual({
       upcoming: [],
       results: [],
-      failedCompetitionIds: COMPETITIONS.map((c) => c.id),
+      failedCompetitionIds: DEFAULT_COMPETITIONS.map((c) => c.id),
+      competitionIds: DEFAULT_COMPETITIONS.map((c) => c.id),
       failureReason: 'unavailable',
     })
   })
@@ -260,7 +265,7 @@ describe('getMatchList results', () => {
     const fetchImpl = fakeFetch({})
     await getMatchList({ now: new Date('2026-10-03T12:00:00Z'), fetchImpl })
     const urls = fetchImpl.mock.calls.map(([input]) => String(input))
-    expect(urls).toHaveLength(COMPETITIONS.length * 2)
+    expect(urls).toHaveLength(DEFAULT_COMPETITIONS.length * 2)
     expect(urls).toContain(
       'https://site.api.espn.com/apis/site/v2/sports/soccer/eng.1/scoreboard?dates=202609',
     )
@@ -393,7 +398,7 @@ describe('getTeamCatalog', () => {
     const fetchImpl = teamsFetch({})
     await getTeamCatalog({ fetchImpl })
     expect(fetchImpl.mock.calls.map(([input]) => String(input))).toEqual(
-      COMPETITIONS.map(
+      DEFAULT_COMPETITIONS.map(
         (c) => `https://site.api.espn.com/apis/v2/sports/soccer/${c.id}/standings`,
       ),
     )
@@ -440,7 +445,8 @@ describe('getTeamCatalog', () => {
     })
     expect(result).toEqual({
       teams: [],
-      failedCompetitionIds: COMPETITIONS.map((c) => c.id),
+      failedCompetitionIds: DEFAULT_COMPETITIONS.map((c) => c.id),
+      competitionIds: DEFAULT_COMPETITIONS.map((c) => c.id),
       failureReason: 'unavailable',
     })
   })
@@ -455,5 +461,55 @@ describe('getTeamCatalog', () => {
     // fetchJson wraps anything fetch throws as an expected failure, so the error comes from parsing.
     const fetchImpl = vi.fn<typeof fetch>(async () => ({ ok: true, json: async () => body }) as Response)
     await expect(getTeamCatalog({ fetchImpl })).rejects.toBe(bug)
+  })
+})
+
+describe('competition catalog', () => {
+  const defaultIds = DEFAULT_COMPETITIONS.map((c) => c.id)
+
+  it('lists every competition with the defaults first', () => {
+    expect(COMPETITIONS.map((c) => c.id)).toEqual([
+      ...defaultIds,
+      ...EXTRA_COMPETITIONS.map((c) => c.id),
+    ])
+    expect(defaultIds).toEqual(['eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1', 'uefa.champions'])
+  })
+
+  it('loads only the defaults when nothing extra is followed', () => {
+    expect(competitionsToLoad([]).map((c) => c.id)).toEqual(defaultIds)
+  })
+
+  it('appends followed extras in catalog order and ignores defaults and unknown ids', () => {
+    const ids = competitionsToLoad(['caf.nations', 'eng.1', 'mar.1', 'fifa.friendly']).map((c) => c.id)
+    expect(ids).toEqual([...defaultIds, 'fifa.friendly', 'caf.nations'])
+  })
+
+  it('knows when every requested competition failed', () => {
+    expect(allCompetitionsFailed({ failedCompetitionIds: ['a', 'b'], competitionIds: ['a', 'b'] })).toBe(true)
+    expect(allCompetitionsFailed({ failedCompetitionIds: ['a'], competitionIds: ['a', 'b'] })).toBe(false)
+    expect(allCompetitionsFailed({ failedCompetitionIds: [], competitionIds: ['a'] })).toBe(false)
+  })
+})
+
+describe('requested competitions', () => {
+  const slugOf = (input: RequestInfo | URL) => String(input).split('/soccer/')[1].split('/')[0]
+
+  it('requests only the passed competitions and reports them', async () => {
+    const fetchImpl = fakeFetch({})
+    const competitions = competitionsToLoad(['fifa.friendly'])
+    const result = await getMatchList({ now: NOW, fetchImpl, competitions })
+    const slugs = new Set(fetchImpl.mock.calls.map(([input]) => slugOf(input)))
+    expect([...slugs]).toEqual(competitions.map((c) => c.id))
+    expect(result.competitionIds).toEqual(competitions.map((c) => c.id))
+  })
+
+  it('skips catalog competitions without tables', async () => {
+    const fetchImpl = vi.fn<typeof fetch>(async () => new Response(JSON.stringify({ children: [] })))
+    const competitions = competitionsToLoad(['fifa.friendly', 'caf.nations'])
+    const result = await getTeamCatalog({ fetchImpl, competitions })
+    const slugs = fetchImpl.mock.calls.map(([input]) => slugOf(input))
+    expect(slugs).not.toContain('fifa.friendly')
+    expect(slugs).toContain('caf.nations')
+    expect(result.competitionIds).toEqual(slugs)
   })
 })

@@ -27,7 +27,10 @@ const NO_MATCHES: Match[] = []
 const NO_TEAMS: Team[] = []
 
 function App() {
-  const { state, retry, refresh } = useMatchList()
+  const competitions = useFavoriteCompetitions()
+  // Wait for followed competitions before the first load, unless they can't be read.
+  const followedIds = competitions.ready || competitions.loadError ? competitions.ids : null
+  const { state, retry, refresh } = useMatchList(followedIds)
   const online = useOnlineStatus()
   const listStatus = state.status === 'success' && state.stale ? 'stale' : state.status
   const wasOnline = useRef(online)
@@ -53,7 +56,6 @@ function App() {
   )
   useKickoffChecks(upcoming, refresh)
   const favorites = useFavoriteTeams()
-  const competitions = useFavoriteCompetitions()
   const notifications = useNotificationsSetting()
   const notificationTypes = useNotificationTypes()
   const liveRefresh = useLiveRefreshSetting()
@@ -64,7 +66,7 @@ function App() {
   const settingsButton = useRef<HTMLButtonElement>(null)
   const [tab, setTab] = useState<MatchTab>('home')
   const [searchFocus, setSearchFocus] = useState(0)
-  const catalog = useTeamCatalog(tab === 'favorites')
+  const catalog = useTeamCatalog(tab === 'favorites', competitions.ids)
   // The catalog hook returns a fresh state object each render, so depend on its stable teams array.
   const catalogTeams = catalog.state.status === 'success' ? catalog.state.result.teams : NO_TEAMS
   const logos = useMemo(

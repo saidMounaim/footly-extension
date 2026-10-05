@@ -172,6 +172,17 @@ describe('loadFavoriteCompetitions', () => {
     expect(await loadFavoriteCompetitions(area)).toEqual(['esp.1', 'eng.1'])
   })
 
+  it('accepts the extra competitions, but not ones ESPN does not serve', async () => {
+    const { area } = memoryArea({
+      [FAVORITE_COMPETITIONS_KEY]: ['caf.nations', 'mar.1', 'fifa.friendly', 'fifa.worldq.caf'],
+    })
+    expect(await loadFavoriteCompetitions(area)).toEqual([
+      'caf.nations',
+      'fifa.friendly',
+      'fifa.worldq.caf',
+    ])
+  })
+
   it('throws FavoritesStorageError when reading fails', async () => {
     await expect(loadFavoriteCompetitions(failingArea)).rejects.toBeInstanceOf(FavoritesStorageError)
   })

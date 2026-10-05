@@ -1,9 +1,17 @@
-import { COMPETITIONS, getMatchDetails, getMatchList, MatchDetailsError } from './api/football.ts'
+import {
+  allCompetitionsFailed,
+  competitionsToLoad,
+  getMatchDetails,
+  getMatchList,
+  MatchDetailsError,
+} from './api/football.ts'
 import type { MatchStatus } from './api/types.ts'
 import { loadMatchListSnapshot, matchListFreshness, saveMatchListSnapshot } from './lib/cache.ts'
 import {
+  FAVORITE_COMPETITIONS_KEY,
   FAVORITE_TEAMS_KEY,
   FavoritesStorageError,
+  loadFavoriteCompetitions,
   loadFavoriteTeams,
   type StorageArea,
 } from './lib/favorites.ts'
@@ -79,15 +87,32 @@ function reportUnexpectedCacheError(error: unknown) {
   }
 }
 
-/** The fresh saved match list when there is one, otherwise a fetched list that is then saved. */
+/** Followed competition ids, or none when they can't be read (the defaults still load). */
+async function followedCompetitionIds(): Promise<string[]> {
+  try {
+    return await loadFavoriteCompetitions(storage)
+  } catch (error) {
+    reportUnexpectedCacheError(error)
+    return []
+  }
+}
+
+/**
+ * The fresh saved match list when it covers the defaults plus followed extras,
+ * otherwise a fetched list that is then saved.
+ */
 async function currentMatchList() {
+  const competitions = competitionsToLoad(await followedCompetitionIds())
+  const requestedIds = competitions.map((competition) => competition.id)
   try {
     const snapshot = await loadMatchListSnapshot(storage)
-    if (snapshot && matchListFreshness(snapshot, new Date()) === 'fresh') return snapshot.result
+    if (snapshot && matchListFreshness(snapshot, new Date(), requestedIds) === 'fresh') {
+      return snapshot.result
+    }
   } catch (error) {
     reportUnexpectedCacheError(error)
   }
-  const result = await getMatchList()
+  const result = await getMatchList({ competitions })
   await saveMatchListSnapshot(storage, result, new Date()).catch(reportUnexpectedCacheError)
   return result
 }
@@ -114,7 +139,7 @@ async function plan() {
   await ensurePlanAlarm()
   const [result, watched] = await Promise.all([currentMatchList(), loadWatchedMatches(storage)])
   const now = new Date()
-  if (result.failedCompetitionIds.length === COMPETITIONS.length) {
+  if (allCompetitionsFailed(result)) {
     await scheduleWatch(watched, now)
     return
   }
@@ -178,6 +203,7 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 chrome.storage.onChanged.addListener((changes, area) => {
   const replan =
     FAVORITE_TEAMS_KEY in changes ||
+    FAVORITE_COMPETITIONS_KEY in changes ||
     NOTIFICATIONS_ENABLED_KEY in changes ||
     NOTIFICATION_TYPES_KEY in changes
   if (area === 'local' && replan) {

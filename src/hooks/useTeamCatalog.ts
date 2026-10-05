@@ -1,6 +1,17 @@
-import { useCallback, useEffect, useState } from 'react'
-import { COMPETITIONS, getTeamCatalog, type TeamCatalogResult } from '../api/football.ts'
-import { isTeamCatalogFresh, loadTeamCatalogSnapshot, saveTeamCatalogSnapshot } from '../lib/cache.ts'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import {
+  allCompetitionsFailed,
+  competitionsToLoad,
+  getTeamCatalog,
+  type CatalogCompetition,
+  type TeamCatalogResult,
+} from '../api/football.ts'
+import {
+  coversCompetitions,
+  isTeamCatalogFresh,
+  loadTeamCatalogSnapshot,
+  saveTeamCatalogSnapshot,
+} from '../lib/cache.ts'
 import type { LoadFailure } from '../lib/errors.ts'
 import { FavoritesStorageError } from '../lib/favorites.ts'
 import { extensionStorage } from './useSavedValue.ts'
@@ -21,14 +32,18 @@ function reportUnexpectedCacheError(error: unknown) {
   }
 }
 
-/** The saved catalog while it is fresh, otherwise null (also when it can't be read). */
-async function readFreshCatalog(): Promise<TeamCatalogResult | null> {
+/** The saved catalog while it is fresh and covers `competitions`, otherwise null (also when unreadable). */
+async function readFreshCatalog(
+  competitions: readonly CatalogCompetition[],
+): Promise<TeamCatalogResult | null> {
   const storage = extensionStorage()
   if (!storage) return null
+  const tableIds = competitions.filter((c) => c.hasStandings).map((c) => c.id)
   try {
     const snapshot = await loadTeamCatalogSnapshot(storage)
     if (!snapshot || !isTeamCatalogFresh(snapshot, new Date())) return null
-    return { teams: snapshot.teams, failedCompetitionIds: [] }
+    if (!coversCompetitions(snapshot.competitionIds, tableIds)) return null
+    return { teams: snapshot.teams, failedCompetitionIds: [], competitionIds: snapshot.competitionIds }
   } catch (error) {
     reportUnexpectedCacheError(error)
     return null
@@ -37,9 +52,17 @@ async function readFreshCatalog(): Promise<TeamCatalogResult | null> {
 
 /**
  * Loads the team catalog the first time `enabled` is true, from the saved
- * catalog while it is under a day old, then keeps it for the popup.
+ * catalog while it is under a day old, then keeps it for the popup. Followed
+ * extra competitions with tables are included; following one reloads it.
  */
-export function useTeamCatalog(enabled: boolean): { state: TeamCatalogState; retry: () => void } {
+export function useTeamCatalog(
+  enabled: boolean,
+  followedIds: readonly string[],
+): { state: TeamCatalogState; retry: () => void } {
+  const key = competitionsToLoad(followedIds)
+    .map((competition) => competition.id)
+    .join(',')
+  const competitions = useMemo(() => competitionsToLoad(key.split(',')), [key])
   const [active, setActive] = useState(enabled)
   const [attempt, setAttempt] = useState(0)
   const [settled, setSettled] = useState<Settled | null>(null)
@@ -49,15 +72,15 @@ export function useTeamCatalog(enabled: boolean): { state: TeamCatalogState; ret
     if (!active) return
     let cancelled = false
     const load = async () => {
-      const cached = attempt === 0 ? await readFreshCatalog() : null
+      const cached = attempt === 0 ? await readFreshCatalog(competitions) : null
       if (cancelled) return
       if (cached) {
         setSettled({ attempt, status: 'success', result: cached })
         return
       }
-      const result = await getTeamCatalog()
+      const result = await getTeamCatalog({ competitions })
       if (cancelled) return
-      if (result.failedCompetitionIds.length === COMPETITIONS.length) {
+      if (allCompetitionsFailed(result)) {
         setSettled({ attempt, status: 'error', reason: result.failureReason ?? 'unexpected' })
         return
       }
@@ -72,7 +95,7 @@ export function useTeamCatalog(enabled: boolean): { state: TeamCatalogState; ret
     return () => {
       cancelled = true
     }
-  }, [active, attempt])
+  }, [active, attempt, competitions])
 
   const retry = useCallback(() => setAttempt((n) => n + 1), [])
 

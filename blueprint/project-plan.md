@@ -64,6 +64,7 @@ The product should work for both casual football fans and users who follow footb
 - Recent match results.
 - Favorite teams.
 - Favorite competitions.
+- More competitions beyond the six default leagues: Botola Pro and international national-team matches (friendlies, World Cup qualifiers, AFCON). They load only when followed, so the default request count stays the same.
 - Match countdown.
 - Quick team and match search.
 - Match detail view, with basic team statistics and starting lineups when the provider supplies them.
@@ -321,6 +322,10 @@ Footly should feel like a **modern, compact football companion**, not a miniatur
 - Clear live status.
 - Excellent dark mode.
 - Responsive within the Chrome popup dimensions.
+
+### Redesign
+
+- A full visual redesign makes every screen modern, cleaner, and easier to use. It is designed directly in the feature spec, without a mockup stage.
 
 ### Crests and icons
 
