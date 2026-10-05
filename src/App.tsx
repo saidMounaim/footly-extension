@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import type { Match } from './api/types.ts'
 import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
+import { HomePanel } from './components/home/HomePanel.tsx'
 import { MatchDetail } from './components/matches/MatchDetail.tsx'
 import { MatchList } from './components/matches/MatchList.tsx'
 import { MatchTabs } from './components/matches/MatchTabs.tsx'
@@ -29,7 +30,7 @@ function App() {
   const favorites = useFavoriteTeams()
   const competitions = useFavoriteCompetitions()
   const notifications = useNotificationsSetting()
-  const [tab, setTab] = useState<MatchTab>('upcoming')
+  const [tab, setTab] = useState<MatchTab>('home')
   const [searchFocus, setSearchFocus] = useState(0)
   const catalog = useTeamCatalog(tab === 'favorites')
   const [selected, setSelected] = useState<Match | null>(null)
@@ -45,6 +46,8 @@ function App() {
     setSelected(match)
     window.scrollTo(0, 0)
   }, [])
+
+  const openFavorites = useCallback(() => changeTab('favorites', 'click'), [changeTab])
 
   const closeMatch = useCallback(() => {
     setSelected(null)
@@ -65,14 +68,13 @@ function App() {
           Foot<span className="text-accent">ly</span>
         </h1>
       </header>
-      <main className="flex-1">
+      <main className="flex flex-1 flex-col">
         {(favorites.saveError || competitions.saveError || notifications.saveError) && (
           <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
             Couldn't save your favorites. Try again.
           </p>
         )}
-        <div hidden={selected !== null}>
-          <MatchTabs active={tab} onChange={changeTab} />
+        <div className={selected ? 'hidden' : 'flex flex-1 flex-col'}>
           {MATCH_TABS.map(({ id }) => (
             <div
               key={id}
@@ -80,8 +82,20 @@ function App() {
               id={panelId(id)}
               aria-labelledby={tabId(id)}
               hidden={id !== tab}
+              className="flex-1"
             >
-              {id === 'favorites' ? (
+              {id === 'home' ? (
+                <HomePanel
+                  state={state}
+                  favoriteIds={favorites.favoriteIds}
+                  competitionIds={competitions.idSet}
+                  now={now}
+                  active={tab === 'home' && selected === null}
+                  onRetry={retry}
+                  onSelect={openMatch}
+                  onOpenFavorites={openFavorites}
+                />
+              ) : id === 'favorites' ? (
                 <FavoritesPanel
                   favorites={favorites}
                   competitions={competitions}
@@ -112,6 +126,7 @@ function App() {
               )}
             </div>
           ))}
+          <MatchTabs active={tab} onChange={changeTab} />
         </div>
         {selected && (
           <MatchDetail

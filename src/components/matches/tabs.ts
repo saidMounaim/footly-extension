@@ -1,9 +1,10 @@
-export type MatchTab = 'upcoming' | 'results' | 'favorites' | 'search'
+export type MatchTab = 'home' | 'upcoming' | 'results' | 'favorites' | 'search'
 
 /** Tabs that show a match list. */
-export type ListTab = Exclude<MatchTab, 'favorites' | 'search'>
+export type ListTab = Exclude<MatchTab, 'home' | 'favorites' | 'search'>
 
 export const MATCH_TABS: { id: MatchTab; label: string }[] = [
+  { id: 'home', label: 'Home' },
   { id: 'upcoming', label: 'Upcoming' },
   { id: 'results', label: 'Results' },
   { id: 'favorites', label: 'Favorites' },

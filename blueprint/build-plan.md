@@ -30,7 +30,7 @@
 
 - [x] 11. **Smart Data Refresh & Caching** - Refresh live matches intelligently while caching stable data to minimize API requests, battery usage, and extension resource consumption.
 
-- [ ] 12. **Personalized Home** - Build a simple personalized dashboard that prioritizes favorite teams, live matches, and the next important games.
+- [x] 12. **Personalized Home** - Build a simple personalized dashboard that prioritizes favorite teams, live matches, and the next important games.
 
 - [ ] 13. **Extension Settings** - Provide lightweight settings for notification preferences, refresh behavior, favorite content, and appearance.
 

@@ -63,6 +63,20 @@ export function MatchListError({ onRetry }: { onRetry: () => void }) {
   )
 }
 
+export function PartialFailureBanner({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div
+      role="alert"
+      className="flex items-center justify-between gap-3 border-b border-border px-4 py-2"
+    >
+      <p className="text-xs text-muted">Some competitions couldn't be loaded.</p>
+      <button type="button" onClick={onRetry} className={secondaryButtonClass}>
+        Retry
+      </button>
+    </div>
+  )
+}
+
 export function MatchList({
   state,
   view,
@@ -83,17 +97,7 @@ export function MatchList({
     'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
   return (
     <div>
-      {result.failedCompetitionIds.length > 0 && (
-        <div
-          role="alert"
-          className="flex items-center justify-between gap-3 border-b border-border px-4 py-2"
-        >
-          <p className="text-xs text-muted">Some competitions couldn't be loaded.</p>
-          <button type="button" onClick={onRetry} className={secondaryButtonClass}>
-            Retry
-          </button>
-        </div>
-      )}
+      {result.failedCompetitionIds.length > 0 && <PartialFailureBanner onRetry={onRetry} />}
       {matches.length === 0 ? (
         <p className="px-6 py-12 text-center text-sm text-muted">{EMPTY_MESSAGE[view]}</p>
       ) : (

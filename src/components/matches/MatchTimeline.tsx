@@ -20,7 +20,7 @@ function teamName(match: Match, teamId: string | undefined): string | undefined 
   return team ? (team.shortName ?? team.name) : undefined
 }
 
-function EventRow({ event, match }: { event: MatchEvent; match: Match }) {
+export function EventRow({ event, match }: { event: MatchEvent; match: Match }) {
   const { icon, label } = EVENT_DISPLAY[event.type]
   const team = teamName(match, event.teamId)
   return (

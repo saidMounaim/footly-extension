@@ -34,7 +34,7 @@ export function MatchTabs({ active, onChange }: MatchTabsProps) {
       role="tablist"
       aria-label="Matches"
       onKeyDown={onKeyDown}
-      className="flex border-b border-border"
+      className="sticky bottom-0 flex border-t border-border bg-surface"
     >
       {MATCH_TABS.map(({ id, label }) => {
         const selected = id === active
@@ -52,7 +52,7 @@ export function MatchTabs({ active, onChange }: MatchTabsProps) {
             aria-controls={panelId(id)}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(id, 'click')}
-            className={`flex-1 border-b-2 px-4 py-2 text-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+            className={`flex-1 border-t-2 px-1 py-2 text-sm focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
               selected
                 ? 'border-accent font-semibold text-foreground'
                 : 'border-transparent font-normal text-muted hover:text-foreground'
