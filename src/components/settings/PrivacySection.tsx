@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { eraseFootlyData } from '../../lib/erase.ts'
 import { CONTACTED_HOSTS, PERMISSION_EXPLANATIONS } from '../../lib/privacy.ts'
 import { pageStorage } from '../../lib/theme.ts'
-import { sectionHeadingClass, secondaryButtonClass } from '../matches/status.ts'
+import { cardClass, sectionHeadingClass, secondaryButtonClass } from '../matches/status.ts'
 
 type EraseState = 'idle' | 'confirming' | 'erasing' | 'failed'
 
@@ -51,7 +51,7 @@ function EraseControl() {
 
   if (state === 'idle') {
     return (
-      <div className="px-4 pb-4">
+      <div className="px-4 pt-3 pb-4">
         <button
           ref={trigger}
           type="button"
@@ -69,7 +69,7 @@ function EraseControl() {
       role="group"
       aria-labelledby="settings-erase-confirm"
       onKeyDown={onKeyDown}
-      className="mx-4 mb-4 rounded-lg border border-border p-3"
+      className="mx-3 mt-3 mb-4 rounded-xl border border-border p-3"
     >
       <p id="settings-erase-confirm" className="text-sm text-foreground">
         This removes your favorites, settings, and saved matches from this device.
@@ -109,7 +109,7 @@ export function PrivacySection() {
       <h3 id="settings-privacy" className={sectionHeadingClass}>
         Privacy & permissions
       </h3>
-      <div className="space-y-3 px-4 py-3 text-sm">
+      <div className={`${cardClass} space-y-3 px-4 py-3 text-sm`}>
         <p className="text-foreground">
           Footly has no account and collects nothing about you. Your favorites and settings stay
           on this device.

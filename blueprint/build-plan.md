@@ -46,6 +46,6 @@
 
 - [x] 20. **More Competitions** - Add Botola Pro and international national-team matches (friendlies, World Cup qualifiers, AFCON), followable in Favorites and searchable, loading only the default leagues plus the competitions you follow.
 
-- [ ] 21. **Modern UI Redesign** - Rework the popup's layout and visual style directly, without a mockup stage, so every screen is modern, cleaner, and easier to use.
+- [x] 21. **Modern UI Redesign** - Rework the popup's layout and visual style directly, without a mockup stage, so every screen is modern, cleaner, and easier to use.
 
 - [ ] 18. **Chrome Web Store Readiness** - Prepare the extension for production with Manifest V3 compliance, icons, screenshots, metadata, privacy information, and production builds.

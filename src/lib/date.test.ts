@@ -1,5 +1,13 @@
 import { describe, expect, it } from 'vitest'
-import { dayLabel, formatKickoff, localDayKey, matchListWindow, monthsToRequest } from './date.ts'
+import {
+  dayLabel,
+  formatKickoff,
+  localDayKey,
+  matchDays,
+  matchListWindow,
+  monthsToRequest,
+  onDay,
+} from './date.ts'
 
 // Vitest pins TZ to Europe/London (see vite.config.ts).
 
@@ -62,5 +70,28 @@ describe('day helpers', () => {
 
   it('formats kickoff as local 24-hour time', () => {
     expect(formatKickoff(new Date('2026-10-10T14:00:00Z'), 'en-US')).toBe('15:00')
+  })
+})
+
+describe('matchDays and onDay', () => {
+  // Europe/London (pinned in vite.config.ts): 23:30Z on Oct 4 is still Oct 5 00:30 local.
+  const matches = [
+    { id: 'a', startTime: '2026-10-04T12:00:00Z' },
+    { id: 'b', startTime: '2026-10-04T23:30:00Z' },
+    { id: 'c', startTime: '2026-10-05T18:00:00Z' },
+    { id: 'd', startTime: '2026-10-04T15:00:00Z' },
+  ]
+
+  it('lists distinct local days in list order', () => {
+    expect(matchDays(matches)).toEqual(['2026-10-04', '2026-10-05'])
+  })
+
+  it('gives no days for no matches', () => {
+    expect(matchDays([])).toEqual([])
+  })
+
+  it('keeps only the chosen local day', () => {
+    expect(onDay(matches, '2026-10-05').map((m) => m.id)).toEqual(['b', 'c'])
+    expect(onDay(matches, '2026-10-07')).toEqual([])
   })
 })

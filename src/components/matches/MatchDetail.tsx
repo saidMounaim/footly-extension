@@ -29,7 +29,7 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
   const upcoming = match.status === 'upcoming'
   const now = useNow(upcoming ? 1000 : null)
   return (
-    <div className="flex flex-col items-center gap-1 border-b border-border px-4 py-5">
+    <div className="mx-3 my-3 flex flex-col items-center gap-3 rounded-2xl border border-border bg-background px-4 py-5 shadow-sm">
       <div className="flex w-full items-center gap-3">
         <div className="flex flex-1 flex-col items-end gap-1.5">
           <Crest src={match.homeTeam.logo} name={match.homeTeam.name} size="lg" />
@@ -43,7 +43,7 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
             />
           </p>
         </div>
-        <p className="shrink-0 text-2xl font-bold tabular-nums text-foreground">
+        <p className="shrink-0 text-4xl font-bold tabular-nums text-foreground">
           {match.score ? formatScore(match.score) : formatKickoff(new Date(match.startTime))}
         </p>
         <div className="flex flex-1 flex-col items-start gap-1.5">
@@ -68,7 +68,7 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
             </span>
           </span>
         ) : (
-          <StatusText match={match} />
+          <StatusText match={match} showScore={false} />
         )}
       </p>
     </div>

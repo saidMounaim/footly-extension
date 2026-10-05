@@ -1,11 +1,13 @@
 import type { Match } from '../../api/types.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
-import { dayLabel, formatKickoff, localDayKey } from '../../lib/date.ts'
+import { useState } from 'react'
+import { dayLabel, formatKickoff, localDayKey, matchDays, onDay } from '../../lib/date.ts'
 import { failureMessage, type LoadFailure } from '../../lib/errors.ts'
 import { splitByCompetitions, splitByFavorites } from '../../lib/favorites.ts'
+import { DayChips } from './DayChips.tsx'
 import { MatchRow } from './MatchRow.tsx'
 import type { ListTab } from './tabs.ts'
-import { secondaryButtonClass } from './status.ts'
+import { secondaryButtonClass, sectionHeadingClass } from './status.ts'
 
 const EMPTY_MESSAGE: Record<ListTab, string> = {
   upcoming: 'No upcoming matches in the next 7 days.',
@@ -126,25 +128,37 @@ export function MatchList({
   onRetry,
   onSelect,
 }: MatchListProps) {
+  // Per tab and in memory only; a day that disappears after a reload falls back to All.
+  const [day, setDay] = useState<string | null>(null)
   if (state.status === 'loading') return <MatchListSkeleton />
   if (state.status === 'error') return <MatchListError reason={state.reason} onRetry={onRetry} />
 
   const { result, loadedAt } = state
-  const matches = result[view]
+  const allMatches = result[view]
+  const days = matchDays(allMatches)
+  const chosen = day !== null && days.includes(day) ? day : null
+  const matches = chosen === null ? allMatches : onDay(allMatches, chosen)
   const { favorites, others: rest } = splitByFavorites(matches, favoriteIds)
   const { favorites: followed, others } = splitByCompetitions(rest, competitionIds)
-  const headingClass =
-    'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
   return (
     <div>
       <ListBanner state={state} onRetry={onRetry} />
+      {days.length > 1 && (
+        <DayChips
+          days={days}
+          selected={chosen}
+          onChange={setDay}
+          now={now}
+          label={view === 'upcoming' ? 'Upcoming days' : 'Result days'}
+        />
+      )}
       {matches.length === 0 ? (
         <p className="px-6 py-12 text-center text-sm text-muted">{EMPTY_MESSAGE[view]}</p>
       ) : (
         <>
           {favorites.length > 0 && (
             <section aria-labelledby={`${view}-your-teams`}>
-              <h2 id={`${view}-your-teams`} className={headingClass}>
+              <h2 id={`${view}-your-teams`} className={sectionHeadingClass}>
                 Your teams
               </h2>
               <ul className="py-1.5">
@@ -156,7 +170,7 @@ export function MatchList({
           )}
           {followed.length > 0 && (
             <section aria-labelledby={`${view}-your-competitions`}>
-              <h2 id={`${view}-your-competitions`} className={headingClass}>
+              <h2 id={`${view}-your-competitions`} className={sectionHeadingClass}>
                 Your competitions
               </h2>
               <ul className="py-1.5">
@@ -168,7 +182,7 @@ export function MatchList({
           )}
           {groupByDay(others).map((group) => (
             <section key={group[0].startTime} aria-labelledby={`${view}-day-${group[0].id}`}>
-              <h2 id={`${view}-day-${group[0].id}`} className={headingClass}>
+              <h2 id={`${view}-day-${group[0].id}`} className={sectionHeadingClass}>
                 {dayLabel(new Date(group[0].startTime), loadedAt)}
               </h2>
               <ul className="py-1.5">

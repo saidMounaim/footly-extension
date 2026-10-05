@@ -34,7 +34,7 @@ export function MatchTabs({ active, onChange }: MatchTabsProps) {
       role="tablist"
       aria-label="Matches"
       onKeyDown={onKeyDown}
-      className="sticky bottom-0 flex border-t border-border bg-surface"
+      className="sticky bottom-0 flex border-t border-border bg-background/90 backdrop-blur"
     >
       {MATCH_TABS.map(({ id, label, icon: Icon }) => {
         const selected = id === active
@@ -52,13 +52,17 @@ export function MatchTabs({ active, onChange }: MatchTabsProps) {
             aria-controls={panelId(id)}
             tabIndex={selected ? 0 : -1}
             onClick={() => onChange(id, 'click')}
-            className={`flex flex-1 flex-col items-center gap-0.5 border-t-2 px-1 pt-1.5 pb-1 text-xs focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
-              selected
-                ? 'border-accent font-semibold text-foreground'
-                : 'border-transparent font-normal text-muted hover:text-foreground'
+            className={`group flex flex-1 flex-col items-center gap-0.5 px-1 pt-1.5 pb-1.5 text-xs focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent ${
+              selected ? 'font-semibold text-accent' : 'font-normal text-muted hover:text-foreground'
             }`}
           >
-            <Icon aria-hidden="true" className="size-5" />
+            <span
+              className={`flex h-7 w-12 items-center justify-center rounded-full transition-colors ${
+                selected ? 'bg-accent/15' : 'group-hover:bg-surface'
+              }`}
+            >
+              <Icon aria-hidden="true" className="size-5" />
+            </span>
             {label}
           </button>
         )

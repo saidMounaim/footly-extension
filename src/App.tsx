@@ -123,9 +123,10 @@ function App() {
 
   return (
     <div className="flex min-h-[480px] flex-col">
-      <header className="flex items-center justify-between border-b border-border bg-surface px-4 py-3">
-        <h1 className="text-lg font-semibold tracking-tight text-foreground">
-          Foot<span className="text-accent">ly</span>
+      <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/90 px-4 py-2.5 backdrop-blur">
+        <h1 className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-foreground">
+          <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
+          Foot<span className="-ml-1.5 text-accent">ly</span>
         </h1>
         <button
           ref={settingsButton}
@@ -133,7 +134,7 @@ function App() {
           onClick={openSettings}
           hidden={settingsOpen}
           aria-label="Settings"
-          className="rounded-md p-1.5 text-muted hover:bg-background hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
+          className="rounded-full border border-border p-1.5 text-muted transition-colors hover:bg-surface hover:text-foreground focus-visible:outline-2 focus-visible:outline-accent"
         >
           <Settings aria-hidden="true" className="size-5" />
         </button>

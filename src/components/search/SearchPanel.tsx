@@ -10,6 +10,7 @@ import { Crest } from '../common/Crest.tsx'
 import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
 import { MatchListError, MatchListSkeleton, StaleBanner } from '../matches/MatchList.tsx'
 import { MatchRow } from '../matches/MatchRow.tsx'
+import { sectionHeadingClass } from '../matches/status.ts'
 
 interface SearchPanelProps {
   state: MatchListState
@@ -24,8 +25,6 @@ interface SearchPanelProps {
   focusRequest: number
 }
 
-const headingClass =
-  'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
 const subheadingClass = 'px-4 pt-2 pb-1 text-xs font-medium text-muted'
 
 const NO_MATCHES: Match[] = []
@@ -126,7 +125,7 @@ export function SearchPanel({
         <>
           {foundCompetitions.length > 0 && (
             <section aria-labelledby="search-competitions">
-              <h2 id="search-competitions" className={headingClass}>
+              <h2 id="search-competitions" className={sectionHeadingClass}>
                 Competitions
               </h2>
               <ul className="divide-y divide-border">
@@ -157,7 +156,7 @@ export function SearchPanel({
 
           {foundTeams.length > 0 && (
             <section aria-labelledby="search-teams">
-              <h2 id="search-teams" className={headingClass}>
+              <h2 id="search-teams" className={sectionHeadingClass}>
                 Teams
               </h2>
               <ul className="divide-y divide-border">
@@ -179,7 +178,7 @@ export function SearchPanel({
 
           {foundUpcoming.length + foundResults.length > 0 && (
             <section aria-labelledby="search-matches">
-              <h2 id="search-matches" className={headingClass}>
+              <h2 id="search-matches" className={sectionHeadingClass}>
                 Matches
               </h2>
               <MatchGroup

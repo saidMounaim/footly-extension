@@ -7,7 +7,12 @@ import type { NotificationsSettingApi } from '../../hooks/useNotificationsSettin
 import type { NotificationTypesApi } from '../../hooks/useNotificationTypes.ts'
 import type { ThemeSettingApi } from '../../hooks/useThemeSetting.ts'
 import { LIVE_REFRESH_OPTIONS, THEME_OPTIONS, type NotificationType, type Theme } from '../../lib/settings.ts'
-import { sectionHeadingClass, secondaryButtonClass } from '../matches/status.ts'
+import {
+  cardClass,
+  groupCardClass,
+  sectionHeadingClass,
+  secondaryButtonClass,
+} from '../matches/status.ts'
 import { PrivacySection } from './PrivacySection.tsx'
 import { SettingSwitch } from './SettingSwitch.tsx'
 
@@ -83,7 +88,10 @@ export function SettingsPanel({
           Appearance
         </h3>
         {theme.loadError && <LoadError />}
-        <fieldset disabled={!theme.ready} className="px-4 py-3 disabled:opacity-50">
+        <fieldset
+          disabled={!theme.ready}
+          className={`${cardClass} px-4 py-3 disabled:opacity-50`}
+        >
           <legend className="text-sm font-medium text-foreground">Theme</legend>
           <p className="text-xs text-muted">System follows your device's light or dark setting.</p>
           <div className="mt-2 flex gap-4">
@@ -109,7 +117,7 @@ export function SettingsPanel({
           Notifications
         </h3>
         {(notifications.loadError || types.loadError) && <LoadError />}
-        <div className="divide-y divide-border">
+        <div className={groupCardClass}>
           <SettingSwitch
             label="Match notifications"
             description="Alerts for your favorite teams' matches."
@@ -135,7 +143,10 @@ export function SettingsPanel({
           Live refresh
         </h3>
         {refresh.loadError && <LoadError />}
-        <fieldset disabled={!refresh.ready} className="px-4 py-3 disabled:opacity-50">
+        <fieldset
+          disabled={!refresh.ready}
+          className={`${cardClass} px-4 py-3 disabled:opacity-50`}
+        >
           <legend className="text-sm font-medium text-foreground">Live match refresh</legend>
           <p className="text-xs text-muted">How often live scores update while Footly is open.</p>
           <div className="mt-2 flex gap-4">
@@ -161,7 +172,7 @@ export function SettingsPanel({
           Favorites
         </h3>
         {(favorites.loadError || competitions.loadError) && <LoadError />}
-        <div className="flex items-center justify-between gap-3 px-4 py-3">
+        <div className={`${cardClass} flex items-center justify-between gap-3 px-4 py-3`}>
           <p className="text-sm text-foreground">
             {plural(favorites.teams.length, 'team')} ·{' '}
             {plural(competitions.ids.length, 'competition')}

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, type ReactNode } from 'react'
 import type { Match } from '../../api/types.ts'
 import { useLiveRefresh } from '../../hooks/useLiveRefresh.ts'
 import { useMatchDetails } from '../../hooks/useMatchDetails.ts'
@@ -8,9 +8,15 @@ import { buildHome, recentEvents } from '../../lib/home.ts'
 import { failureMessage } from '../../lib/errors.ts'
 import { Crest } from '../common/Crest.tsx'
 import { ListBanner, MatchListError, MatchListSkeleton } from '../matches/MatchList.tsx'
-import { MatchRow } from '../matches/MatchRow.tsx'
+import { MatchRow, StatusText } from '../matches/MatchRow.tsx'
 import { EventRow, MatchTimelineSkeleton } from '../matches/MatchTimeline.tsx'
-import { sectionHeadingClass, secondaryButtonClass, upcomingLabel } from '../matches/status.ts'
+import {
+  formatScore,
+  sectionHeadingClass,
+  secondaryButtonClass,
+  statusLabel,
+  upcomingLabel,
+} from '../matches/status.ts'
 
 /** Events shown on the featured live match card. */
 const RECENT_EVENT_COUNT = 3
@@ -52,7 +58,7 @@ function FeaturedEvents({ match, liveRefreshMs }: { match: Match; liveRefreshMs:
 
   return (
     <div>
-      <h3 className="px-4 pt-2 text-xs font-semibold text-muted">Recent events</h3>
+      <h3 className="px-4 pt-3 text-xs font-semibold text-muted">Recent events</h3>
       {state.status === 'loading' && <MatchTimelineSkeleton />}
       {state.status === 'error' && (
         <div role="alert" className="flex items-center justify-between gap-3 px-4 py-2">
@@ -72,6 +78,52 @@ function FeaturedEvents({ match, liveRefreshMs }: { match: Match; liveRefreshMs:
             ))}
           </ol>
         ))}
+    </div>
+  )
+}
+
+/**
+ * The top live match as a large card. The score area is the "open match" button;
+ * the recent events sit below it so their Retry stays a separate control.
+ */
+function LiveHero({
+  match,
+  onSelect,
+  children,
+}: {
+  match: Match
+  onSelect: SelectMatch
+  children: ReactNode
+}) {
+  return (
+    <div className="mx-3 my-1.5 overflow-hidden rounded-2xl border border-accent/40 bg-background shadow-sm">
+      <button
+        type="button"
+        onClick={(event) => onSelect(match, event.currentTarget)}
+        aria-label={`Open match ${match.homeTeam.name} vs ${match.awayTeam.name}, ${statusLabel(match)}`}
+        className="block w-full p-4 text-left transition-colors hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+      >
+        <span className="flex items-center justify-between gap-2 text-xs text-muted">
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Crest
+              src={match.competition.logo}
+              name={match.competition.name}
+              size="sm"
+              kind="competition"
+            />
+            <span className="min-w-0 truncate">{match.competition.name}</span>
+          </span>
+          <StatusText match={match} showScore={false} />
+        </span>
+        <span className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+          <CardTeam name={match.homeTeam.name} logo={match.homeTeam.logo} />
+          <span className="text-3xl font-bold tabular-nums text-foreground">
+            {match.score ? formatScore(match.score) : 'vs'}
+          </span>
+          <CardTeam name={match.awayTeam.name} logo={match.awayTeam.logo} />
+        </span>
+      </button>
+      <div className="border-t border-border pb-1">{children}</div>
     </div>
   )
 }
@@ -166,22 +218,11 @@ export function HomePanel({
           <h2 id="home-live" className={sectionHeadingClass}>
             Live now
           </h2>
-          <ul className="py-1.5">
-            <MatchRow match={live[0]} favorite={isFavorite(live[0])} onSelect={onSelect} />
-          </ul>
-          {active && (
-            <FeaturedEvents key={live[0].id} match={live[0]} liveRefreshMs={liveRefreshMs} />
-          )}
-          <div className="border-b border-border px-4 pb-3 pt-1">
-            <button
-              type="button"
-              onClick={(event) => onSelect(live[0], event.currentTarget)}
-              aria-label={`Open match ${live[0].homeTeam.name} vs ${live[0].awayTeam.name}`}
-              className={secondaryButtonClass}
-            >
-              Open match
-            </button>
-          </div>
+          <LiveHero match={live[0]} onSelect={onSelect}>
+            {active && (
+              <FeaturedEvents key={live[0].id} match={live[0]} liveRefreshMs={liveRefreshMs} />
+            )}
+          </LiveHero>
           {live.length > 1 && (
             <ul className="py-1.5">
               {live.slice(1).map((match) => (

@@ -7,8 +7,13 @@ export const secondaryButtonClass =
   'rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-foreground hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent disabled:opacity-50'
 
 /** Shared look for section headings inside the popup. */
-export const sectionHeadingClass =
-  'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
+export const sectionHeadingClass = 'px-4 pt-4 pb-2 text-sm font-semibold text-foreground'
+
+/** Rounded container for a settings-style block. */
+export const cardClass = 'mx-3 overflow-hidden rounded-xl border border-border bg-background'
+
+/** A card whose rows are separated by dividers. */
+export const groupCardClass = `${cardClass} divide-y divide-border`
 
 export function formatScore(score: NonNullable<Match['score']>): string {
   return `${score.home}–${score.away}`

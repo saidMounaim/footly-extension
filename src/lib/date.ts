@@ -84,3 +84,18 @@ export function formatKickoff(date: Date, locale?: string): string {
     hourCycle: 'h23',
   }).format(date)
 }
+
+/** The distinct local days (`localDayKey`) that have matches, in list order. */
+export function matchDays(matches: { startTime: string }[]): string[] {
+  const days: string[] = []
+  for (const match of matches) {
+    const key = localDayKey(new Date(match.startTime))
+    if (!days.includes(key)) days.push(key)
+  }
+  return days
+}
+
+/** Only the matches on the given local day. */
+export function onDay<M extends { startTime: string }>(matches: M[], dayKey: string): M[] {
+  return matches.filter((match) => localDayKey(new Date(match.startTime)) === dayKey)
+}

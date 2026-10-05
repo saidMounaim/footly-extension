@@ -11,7 +11,7 @@ import type { TeamCatalogState } from '../../hooks/useTeamCatalog.ts'
 import type { LogoLookup } from '../../lib/crest.ts'
 import { failureMessage } from '../../lib/errors.ts'
 import { searchTeams } from '../../lib/search.ts'
-import { secondaryButtonClass } from '../matches/status.ts'
+import { groupCardClass, secondaryButtonClass, sectionHeadingClass } from '../matches/status.ts'
 import { Crest } from '../common/Crest.tsx'
 import { FavoriteToggle } from './FavoriteToggle.tsx'
 
@@ -24,13 +24,11 @@ interface FavoritesPanelProps {
   onRetryCatalog: () => void
 }
 
-const headingClass =
-  'bg-surface px-4 py-1.5 text-xs font-semibold uppercase tracking-wide text-muted'
 
 function YourTeams({ favorites, logos }: { favorites: FavoriteTeamsApi; logos: LogoLookup }) {
   return (
     <section aria-labelledby="your-teams-heading">
-      <h2 id="your-teams-heading" className={headingClass}>
+      <h2 id="your-teams-heading" className={sectionHeadingClass}>
         Your teams
       </h2>
       {favorites.teams.length === 0 ? (
@@ -39,7 +37,7 @@ function YourTeams({ favorites, logos }: { favorites: FavoriteTeamsApi; logos: L
           <p className="text-muted">Search for a team to start following their matches.</p>
         </div>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className={groupCardClass}>
           {favorites.teams.map((team) => (
             <li key={team.id} className="flex items-center gap-3 px-4 py-2">
               <Crest src={team.logo ?? logos.teams.get(team.id)} name={team.name} />
@@ -76,10 +74,10 @@ function CompetitionGroup({
 }) {
   return (
     <section aria-labelledby={id}>
-      <h2 id={id} className={headingClass}>
+      <h2 id={id} className={sectionHeadingClass}>
         {title}
       </h2>
-      <ul className="divide-y divide-border">
+      <ul className={groupCardClass}>
         {list.map((competition) => (
           <li key={competition.id}>
             <FavoriteToggle
@@ -189,7 +187,7 @@ export function FavoritesPanel({
       <YourTeams favorites={favorites} logos={logos} />
       <Competitions competitions={competitions} logos={logos} />
       <section aria-labelledby="find-teams-heading">
-        <h2 id="find-teams-heading" className={headingClass}>
+        <h2 id="find-teams-heading" className={sectionHeadingClass}>
           Find teams
         </h2>
         <div className="px-4 py-3">
