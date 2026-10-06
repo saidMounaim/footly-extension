@@ -336,6 +336,8 @@ Footly should feel like a **modern, compact football companion**, not a miniatur
 
 ### Popup structure
 
+Current direction (feature 23): Home lists competition cards (the default leagues plus followed ones), each showing live games or the next kickoff; opening a competition shows its upcoming matches and results with day chips. The original sketch below is kept for history.
+
 The default popup should prioritize the most relevant information:
 
 ```text

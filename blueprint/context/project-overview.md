@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash 6810bf2690c0a67e3c0f4566fc949cdc6eda53c49bd8e28900e02ccda5eed2e3 -->
+<!-- blueprint:source-hash f3a5bbbf1343b72d9b5b0fdb0599fe8d438299f648fae65c5219d37d8c5ab028 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -28,7 +28,7 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 
 ## Features
 
-Build order from `build-plan.md`; features 1 to 21 are done. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
+Build order from `build-plan.md`; features 1 to 22 are done. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
 
 1. **Match Discovery & Upcoming Games** (done) - upcoming matches with competition, teams, kickoff, status. Split into:
    - **1a. Extension Shell** - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
@@ -55,7 +55,8 @@ Build order from `build-plan.md`; features 1 to 21 are done. Feature 19 was list
 20. **More Competitions** (done) - international national-team matches (friendlies, World Cup qualifiers for Africa, AFCON); Botola Pro was dropped because ESPN doesn't serve it; followable and searchable; only the six default leagues plus followed competitions are loaded.
 21. **Modern UI Redesign** (done) - rework layout and visual style directly (no mockup stage) so every screen is modern, cleaner, and easier to use.
 18. **Chrome Web Store Readiness** (done) - Manifest V3 compliance, icons, screenshots, metadata, privacy info, production build.
-22. **Local League Suggestion** - one-time prompt to follow the user's own country's league, guessed on the device from time zone and language; national-team competitions where ESPN lacks the league.
+22. **Local League Suggestion** (done) - one-time prompt to follow the user's own country's league, guessed on the device from time zone and language; national-team competitions where ESPN lacks the league.
+23. **Competition Browser on Home** - Home lists competition cards instead of games; opening one shows its upcoming matches and results with day chips.
 
 ## Data model
 
@@ -132,7 +133,7 @@ Not in v1: free and adoption-focused. Possible later "Footly Plus" (advanced not
 
 Modern, compact football companion, not a mini football website. Clean, fast, easy to scan, strong hierarchy, clear live status, excellent dark mode, fits the Chrome popup size.
 
-- Popup `Home` - "Your next match" card, live match with recent events, bottom navigation
+- Popup `Home` - competition cards (default leagues plus followed; live count or next kickoff); opening one shows its upcoming matches and results with day chips; bottom navigation
 - `Favorites` - followed teams and competitions
 - `Search` - teams and matches
 - `Settings` - preferences and notifications

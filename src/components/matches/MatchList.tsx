@@ -19,6 +19,8 @@ interface MatchListProps {
   view: ListTab
   favoriteIds: ReadonlySet<string>
   competitionIds: ReadonlySet<string>
+  /** Show only this competition's matches (the competition screen). */
+  onlyCompetitionId?: string
   /** Current time for upcoming countdowns. */
   now: Date
   onRetry: () => void
@@ -124,6 +126,7 @@ export function MatchList({
   view,
   favoriteIds,
   competitionIds,
+  onlyCompetitionId,
   now,
   onRetry,
   onSelect,
@@ -134,7 +137,10 @@ export function MatchList({
   if (state.status === 'error') return <MatchListError reason={state.reason} onRetry={onRetry} />
 
   const { result, loadedAt } = state
-  const allMatches = result[view]
+  const allMatches =
+    onlyCompetitionId === undefined
+      ? result[view]
+      : result[view].filter((match) => match.competition.id === onlyCompetitionId)
   const days = matchDays(allMatches)
   const chosen = day !== null && days.includes(day) ? day : null
   const matches = chosen === null ? allMatches : onDay(allMatches, chosen)

@@ -1,6 +1,8 @@
 import { Settings } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { COMPETITIONS, competitionsToLoad } from './api/football.ts'
 import type { Match, Team } from './api/types.ts'
+import { CompetitionScreen } from './components/competition/CompetitionScreen.tsx'
 import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
 import { HomePanel } from './components/home/HomePanel.tsx'
 import { LocalLeagueCard } from './components/home/LocalLeagueCard.tsx'
@@ -83,6 +85,11 @@ function App() {
   )
   const [selected, setSelected] = useState<Match | null>(null)
   const returnTo = useRef<{ trigger: HTMLButtonElement; scrollY: number } | null>(null)
+  // Home cards: the competitions actually loaded (defaults, then followed extras).
+  const loadedCompetitions = useMemo(() => competitionsToLoad(competitions.ids), [competitions.ids])
+  const [openCompetitionId, setOpenCompetitionId] = useState<string | null>(null)
+  const competitionReturn = useRef<HTMLButtonElement | null>(null)
+  const openCompetition = COMPETITIONS.find((competition) => competition.id === openCompetitionId)
 
   const changeTab = useCallback((next: MatchTab, via: 'click' | 'key') => {
     setTab(next)
@@ -95,7 +102,19 @@ function App() {
     window.scrollTo(0, 0)
   }, [])
 
-  const openFavorites = useCallback(() => changeTab('favorites', 'click'), [changeTab])
+  const showCompetition = useCallback((id: string, trigger: HTMLButtonElement) => {
+    competitionReturn.current = trigger
+    setOpenCompetitionId(id)
+    window.scrollTo(0, 0)
+  }, [])
+
+  const closeCompetition = useCallback(() => {
+    setOpenCompetitionId(null)
+    const trigger = competitionReturn.current
+    competitionReturn.current = null
+    // Wait for Home to be shown again before focusing the card that opened it.
+    requestAnimationFrame(() => trigger?.focus())
+  }, [])
 
   const openSettings = useCallback(() => setSettingsOpen(true), [])
 
@@ -109,6 +128,8 @@ function App() {
     setSettingsOpen(false)
     setSelected(null)
     returnTo.current = null
+    setOpenCompetitionId(null)
+    competitionReturn.current = null
     changeTab('favorites', 'click')
     requestAnimationFrame(() => document.getElementById(tabId('favorites'))?.focus())
   }, [changeTab])
@@ -117,9 +138,7 @@ function App() {
   const focusHome = useCallback(() => {
     requestAnimationFrame(() => {
       const target =
-        document.getElementById('home-live') ??
-        document.getElementById('home-next') ??
-        document.getElementById(tabId('home'))
+        document.getElementById('home-competitions') ?? document.getElementById(tabId('home'))
       target?.focus()
     })
   }, [])
@@ -192,7 +211,11 @@ function App() {
             Couldn't save your changes. Try again.
           </p>
         )}
-        <div className={selected || settingsOpen ? 'hidden' : 'flex flex-1 flex-col'}>
+        <div
+          className={
+            selected || settingsOpen || openCompetition ? 'hidden' : 'flex flex-1 flex-col'
+          }
+        >
           {MATCH_TABS.map(({ id }) => (
             <div
               key={id}
@@ -213,14 +236,12 @@ function App() {
                   )}
                   <HomePanel
                     state={state}
-                    favoriteIds={favorites.favoriteIds}
-                    competitionIds={competitions.idSet}
+                    competitions={loadedCompetitions}
+                    followedIds={competitions.idSet}
+                    logos={logos}
                     now={now}
-                    active={tab === 'home' && selected === null && !settingsOpen}
-                    liveRefreshMs={liveRefreshMs}
                     onRetry={retry}
-                    onSelect={openMatch}
-                    onOpenFavorites={openFavorites}
+                    onOpenCompetition={showCompetition}
                   />
                 </>
               ) : id === 'favorites' ? (
@@ -257,6 +278,22 @@ function App() {
           ))}
           <MatchTabs active={tab} onChange={changeTab} />
         </div>
+        {openCompetition && (
+          // Stays mounted under an open match so Back restores its tab, day, and focus.
+          <div hidden={selected !== null || settingsOpen}>
+            <CompetitionScreen
+              key={openCompetition.id}
+              competition={openCompetition}
+              logo={logos.competitions.get(openCompetition.id)}
+              state={state}
+              favoriteIds={favorites.favoriteIds}
+              now={now}
+              onRetry={retry}
+              onSelect={openMatch}
+              onBack={closeCompetition}
+            />
+          </div>
+        )}
         {settingsOpen && (
           <SettingsPanel
             theme={theme}

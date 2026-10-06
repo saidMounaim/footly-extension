@@ -51,3 +51,5 @@
 - [x] 18. **Chrome Web Store Readiness** - Prepare the extension for production with Manifest V3 compliance, icons, screenshots, metadata, privacy information, and production builds.
 
 - [x] 22. **Local League Suggestion** - On first open, guess the user's country from the browser time zone and language (on the device, no new permission) and offer a one-time prompt to follow that country's league when ESPN covers it; otherwise suggest the national-team competitions where relevant.
+
+- [x] 23. **Competition Browser on Home** - Home lists competition cards (the default leagues plus followed ones) instead of games; opening a competition shows its upcoming matches and results with day chips.
