@@ -14,16 +14,20 @@ published automatically. Use `npm run package`, then submit
 
 **Detailed description:**
 
-> Footly is a lightweight football companion for Chrome. Open the popup and see
-> what matters right now: live matches, your team's next match with a countdown,
-> and the next games coming up.
+> Footly is a lightweight football companion for Chrome. Open the popup to see
+> your competitions at a glance, each showing its live matches or next kickoff.
+> Tap one to browse its upcoming matches and results by day.
 >
 > **Follow what you care about**
 > - Save favorite teams and follow competitions; their matches come first.
 > - Premier League, La Liga, Serie A, Bundesliga, Ligue 1, and the Champions
 >   League by default.
+> - Follow top leagues from the Netherlands, Portugal, Turkey, Scotland,
+>   Belgium, the USA, Mexico, Brazil, Argentina, and Saudi Arabia.
 > - Follow International Friendlies, World Cup Qualifying (Africa), and the
 >   Africa Cup of Nations to add national-team matches.
+> - Footly can suggest your own country's league once, guessed on your device
+>   and never sent anywhere.
 >
 > **Live and clear**
 > - Live scores with goals, cards, substitutions, and penalties in order.
@@ -57,10 +61,10 @@ published automatically. Use `npm run package`, then submit
 Capture at **1280×800**. Use 3 to 5 screenshots. The popup is 360px wide, so
 center it on a plain background that matches the theme.
 
-1. **Home, light theme,** during a live match: the live card and "Your next
-   match".
-2. **Upcoming, dark theme,** with a day chip selected and favorite teams listed
-   first.
+1. **Home, light theme:** the competition cards, ideally during a live match so
+   a card shows "N live".
+2. **A competition, dark theme:** the Upcoming/Results switch, a day chip
+   selected, and favorite teams listed first.
 3. **Match detail:** score card, timeline, and lineups.
 4. **Favorites:** Leagues and More competitions, with a few followed.
 5. **Settings:** notification types and Privacy & permissions.
