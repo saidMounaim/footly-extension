@@ -48,4 +48,4 @@
 
 - [x] 21. **Modern UI Redesign** - Rework the popup's layout and visual style directly, without a mockup stage, so every screen is modern, cleaner, and easier to use.
 
-- [ ] 18. **Chrome Web Store Readiness** - Prepare the extension for production with Manifest V3 compliance, icons, screenshots, metadata, privacy information, and production builds.
+- [x] 18. **Chrome Web Store Readiness** - Prepare the extension for production with Manifest V3 compliance, icons, screenshots, metadata, privacy information, and production builds.

@@ -17,6 +17,21 @@ describe('manifest', () => {
     expect(manifest).toHaveProperty('permissions', ['storage', 'alarms', 'notifications'])
     expect(manifest).not.toHaveProperty('host_permissions')
     expect(manifest).not.toHaveProperty('content_scripts')
+    // The default MV3 policy forbids remote code; Footly never loosens it.
+    expect(manifest).not.toHaveProperty('content_security_policy')
+  })
+
+  it('ships its icon at every size Chrome uses', () => {
+    expect(manifest).toHaveProperty('icons', {
+      16: 'icons/icon-16.png',
+      32: 'icons/icon-32.png',
+      48: 'icons/icon-48.png',
+      128: 'icons/icon-128.png',
+    })
+    expect(manifest).toHaveProperty('action.default_icon', {
+      16: 'icons/icon-16.png',
+      32: 'icons/icon-32.png',
+    })
   })
 
   it('explains exactly the permissions it requests', () => {

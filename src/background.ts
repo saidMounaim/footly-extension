@@ -43,7 +43,7 @@ import {
 const PLAN_ALARM = 'footly-plan'
 const WATCH_ALARM = 'footly-watch'
 const storage: StorageArea = chrome.storage.local
-const ICON_PATH = 'icons/notification-128.png'
+const ICON_PATH = 'icons/icon-128.png'
 
 function notify(id: string, content: { title: string; message: string }) {
   return chrome.notifications.create(id, {
