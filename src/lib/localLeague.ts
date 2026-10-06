@@ -88,10 +88,16 @@ const COMPETITION_NAME: ReadonlyMap<string, string> = new Map(
   COMPETITIONS.map((competition) => [competition.id, competition.name]),
 )
 
+/** Zones that carry no location, so the browser language is the only hint. */
+function isLocationless(timeZone: string): boolean {
+  return timeZone === 'UTC' || timeZone === 'GMT' || timeZone.startsWith('Etc/')
+}
+
 /**
- * The user's likely country (ISO 3166-1 alpha-2), from the time zone first and
- * then the region of the first browser language that has one; null when unknown.
- * Computed on the device and never stored or sent.
+ * The user's likely country (ISO 3166-1 alpha-2), from the time zone when it
+ * names a place, otherwise from the region of the first browser language that
+ * has one; null when unknown. A place we have no table entry for gives no guess,
+ * since `en-US` is common everywhere. Computed on the device and never stored or sent.
  */
 export function guessCountry({
   timeZone,
@@ -100,9 +106,7 @@ export function guessCountry({
   timeZone: string | undefined
   languages: readonly string[]
 }): string | null {
-  const fromZone = timeZone ? TIME_ZONE_COUNTRY[timeZone] : undefined
-  if (fromZone) return fromZone
-  if (timeZone === 'Europe/London') return null
+  if (timeZone && !isLocationless(timeZone)) return TIME_ZONE_COUNTRY[timeZone] ?? null
   for (const language of languages) {
     const region = language.split('-')[1]
     if (region && /^[A-Za-z]{2}$/.test(region)) return region.toUpperCase()

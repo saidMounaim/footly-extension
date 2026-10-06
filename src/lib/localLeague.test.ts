@@ -27,9 +27,16 @@ describe('guessCountry', () => {
     expect(guessCountry({ timeZone: 'Africa/Casablanca', languages: [] })).toBe('MA')
   })
 
-  it('falls back to the first language with a region', () => {
-    expect(guessCountry({ timeZone: 'Europe/Paris', languages: ['fr', 'fr-MA', 'en-US'] })).toBe('MA')
+  it('falls back to the first language with a region when the zone names no place', () => {
+    expect(guessCountry({ timeZone: undefined, languages: ['fr', 'fr-MA', 'en-US'] })).toBe('MA')
     expect(guessCountry({ timeZone: undefined, languages: ['ar-ma'] })).toBe('MA')
+    expect(guessCountry({ timeZone: 'UTC', languages: ['fr-MA'] })).toBe('MA')
+    expect(guessCountry({ timeZone: 'Etc/GMT+1', languages: ['fr-MA'] })).toBe('MA')
+  })
+
+  it('ignores the language when the zone names a place we have no entry for', () => {
+    expect(guessCountry({ timeZone: 'Europe/Berlin', languages: ['en-US'] })).toBeNull()
+    expect(guessCountry({ timeZone: 'Europe/Paris', languages: ['fr-MA'] })).toBeNull()
   })
 
   it('makes no guess for London, whatever the language', () => {

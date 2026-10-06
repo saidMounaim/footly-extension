@@ -23,14 +23,6 @@
 **Suggested fix:** When entering `failed`, move focus to Cancel (or Erase) in the existing `useEffect`, e.g. treat `failed` like `confirming`. Requirement lost: none.
 **Resolution:**
 
-### F-09 [P3] open - An en-US browser in an unmapped time zone is offered MLS
-
-**File:** src/lib/localLeague.ts:107
-**Found:** 2026-10-06 by /audit independent (scope: current; lens: quality)
-**Why it matters:** When the time zone is known but not in `TIME_ZONE_COUNTRY` (for example `Europe/Berlin`, `Europe/Paris`, `Asia/Tokyo`), `guessCountry` falls through to the language region. Many users run Chrome with `en-US`, so a German or Japanese user gets "Follow MLS?". This matches the spec's literal order (time zone, then language region), so it is a product-quality concern rather than a contract break, and the card is one-time and dismissible.
-**Suggested fix:** Needs a spec decision: use the language region only when the time zone is missing, or only when it agrees with a mapped zone's country. Requirement lost: language-only guesses for users whose time zone is set but unmapped.
-**Resolution:**
-
 ### F-10 [P3] unverified - Follows can be saved while the "accepted" answer is never recorded
 
 **File:** src/App.tsx:138
