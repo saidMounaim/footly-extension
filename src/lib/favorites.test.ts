@@ -8,6 +8,7 @@ import {
   loadFavoriteTeams,
   saveFavoriteCompetitions,
   saveFavoriteTeams,
+  groupByCompetition,
   splitByCompetitions,
   splitByFavorites,
   toggleFavorite,
@@ -230,5 +231,38 @@ describe('splitByCompetitions', () => {
   it('keeps everything in others with nothing followed', () => {
     const matches = [match('a', 'eng.1')]
     expect(splitByCompetitions(matches, new Set())).toEqual({ favorites: [], others: matches })
+  })
+})
+
+describe('groupByCompetition', () => {
+  const match = (id: string, competition: string, logo?: string) =>
+    ({ id, competition: { id: competition, name: `Name ${competition}`, ...(logo && { logo }) } }) as Match
+
+  it('groups by first appearance and keeps match order inside each group', () => {
+    const groups = groupByCompetition([
+      match('1', 'esp.1'),
+      match('2', 'eng.1'),
+      match('3', 'esp.1'),
+      match('4', 'eng.1'),
+    ])
+    expect(groups.map((g) => g.id)).toEqual(['esp.1', 'eng.1'])
+    expect(groups.map((g) => g.matches.map((m) => m.id))).toEqual([
+      ['1', '3'],
+      ['2', '4'],
+    ])
+    expect(groups[0].name).toBe('Name esp.1')
+  })
+
+  it('takes the logo from the first match that has one', () => {
+    const [group] = groupByCompetition([
+      match('1', 'eng.1'),
+      match('2', 'eng.1', 'https://x/eng.png'),
+      match('3', 'eng.1', 'https://x/other.png'),
+    ])
+    expect(group.logo).toBe('https://x/eng.png')
+  })
+
+  it('gives no groups for no matches', () => {
+    expect(groupByCompetition([])).toEqual([])
   })
 })

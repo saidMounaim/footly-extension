@@ -146,3 +146,24 @@ export function splitByCompetitions(
   }
   return { favorites, others }
 }
+
+export interface CompetitionGroup {
+  id: string
+  name: string
+  /** The first logo any of its matches carries. */
+  logo?: string
+  matches: Match[]
+}
+
+/** Matches grouped by competition in first-appearance order, keeping their order inside each group. */
+export function groupByCompetition(matches: Match[]): CompetitionGroup[] {
+  const groups = new Map<string, CompetitionGroup>()
+  for (const match of matches) {
+    const { id, name, logo } = match.competition
+    const group = groups.get(id) ?? { id, name, matches: [] }
+    if (!group.logo && logo) group.logo = logo
+    group.matches.push(match)
+    groups.set(id, group)
+  }
+  return [...groups.values()]
+}

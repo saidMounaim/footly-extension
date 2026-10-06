@@ -1,9 +1,12 @@
+import { Star } from 'lucide-react'
+import type { ReactNode } from 'react'
 import type { Match } from '../../api/types.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { useState } from 'react'
 import { dayLabel, formatKickoff, localDayKey, matchDays, onDay } from '../../lib/date.ts'
 import { failureMessage, type LoadFailure } from '../../lib/errors.ts'
-import { splitByCompetitions, splitByFavorites } from '../../lib/favorites.ts'
+import { groupByCompetition, splitByCompetitions, splitByFavorites } from '../../lib/favorites.ts'
+import { Crest } from '../common/Crest.tsx'
 import { DayChips } from './DayChips.tsx'
 import { MatchRow } from './MatchRow.tsx'
 import type { ListTab } from './tabs.ts'
@@ -66,6 +69,22 @@ export function MatchListError({ reason, onRetry }: { reason: LoadFailure; onRet
         Retry
       </button>
     </div>
+  )
+}
+
+/** A tinted, bordered panel marking a personal section; its heading names it, so color isn't the only cue. */
+function HighlightPanel({ id, title, children }: { id: string; title: string; children: ReactNode }) {
+  return (
+    <section
+      aria-labelledby={id}
+      className="mx-3 mt-3 overflow-hidden rounded-2xl border border-accent/40 bg-accent/10"
+    >
+      <h2 id={id} className="flex items-center gap-1.5 px-3 pt-3 pb-1 text-sm font-semibold text-foreground">
+        <Star aria-hidden="true" className="size-4 fill-current text-accent" />
+        {title}
+      </h2>
+      {children}
+    </section>
   )
 }
 
@@ -163,28 +182,38 @@ export function MatchList({
       ) : (
         <>
           {favorites.length > 0 && (
-            <section aria-labelledby={`${view}-your-teams`}>
-              <h2 id={`${view}-your-teams`} className={sectionHeadingClass}>
-                Your teams
-              </h2>
-              <ul className="py-1.5">
+            <HighlightPanel id={`${view}-your-teams`} title="Your teams">
+              <ul className="pb-1.5">
                 {favorites.map((match) => (
                   <MatchRow key={match.id} match={match} favorite now={now} onSelect={onSelect} />
                 ))}
               </ul>
-            </section>
+            </HighlightPanel>
           )}
           {followed.length > 0 && (
-            <section aria-labelledby={`${view}-your-competitions`}>
-              <h2 id={`${view}-your-competitions`} className={sectionHeadingClass}>
-                Your competitions
-              </h2>
-              <ul className="py-1.5">
-                {followed.map((match) => (
-                  <MatchRow key={match.id} match={match} now={now} onSelect={onSelect} />
-                ))}
-              </ul>
-            </section>
+            <HighlightPanel id={`${view}-your-competitions`} title="Your competitions">
+              {groupByCompetition(followed).map((group) => (
+                <div key={group.id} role="group" aria-labelledby={`${view}-competition-${group.id}`}>
+                  <h3
+                    id={`${view}-competition-${group.id}`}
+                    className="flex items-center gap-2 px-4 pt-2 text-xs font-semibold text-muted"
+                  >
+                    <Crest src={group.logo} name={group.name} size="sm" kind="competition" />
+                    <span className="min-w-0 truncate">{group.name}</span>
+                  </h3>
+                  <ul className="pb-1.5">
+                    {group.matches.map((match) => (
+                      <MatchRow key={match.id} match={match} now={now} onSelect={onSelect} />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </HighlightPanel>
+          )}
+          {(favorites.length > 0 || followed.length > 0) && others.length > 0 && (
+            <h2 id={`${view}-other-matches`} className={`${sectionHeadingClass} mt-2`}>
+              Other matches
+            </h2>
           )}
           {groupByDay(others).map((group) => (
             <section key={group[0].startTime} aria-labelledby={`${view}-day-${group[0].id}`}>
