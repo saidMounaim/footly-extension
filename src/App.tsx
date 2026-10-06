@@ -128,11 +128,16 @@ function App() {
     const suggestion = localLeague.suggestion
     if (!suggestion) return
     // Only add what isn't followed yet; toggling a followed one would unfollow it.
-    for (const id of suggestion.competitionIds) {
-      if (!competitions.isFavorite(id)) competitions.toggle(id)
-    }
-    localLeague.answer('accepted')
+    const follows = suggestion.competitionIds
+      .filter((id) => !competitions.isFavorite(id))
+      .map((id) => competitions.toggle(id))
+    // The card hides as soon as the follows apply, so keep focus on Home meanwhile.
     focusHome()
+    // Record the answer only once every follow is saved; a failed save rolls the
+    // follows back, which brings the card back next to the shared alert.
+    void Promise.all(follows).then((saved) => {
+      if (saved.every(Boolean)) localLeague.answer('accepted')
+    })
   }, [localLeague, competitions, focusHome])
 
   const dismissLocalLeague = useCallback(() => {

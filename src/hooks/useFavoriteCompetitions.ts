@@ -9,8 +9,11 @@ export interface FavoriteCompetitionsApi {
   isFavorite: (id: string) => boolean
   /** True once saved competitions were read; toggles are ignored until then. */
   ready: boolean
-  /** Follows or unfollows immediately; rolls back to the last saved list if saving fails. */
-  toggle: (id: string) => void
+  /**
+   * Follows or unfollows immediately; rolls back to the last saved list if saving
+   * fails. Resolves whether the change was saved.
+   */
+  toggle: (id: string) => Promise<boolean>
   /** The saved competitions couldn't be read. */
   loadError: boolean
   /** The last save failed. */

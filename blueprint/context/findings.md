@@ -23,18 +23,18 @@
 **Suggested fix:** When entering `failed`, move focus to Cancel (or Erase) in the existing `useEffect`, e.g. treat `failed` like `confirming`. Requirement lost: none.
 **Resolution:**
 
-### F-08 [P2] open - A failed Follow save still records "accepted", so the card is gone with nothing followed
-
-**File:** src/App.tsx:129
-**Found:** 2026-10-06 by /audit independent (scope: current; lens: quality)
-**Why it matters:** `followLocalLeague` toggles each competition and then immediately calls `localLeague.answer('accepted')`. The two saves are independent: if the `favoriteCompetitions` write fails, `useSavedValue` rolls the competitions back, but the `localLeagueSuggestion` write can still succeed. The user sees the shared alert, the card disappears permanently, and nothing is followed. The spec says a failed save keeps the card; this path only holds for a failed answer save. Rare (chrome.storage.local write failure) and recoverable by following manually in Favorites, so not a blocker.
-**Suggested fix:** Record the answer only after the competitions save succeeds (for example, have the follow path wait on the favorites save result, or roll the answer back when `competitions.saveError` turns on during a follow). Requirement lost: none.
-**Resolution:**
-
 ### F-09 [P3] open - An en-US browser in an unmapped time zone is offered MLS
 
 **File:** src/lib/localLeague.ts:107
 **Found:** 2026-10-06 by /audit independent (scope: current; lens: quality)
 **Why it matters:** When the time zone is known but not in `TIME_ZONE_COUNTRY` (for example `Europe/Berlin`, `Europe/Paris`, `Asia/Tokyo`), `guessCountry` falls through to the language region. Many users run Chrome with `en-US`, so a German or Japanese user gets "Follow MLS?". This matches the spec's literal order (time zone, then language region), so it is a product-quality concern rather than a contract break, and the card is one-time and dismissible.
 **Suggested fix:** Needs a spec decision: use the language region only when the time zone is missing, or only when it agrees with a mapped zone's country. Requirement lost: language-only guesses for users whose time zone is set but unmapped.
+**Resolution:**
+
+### F-10 [P3] unverified - Follows can be saved while the "accepted" answer is never recorded
+
+**File:** src/App.tsx:138
+**Found:** 2026-10-06 by /audit independent (scope: current; lens: quality)
+**Why it matters:** The answer is now written only from the `Promise.all(follows).then` callback. If that callback never runs or sees a `false` while the follows still end up stored, the competitions are followed but the saved answer stays `null`. Two paths: the popup closes after Follow before the storage writes resolve, so the callback is lost with the page; or, for a two-competition national-team suggestion, the first save fails and the second (which writes the full list) succeeds, so `useSavedValue` skips the rollback but the first result is `false`. The card stays hidden while everything is followed, but if the user later unfollows one of those competitions, the one-time card can appear again. Not reproduced; both paths need a sub-second popup close or a partial `chrome.storage.local` failure.
+**Suggested fix:** If observed, record `accepted` when the follows' final state contains every suggested competition (for example, check `competitions.idSet` after settling), or accept the edge as harmless. Requirement lost: none.
 **Resolution:**

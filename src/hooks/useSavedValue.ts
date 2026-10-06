@@ -5,8 +5,11 @@ export interface SavedValue<V, Change> {
   value: V
   /** True once the saved value was read; changes are ignored until then. */
   ready: boolean
-  /** Applies the change immediately; rolls back to the last saved value if saving fails. */
-  toggle: (change: Change) => void
+  /**
+   * Applies the change immediately; rolls back to the last saved value if saving
+   * fails. Resolves true once the change is saved, false when it was ignored or rolled back.
+   */
+  toggle: (change: Change) => Promise<boolean>
   /** The saved value couldn't be read. */
   loadError: boolean
   /** The last save failed. */
@@ -17,6 +20,24 @@ function reportUnexpected(error: unknown) {
   if (!(error instanceof FavoritesStorageError)) {
     console.error('Unexpected error while accessing favorites', error)
   }
+}
+
+/** Runs `onSaved` or `onFailed` when `saving` settles; resolves whether it was saved. */
+export function settleSave(
+  saving: Promise<void>,
+  onSaved: () => void,
+  onFailed: (failure: unknown) => void,
+): Promise<boolean> {
+  return saving.then(
+    () => {
+      onSaved()
+      return true
+    },
+    (failure: unknown) => {
+      onFailed(failure)
+      return false
+    },
+  )
 }
 
 /** chrome.storage.local when running as an extension; undefined on a plain page. */
@@ -71,12 +92,13 @@ export function useSavedValue<V, Change>(
 
   const toggle = useCallback(
     (change: Change) => {
-      if (!readyRef.current) return
+      if (!readyRef.current) return Promise.resolve(false)
       const next = apply(latest.current, change)
       latest.current = next
       setValue(next)
       const storage = extensionStorage()
-      ;(storage ? save(storage, next) : unavailable()).then(
+      return settleSave(
+        storage ? save(storage, next) : unavailable(),
         () => {
           saved.current = next
           setSaveError(false)
