@@ -3,6 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Match, Team } from './api/types.ts'
 import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
 import { HomePanel } from './components/home/HomePanel.tsx'
+import { LocalLeagueCard } from './components/home/LocalLeagueCard.tsx'
 import { MatchDetail } from './components/matches/MatchDetail.tsx'
 import { MatchList } from './components/matches/MatchList.tsx'
 import { MatchTabs } from './components/matches/MatchTabs.tsx'
@@ -20,6 +21,7 @@ import { useNotificationTypes } from './hooks/useNotificationTypes.ts'
 import { useNow } from './hooks/useNow.ts'
 import { useOnlineStatus } from './hooks/useOnlineStatus.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
+import { useLocalLeagueSuggestion } from './hooks/useLocalLeagueSuggestion.ts'
 import { useThemeSetting } from './hooks/useThemeSetting.ts'
 import { collectLogos } from './lib/crest.ts'
 
@@ -30,6 +32,8 @@ function App() {
   const competitions = useFavoriteCompetitions()
   // Wait for followed competitions before the first load, unless they can't be read.
   const followedIds = competitions.ready || competitions.loadError ? competitions.ids : null
+  // Only offer a league once the followed list really loaded, so nothing is re-followed by mistake.
+  const localLeague = useLocalLeagueSuggestion(competitions.ready ? competitions.ids : null)
   const { state, retry, refresh } = useMatchList(followedIds)
   const online = useOnlineStatus()
   const listStatus = state.status === 'success' && state.stale ? 'stale' : state.status
@@ -109,6 +113,33 @@ function App() {
     requestAnimationFrame(() => document.getElementById(tabId('favorites'))?.focus())
   }, [changeTab])
 
+  /** After the card goes away, keep focus on Home instead of losing it to the page. */
+  const focusHome = useCallback(() => {
+    requestAnimationFrame(() => {
+      const target =
+        document.getElementById('home-live') ??
+        document.getElementById('home-next') ??
+        document.getElementById(tabId('home'))
+      target?.focus()
+    })
+  }, [])
+
+  const followLocalLeague = useCallback(() => {
+    const suggestion = localLeague.suggestion
+    if (!suggestion) return
+    // Only add what isn't followed yet; toggling a followed one would unfollow it.
+    for (const id of suggestion.competitionIds) {
+      if (!competitions.isFavorite(id)) competitions.toggle(id)
+    }
+    localLeague.answer('accepted')
+    focusHome()
+  }, [localLeague, competitions, focusHome])
+
+  const dismissLocalLeague = useCallback(() => {
+    localLeague.answer('dismissed')
+    focusHome()
+  }, [localLeague, focusHome])
+
   const closeMatch = useCallback(() => {
     setSelected(null)
     const target = returnTo.current
@@ -150,7 +181,8 @@ function App() {
           notifications.saveError ||
           notificationTypes.saveError ||
           liveRefresh.saveError ||
-          theme.saveError) && (
+          theme.saveError ||
+          localLeague.saveError) && (
           <p role="alert" className="border-b border-border px-4 py-2 text-xs text-foreground">
             Couldn't save your changes. Try again.
           </p>
@@ -166,17 +198,26 @@ function App() {
               className="flex-1"
             >
               {id === 'home' ? (
-                <HomePanel
-                  state={state}
-                  favoriteIds={favorites.favoriteIds}
-                  competitionIds={competitions.idSet}
-                  now={now}
-                  active={tab === 'home' && selected === null && !settingsOpen}
-                  liveRefreshMs={liveRefreshMs}
-                  onRetry={retry}
-                  onSelect={openMatch}
-                  onOpenFavorites={openFavorites}
-                />
+                <>
+                  {localLeague.suggestion && (
+                    <LocalLeagueCard
+                      suggestion={localLeague.suggestion}
+                      onFollow={followLocalLeague}
+                      onDismiss={dismissLocalLeague}
+                    />
+                  )}
+                  <HomePanel
+                    state={state}
+                    favoriteIds={favorites.favoriteIds}
+                    competitionIds={competitions.idSet}
+                    now={now}
+                    active={tab === 'home' && selected === null && !settingsOpen}
+                    liveRefreshMs={liveRefreshMs}
+                    onRetry={retry}
+                    onSelect={openMatch}
+                    onOpenFavorites={openFavorites}
+                  />
+                </>
               ) : id === 'favorites' ? (
                 <FavoritesPanel
                   favorites={favorites}

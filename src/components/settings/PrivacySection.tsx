@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { eraseFootlyData } from '../../lib/erase.ts'
-import { CONTACTED_HOSTS, PERMISSION_EXPLANATIONS } from '../../lib/privacy.ts'
+import {
+  CONTACTED_HOSTS,
+  COUNTRY_GUESS_NOTE,
+  PERMISSION_EXPLANATIONS,
+} from '../../lib/privacy.ts'
 import { pageStorage } from '../../lib/theme.ts'
 import { cardClass, sectionHeadingClass, secondaryButtonClass } from '../matches/status.ts'
 
@@ -114,6 +118,7 @@ export function PrivacySection() {
           Footly has no account and collects nothing about you. Your favorites and settings stay
           on this device.
         </p>
+        <p className="text-xs text-muted">{COUNTRY_GUESS_NOTE}</p>
         <dl className="space-y-1.5">
           {PERMISSION_EXPLANATIONS.map(({ permission, label, reason }) => (
             <div key={permission}>

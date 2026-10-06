@@ -20,6 +20,10 @@ export const PERMISSION_EXPLANATIONS = [
   },
 ] as const
 
+/** Shown in Settings and repeated word for word in PRIVACY.md. */
+export const COUNTRY_GUESS_NOTE =
+  'Your country is guessed on this device from your time zone and language, only to suggest a league; it is never sent anywhere.'
+
 /** The only servers Footly contacts. */
 export const CONTACTED_HOSTS = [
   { host: 'site.api.espn.com', purpose: 'Scores, fixtures, and team lists from ESPN.' },

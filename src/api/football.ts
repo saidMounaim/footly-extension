@@ -27,11 +27,24 @@ export const DEFAULT_COMPETITIONS: readonly CatalogCompetition[] = [
   { id: 'uefa.champions', name: 'Champions League', hasStandings: true },
 ]
 
-/** Loaded only while followed. Ids confirmed against ESPN; Botola Pro (mar.1) isn't served. */
+/**
+ * Loaded only while followed. Ids confirmed against ESPN; Botola Pro (mar.1) and
+ * the Egyptian Premier League (egy.1) aren't served.
+ */
 export const EXTRA_COMPETITIONS: readonly CatalogCompetition[] = [
   { id: 'fifa.friendly', name: 'International Friendlies', hasStandings: false },
   { id: 'fifa.worldq.caf', name: 'World Cup Qualifying (Africa)', hasStandings: true },
   { id: 'caf.nations', name: 'Africa Cup of Nations', hasStandings: true },
+  { id: 'ned.1', name: 'Eredivisie', hasStandings: true },
+  { id: 'por.1', name: 'Primeira Liga', hasStandings: true },
+  { id: 'tur.1', name: 'Süper Lig', hasStandings: true },
+  { id: 'sco.1', name: 'Scottish Premiership', hasStandings: true },
+  { id: 'bel.1', name: 'Belgian Pro League', hasStandings: true },
+  { id: 'usa.1', name: 'MLS', hasStandings: true },
+  { id: 'mex.1', name: 'Liga MX', hasStandings: true },
+  { id: 'bra.1', name: 'Brasileirão', hasStandings: true },
+  { id: 'arg.1', name: 'Liga Profesional', hasStandings: true },
+  { id: 'ksa.1', name: 'Saudi Pro League', hasStandings: true },
 ]
 
 /** Every competition Footly knows, defaults first; used to validate stored ids. */

@@ -49,3 +49,5 @@
 - [x] 21. **Modern UI Redesign** - Rework the popup's layout and visual style directly, without a mockup stage, so every screen is modern, cleaner, and easier to use.
 
 - [x] 18. **Chrome Web Store Readiness** - Prepare the extension for production with Manifest V3 compliance, icons, screenshots, metadata, privacy information, and production builds.
+
+- [x] 22. **Local League Suggestion** - On first open, guess the user's country from the browser time zone and language (on the device, no new permission) and offer a one-time prompt to follow that country's league when ESPN covers it; otherwise suggest the national-team competitions where relevant.

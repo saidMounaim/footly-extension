@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash c4efd179e3ff04577a45f7dc855fb2e87d6acf0fd7ff9481ac65a43f67ac7dd0 -->
+<!-- blueprint:source-hash 6810bf2690c0a67e3c0f4566fc949cdc6eda53c49bd8e28900e02ccda5eed2e3 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -23,12 +23,12 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 - Must handle rate limits, missing or delayed data, cancelled/postponed matches, incomplete events, network failures, provider outages, and unexpected response changes. Never assume every match has every event or statistic.
 - "Live" is not millisecond real-time: prefer reasonable refresh rates, API efficiency, reliability, and low resource use. Refresh by match state: upcoming is infrequent, live is more frequent, finished stops frequent polling.
 - Security: no private API credentials in the extension bundle, HTTPS only, minimal permissions, validate external data, never execute HTML or JS from the API.
-- Privacy: no browsing history, no inspection of websites, no scripts injected into arbitrary sites, no selling data.
+- Privacy: country is guessed on the device from time zone and language and never sent anywhere; no browsing history, no inspection of websites, no scripts injected into arbitrary sites, no selling data.
 - Non-requirements: accounts, social profiles, chat, betting or gambling, video streaming, user-generated content, editorial news, AI predictions, crypto, access to every website, a permanent server connection, a large database. MVP also excludes intrusive ads and a large content feed.
 
 ## Features
 
-Build order from `build-plan.md`; features 1 to 17 and 19 are done. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
+Build order from `build-plan.md`; features 1 to 21 are done. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
 
 1. **Match Discovery & Upcoming Games** (done) - upcoming matches with competition, teams, kickoff, status. Split into:
    - **1a. Extension Shell** - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
@@ -52,9 +52,10 @@ Build order from `build-plan.md`; features 1 to 17 and 19 are done. Feature 19 w
 19. **UI Refresh: Icons & Team Crests** (done) - one consistent icon set instead of emoji, icons on the bottom tabs, club crests and competition logos in match rows, the next-match card, match detail, competition headings, and favorites.
 16. **Performance & Extension Optimization** (done) - popup load time, memory, background activity, permissions.
 17. **Privacy & Permissions** (done) - minimal, explained permissions; no unnecessary data collection.
-20. **More Competitions** - Botola Pro and international national-team matches (friendlies, World Cup qualifiers, AFCON); followable and searchable; only the six default leagues plus followed competitions are loaded.
-21. **Modern UI Redesign** - rework layout and visual style directly (no mockup stage) so every screen is modern, cleaner, and easier to use.
-18. **Chrome Web Store Readiness** - Manifest V3 compliance, icons, screenshots, metadata, privacy info, production build.
+20. **More Competitions** (done) - international national-team matches (friendlies, World Cup qualifiers for Africa, AFCON); Botola Pro was dropped because ESPN doesn't serve it; followable and searchable; only the six default leagues plus followed competitions are loaded.
+21. **Modern UI Redesign** (done) - rework layout and visual style directly (no mockup stage) so every screen is modern, cleaner, and easier to use.
+18. **Chrome Web Store Readiness** (done) - Manifest V3 compliance, icons, screenshots, metadata, privacy info, production build.
+22. **Local League Suggestion** - one-time prompt to follow the user's own country's league, guessed on the device from time zone and language; national-team competitions where ESPN lacks the league.
 
 ## Data model
 
@@ -165,5 +166,5 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 - **Search** appears in the plan as team and match search; build plan adds competitions.
 - **Undefined types.** `MatchStatus` and `MatchEvent` shapes are missing. 1b must define `MatchStatus` (it locks the `Match` shape); `MatchEvent` can wait for feature 2.
 - **Default competitions.** The six-league default for 1b lives only in the build plan; how it combines with favorites (features 4, 5, 12) is undecided.
-- **Competition ids.** The ESPN ids for Botola Pro and the international competitions are not confirmed in the plans; feature 20 verifies them before relying on them.
+- **Competition ids.** ESPN does not serve Botola Pro (`mar.1`); feature 22 must verify each local-league id against ESPN before relying on it.
 - **Testing.** The plan lists Vitest and React Testing Library; only Vitest is configured (`npm test`), and UI stays out of unit tests by the coding standards.

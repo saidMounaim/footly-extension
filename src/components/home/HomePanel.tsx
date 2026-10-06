@@ -215,7 +215,7 @@ export function HomePanel({
       {banner}
       {live.length > 0 && (
         <section aria-labelledby="home-live">
-          <h2 id="home-live" className={sectionHeadingClass}>
+          <h2 id="home-live" tabIndex={-1} className={`${sectionHeadingClass} focus:outline-none`}>
             Live now
           </h2>
           <LiveHero match={live[0]} onSelect={onSelect}>
@@ -233,7 +233,7 @@ export function HomePanel({
         </section>
       )}
       <section aria-labelledby="home-next">
-        <h2 id="home-next" className={sectionHeadingClass}>
+        <h2 id="home-next" tabIndex={-1} className={`${sectionHeadingClass} focus:outline-none`}>
           Your next match
         </h2>
         {nextMatch ? (

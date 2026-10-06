@@ -91,7 +91,7 @@ describe('parseWatchedMatches', () => {
       null,
       'm2',
       { ...good, id: '' },
-      { ...good, id: 'm3', competitionId: 'ned.1' },
+      { ...good, id: 'm3', competitionId: 'xxx.9' },
       { ...good, id: 'm4', competitionName: 42 },
       { ...good, id: 'm5', startTime: 'not a date' },
       { ...good, id: 'm6', status: 'abandoned' },

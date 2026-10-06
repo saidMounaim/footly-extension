@@ -4,6 +4,8 @@ Footly is a Chrome extension that shows football fixtures, live scores, and
 results. Footly has no account and collects nothing about you. Your favorites and
 settings stay on this device.
 
+Your country is guessed on this device from your time zone and language, only to suggest a league; it is never sent anywhere.
+
 ## What Footly does not do
 
 - No accounts, sign-in, analytics, tracking, or advertising.
@@ -36,6 +38,7 @@ never leaves the device.
 | `matchListCache` | Today's fixtures and recent results, with save time | Open the popup instantly and make fewer requests |
 | `teamCatalogCache` | Clubs in the supported competitions, with save time | Team search without reloading every time |
 | `watchedMatches` | Your teams' upcoming matches and their last status | Send each alert once |
+| `localLeagueSuggestion` | Whether you accepted or dismissed the local league card (no country) | Show the card only once |
 
 The popup also keeps a copy of your theme choice under `footly-theme` in its own
 local storage, so it opens in the right theme without a flash.

@@ -64,7 +64,8 @@ The product should work for both casual football fans and users who follow footb
 - Recent match results.
 - Favorite teams.
 - Favorite competitions.
-- More competitions beyond the six default leagues: Botola Pro and international national-team matches (friendlies, World Cup qualifiers, AFCON). They load only when followed, so the default request count stays the same.
+- Local league suggestion: a one-time prompt to follow the user's own country's league, guessed on the device.
+- More competitions beyond the six default leagues: international national-team matches (friendlies, World Cup qualifiers for Africa, AFCON). Botola Pro is not available from ESPN. They load only when followed, so the default request count stays the same.
 - Match countdown.
 - Quick team and match search.
 - Match detail view, with basic team statistics and starting lineups when the provider supplies them.
@@ -614,6 +615,8 @@ Finished match
 The MVP should not require an account.
 
 Favorite teams, competitions, theme settings, and notification preferences should remain local where possible.
+
+Country is guessed on the device from time zone and language; it is never sent anywhere.
 
 Do not collect browsing history.
 

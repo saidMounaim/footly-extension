@@ -475,6 +475,15 @@ describe('competition catalog', () => {
     expect(defaultIds).toEqual(['eng.1', 'esp.1', 'ita.1', 'ger.1', 'fra.1', 'uefa.champions'])
   })
 
+  it('includes the confirmed local leagues but not unserved ones', () => {
+    const ids = EXTRA_COMPETITIONS.map((c) => c.id)
+    for (const id of ['ned.1', 'por.1', 'tur.1', 'sco.1', 'bel.1', 'usa.1', 'mex.1', 'bra.1', 'arg.1', 'ksa.1']) {
+      expect(ids).toContain(id)
+    }
+    expect(ids).not.toContain('mar.1')
+    expect(ids).not.toContain('egy.1')
+  })
+
   it('loads only the defaults when nothing extra is followed', () => {
     expect(competitionsToLoad([]).map((c) => c.id)).toEqual(defaultIds)
   })

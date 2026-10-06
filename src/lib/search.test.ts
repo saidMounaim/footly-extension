@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { Match, Team } from '../api/types.ts'
-import { COMPETITIONS } from '../api/football.ts'
+import { COMPETITIONS, DEFAULT_COMPETITIONS } from '../api/football.ts'
 import { foldText, searchCompetitions, searchMatches, searchTeams, teamsInMatches } from './search.ts'
 
 const teams = [
@@ -39,9 +39,9 @@ describe('searchTeams', () => {
 
 describe('searchCompetitions', () => {
   it('matches the name ignoring case, accents, and spaces', () => {
-    expect(searchCompetitions(COMPETITIONS, '  PREM ').map((c) => c.id)).toEqual(['eng.1'])
-    expect(searchCompetitions(COMPETITIONS, 'liga').map((c) => c.id)).toEqual(['esp.1', 'ger.1'])
-    expect(searchCompetitions(COMPETITIONS, 'la liga').map((c) => c.id)).toEqual(['esp.1'])
+    expect(searchCompetitions(DEFAULT_COMPETITIONS, '  PREM ').map((c) => c.id)).toEqual(['eng.1'])
+    expect(searchCompetitions(DEFAULT_COMPETITIONS, 'liga').map((c) => c.id)).toEqual(['esp.1', 'ger.1'])
+    expect(searchCompetitions(DEFAULT_COMPETITIONS, 'la liga').map((c) => c.id)).toEqual(['esp.1'])
   })
 
   it('returns nothing for an empty or blank query', () => {
