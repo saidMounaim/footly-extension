@@ -65,7 +65,7 @@ The product should work for both casual football fans and users who follow footb
 - Favorite teams.
 - Favorite competitions.
 - Local league suggestion: a one-time prompt to follow the user's own country's league, guessed on the device.
-- More competitions beyond the six default leagues: international national-team matches (friendlies, World Cup qualifiers for Africa, AFCON). Botola Pro is not available from ESPN. They load only when followed, so the default request count stays the same.
+- More competitions beyond the six default leagues, grouped in Favorites as Clubs and National teams: national-team matches (friendlies, World Cup, World Cup qualifiers for Africa, South America, Europe, CONCACAF, and Asia, AFCON, Copa América, Euro, Nations League, Gold Cup) and more club competitions (other countries' top leagues, Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each only where ESPN serves it. Botola Pro is not available from ESPN. They load only when followed, so the default request count stays the same.
 - Match countdown.
 - Quick team and match search.
 - Match detail view, with basic team statistics and starting lineups when the provider supplies them.

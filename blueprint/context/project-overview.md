@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash f3a5bbbf1343b72d9b5b0fdb0599fe8d438299f648fae65c5219d37d8c5ab028 -->
+<!-- blueprint:source-hash 0e4742f6d48719604814997d331572df954b64ad435caeaf94ba05fff1f17fe7 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -56,7 +56,8 @@ Build order from `build-plan.md`; features 1 to 22 are done. Feature 19 was list
 21. **Modern UI Redesign** (done) - rework layout and visual style directly (no mockup stage) so every screen is modern, cleaner, and easier to use.
 18. **Chrome Web Store Readiness** (done) - Manifest V3 compliance, icons, screenshots, metadata, privacy info, production build.
 22. **Local League Suggestion** (done) - one-time prompt to follow the user's own country's league, guessed on the device from time zone and language; national-team competitions where ESPN lacks the league.
-23. **Competition Browser on Home** - Home lists competition cards instead of games; opening one shows its upcoming matches and results with day chips.
+23. **Competition Browser on Home** (done) - Home lists competition cards instead of games; opening one shows its upcoming matches and results with day chips.
+24. **More Competitions 2** - more national-team competitions (World Cup, Copa América, Euro, Nations League, Gold Cup, World Cup qualifiers for South America, Europe, CONCACAF, Asia) and club competitions (Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each only where ESPN serves it; extras grouped in Favorites as Clubs and National teams.
 
 ## Data model
 
@@ -134,7 +135,7 @@ Not in v1: free and adoption-focused. Possible later "Footly Plus" (advanced not
 Modern, compact football companion, not a mini football website. Clean, fast, easy to scan, strong hierarchy, clear live status, excellent dark mode, fits the Chrome popup size.
 
 - Popup `Home` - competition cards (default leagues plus followed; live count or next kickoff); opening one shows its upcoming matches and results with day chips; bottom navigation
-- `Favorites` - followed teams and competitions
+- `Favorites` - followed teams and competitions; followable extras grouped as Clubs and National teams
 - `Search` - teams and matches
 - `Settings` - preferences and notifications
 - Status uses text or icons, not color alone (upcoming neutral, live prominent, halftime label, finished final score, postponed warning, cancelled clear)

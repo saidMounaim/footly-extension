@@ -28,13 +28,26 @@ export const DEFAULT_COMPETITIONS: readonly CatalogCompetition[] = [
 ]
 
 /**
- * Loaded only while followed. Ids confirmed against ESPN; Botola Pro (mar.1) and
- * the Egyptian Premier League (egy.1) aren't served.
+ * Loaded only while followed, national teams first so earlier extras keep their
+ * order. Ids confirmed against ESPN; Botola Pro (mar.1) and the Egyptian Premier
+ * League (egy.1) aren't served. `hasStandings` is set only where ESPN returns tables.
  */
-export const EXTRA_COMPETITIONS: readonly CatalogCompetition[] = [
+export const NATIONAL_TEAM_EXTRAS: readonly CatalogCompetition[] = [
   { id: 'fifa.friendly', name: 'International Friendlies', hasStandings: false },
   { id: 'fifa.worldq.caf', name: 'World Cup Qualifying (Africa)', hasStandings: true },
   { id: 'caf.nations', name: 'Africa Cup of Nations', hasStandings: true },
+  { id: 'fifa.world', name: 'World Cup', hasStandings: true },
+  { id: 'conmebol.america', name: 'Copa América', hasStandings: true },
+  { id: 'uefa.euro', name: 'Euro', hasStandings: true },
+  { id: 'uefa.nations', name: 'Nations League', hasStandings: true },
+  { id: 'concacaf.gold', name: 'Gold Cup', hasStandings: true },
+  { id: 'fifa.worldq.conmebol', name: 'World Cup Qualifying (South America)', hasStandings: true },
+  { id: 'fifa.worldq.uefa', name: 'World Cup Qualifying (Europe)', hasStandings: true },
+  { id: 'fifa.worldq.concacaf', name: 'World Cup Qualifying (CONCACAF)', hasStandings: true },
+  { id: 'fifa.worldq.afc', name: 'World Cup Qualifying (Asia)', hasStandings: true },
+]
+
+export const CLUB_EXTRAS: readonly CatalogCompetition[] = [
   { id: 'ned.1', name: 'Eredivisie', hasStandings: true },
   { id: 'por.1', name: 'Primeira Liga', hasStandings: true },
   { id: 'tur.1', name: 'Süper Lig', hasStandings: true },
@@ -45,6 +58,17 @@ export const EXTRA_COMPETITIONS: readonly CatalogCompetition[] = [
   { id: 'bra.1', name: 'Brasileirão', hasStandings: true },
   { id: 'arg.1', name: 'Liga Profesional', hasStandings: true },
   { id: 'ksa.1', name: 'Saudi Pro League', hasStandings: true },
+  { id: 'uefa.europa', name: 'Europa League', hasStandings: true },
+  { id: 'uefa.europa.conf', name: 'Conference League', hasStandings: true },
+  { id: 'conmebol.libertadores', name: 'Copa Libertadores', hasStandings: true },
+  { id: 'eng.2', name: 'Championship', hasStandings: true },
+  { id: 'eng.fa', name: 'FA Cup', hasStandings: false },
+  { id: 'esp.copa_del_rey', name: 'Copa del Rey', hasStandings: false },
+]
+
+export const EXTRA_COMPETITIONS: readonly CatalogCompetition[] = [
+  ...NATIONAL_TEAM_EXTRAS,
+  ...CLUB_EXTRAS,
 ]
 
 /** Every competition Footly knows, defaults first; used to validate stored ids. */

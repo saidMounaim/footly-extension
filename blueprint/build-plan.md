@@ -53,3 +53,5 @@
 - [x] 22. **Local League Suggestion** - On first open, guess the user's country from the browser time zone and language (on the device, no new permission) and offer a one-time prompt to follow that country's league when ESPN covers it; otherwise suggest the national-team competitions where relevant.
 
 - [x] 23. **Competition Browser on Home** - Home lists competition cards (the default leagues plus followed ones) instead of games; opening a competition shows its upcoming matches and results with day chips.
+
+- [x] 24. **More Competitions 2** - Add more club and national-team competitions (World Cup, Copa América, Euro, Nations League, Gold Cup, World Cup qualifiers for South America, Europe, CONCACAF, and Asia; Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each confirmed against ESPN, and group the followable extras in Favorites as Clubs and National teams so the longer list stays easy to scan.

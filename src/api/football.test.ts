@@ -3,8 +3,10 @@ import {
   allCompetitionsFailed,
   COMPETITIONS,
   competitionsToLoad,
+  CLUB_EXTRAS,
   DEFAULT_COMPETITIONS,
   EXTRA_COMPETITIONS,
+  NATIONAL_TEAM_EXTRAS,
   getMatchDetails,
   getMatchList,
   getTeamCatalog,
@@ -482,6 +484,54 @@ describe('competition catalog', () => {
     }
     expect(ids).not.toContain('mar.1')
     expect(ids).not.toContain('egy.1')
+  })
+
+  it('has no duplicate ids', () => {
+    const ids = COMPETITIONS.map((c) => c.id)
+    expect(new Set(ids).size).toBe(ids.length)
+  })
+
+  it('lists national-team extras before club extras, keeping the earlier extras in order', () => {
+    expect(EXTRA_COMPETITIONS).toEqual([...NATIONAL_TEAM_EXTRAS, ...CLUB_EXTRAS])
+    expect(NATIONAL_TEAM_EXTRAS.slice(0, 3).map((c) => c.id)).toEqual([
+      'fifa.friendly',
+      'fifa.worldq.caf',
+      'caf.nations',
+    ])
+    expect(CLUB_EXTRAS.slice(0, 10).map((c) => c.id)).toEqual([
+      'ned.1', 'por.1', 'tur.1', 'sco.1', 'bel.1', 'usa.1', 'mex.1', 'bra.1', 'arg.1', 'ksa.1',
+    ])
+  })
+
+  it('includes the confirmed national-team and club competitions', () => {
+    expect(NATIONAL_TEAM_EXTRAS.map((c) => c.id)).toEqual(
+      expect.arrayContaining([
+        'fifa.world',
+        'conmebol.america',
+        'uefa.euro',
+        'uefa.nations',
+        'concacaf.gold',
+        'fifa.worldq.conmebol',
+        'fifa.worldq.uefa',
+        'fifa.worldq.concacaf',
+        'fifa.worldq.afc',
+      ]),
+    )
+    expect(CLUB_EXTRAS.map((c) => c.id)).toEqual(
+      expect.arrayContaining([
+        'uefa.europa',
+        'uefa.europa.conf',
+        'conmebol.libertadores',
+        'eng.2',
+        'eng.fa',
+        'esp.copa_del_rey',
+      ]),
+    )
+  })
+
+  it('skips standings for cups ESPN publishes no tables for', () => {
+    const cups = EXTRA_COMPETITIONS.filter((c) => !c.hasStandings).map((c) => c.id)
+    expect(cups).toEqual(['fifa.friendly', 'eng.fa', 'esp.copa_del_rey'])
   })
 
   it('loads only the defaults when nothing extra is followed', () => {

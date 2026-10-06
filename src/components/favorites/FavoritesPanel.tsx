@@ -1,7 +1,8 @@
 import { useId, useState } from 'react'
 import {
+  CLUB_EXTRAS,
   DEFAULT_COMPETITIONS,
-  EXTRA_COMPETITIONS,
+  NATIONAL_TEAM_EXTRAS,
   type CatalogCompetition,
 } from '../../api/football.ts'
 import type { Team } from '../../api/types.ts'
@@ -101,7 +102,7 @@ function CompetitionGroup({
   )
 }
 
-/** The always-loaded leagues, then extras that load once followed. */
+/** The always-loaded leagues, then club and national-team extras that load once followed. */
 function Competitions({
   competitions,
   logos,
@@ -119,9 +120,16 @@ function Competitions({
         logos={logos}
       />
       <CompetitionGroup
-        id="favorites-more-competitions"
-        title="More competitions"
-        list={EXTRA_COMPETITIONS}
+        id="favorites-club-competitions"
+        title="Club competitions"
+        list={CLUB_EXTRAS}
+        competitions={competitions}
+        logos={logos}
+      />
+      <CompetitionGroup
+        id="favorites-national-teams"
+        title="National teams"
+        list={NATIONAL_TEAM_EXTRAS}
         competitions={competitions}
         logos={logos}
       />
