@@ -27,5 +27,5 @@ export const COUNTRY_GUESS_NOTE =
 /** The only servers Footly contacts. */
 export const CONTACTED_HOSTS = [
   { host: 'site.api.espn.com', purpose: 'Scores, fixtures, and team lists from ESPN.' },
-  { host: 'a.espncdn.com', purpose: "Club crests and league logos from ESPN's image server." },
+  { host: 'a.espncdn.com', purpose: "Club crests, league logos, and player photos from ESPN's image server." },
 ] as const

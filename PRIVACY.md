@@ -48,7 +48,7 @@ local storage, so it opens in the right theme without a flash.
 | Server | Purpose |
 |---|---|
 | `site.api.espn.com` | Scores, fixtures, and team lists from ESPN. |
-| `a.espncdn.com` | Club crests and league logos from ESPN's image server. |
+| `a.espncdn.com` | Club crests, league logos, and player photos from ESPN's image server. |
 
 Like any web request, these reveal your IP address to ESPN. Footly sends nothing
 else about you: no identifiers, no favorites, and no referrer. ESPN's own privacy

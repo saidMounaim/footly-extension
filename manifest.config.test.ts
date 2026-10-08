@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import pkg from './package.json' with { type: 'json' }
 import manifest from './manifest.config.ts'
-import { PERMISSION_EXPLANATIONS } from './src/lib/privacy.ts'
+import { CONTACTED_HOSTS, PERMISSION_EXPLANATIONS } from './src/lib/privacy.ts'
 
 describe('manifest', () => {
   it('is a Manifest V3 popup with the package version', () => {
@@ -38,6 +39,13 @@ describe('manifest', () => {
     // Same order as the manifest, so this fails for a missing or an extra explanation.
     const explained = PERMISSION_EXPLANATIONS.map((entry) => entry.permission)
     expect(manifest).toHaveProperty('permissions', explained)
+  })
+
+  it('lists every contacted server in PRIVACY.md exactly as Settings shows it', () => {
+    const policy = readFileSync(new URL('./PRIVACY.md', import.meta.url), 'utf8')
+    for (const { host, purpose } of CONTACTED_HOSTS) {
+      expect(policy).toContain(`| \`${host}\` | ${purpose} |`)
+    }
   })
 
   it('runs one module service worker for background match alerts', () => {
