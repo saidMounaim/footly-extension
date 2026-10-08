@@ -80,34 +80,55 @@ export function StatusText({ match, now, showScore = true }: StatusTextProps) {
   }
 }
 
-/** One team in the match card: crest, name, and its own score when there is one. */
+/** One team in an unfinished match card: crest, name, and its own score when there is one. */
 function TeamLine({
   name,
   logo,
   score,
-  dimmed,
 }: {
   name: string
   logo: string | undefined
   score: number | undefined
-  /** The losing side of a finished match. */
-  dimmed: boolean
 }) {
   return (
     <span className="flex min-w-0 items-center gap-3">
       <Crest src={logo} name={name} />
       <span
-        className={`min-w-0 flex-1 truncate text-sm ${dimmed ? 'text-muted' : 'font-medium text-foreground'}`}
+        className="min-w-0 flex-1 truncate text-sm font-medium text-foreground"
       >
         {name}
       </span>
       {score !== undefined && (
         <span
-          className={`w-6 text-right text-base font-semibold tabular-nums ${dimmed ? 'text-muted' : 'text-foreground'}`}
+          className="w-6 text-right text-base font-semibold tabular-nums text-foreground"
         >
           {score}
         </span>
       )}
+    </span>
+  )
+}
+
+/**
+ * A finished match as crest, score, crest. The names live in the row's
+ * accessible name and in each crest's hover title.
+ */
+function ResultLine({ match, score }: { match: Match; score: NonNullable<Match['score']> }) {
+  const scoreClass = (mine: number, theirs: number) =>
+    mine < theirs ? 'text-muted' : 'text-foreground'
+  return (
+    <span className="mt-3 flex items-center justify-center gap-5">
+      <span title={match.homeTeam.name} className="flex">
+        <Crest src={match.homeTeam.logo} name={match.homeTeam.name} size="lg" />
+      </span>
+      <span aria-hidden="true" className="text-2xl font-bold tabular-nums">
+        <span className={scoreClass(score.home, score.away)}>{score.home}</span>
+        <span className="px-1.5 text-muted">–</span>
+        <span className={scoreClass(score.away, score.home)}>{score.away}</span>
+      </span>
+      <span title={match.awayTeam.name} className="flex">
+        <Crest src={match.awayTeam.logo} name={match.awayTeam.name} size="lg" />
+      </span>
     </span>
   )
 }
@@ -150,20 +171,22 @@ export function MatchRow({ match, favorite = false, now, onSelect }: MatchRowPro
             <StatusText match={match} now={now} showScore={false} />
           </span>
         </span>
-        <span className="mt-3 flex flex-col gap-2.5">
-          <TeamLine
-            name={match.homeTeam.name}
-            logo={match.homeTeam.logo}
-            score={score?.home}
-            dimmed={finished && score.home < score.away}
-          />
-          <TeamLine
-            name={match.awayTeam.name}
-            logo={match.awayTeam.logo}
-            score={score?.away}
-            dimmed={finished && score.away < score.home}
-          />
-        </span>
+        {finished ? (
+          <ResultLine match={match} score={score} />
+        ) : (
+          <span className="mt-3 flex flex-col gap-2.5">
+            <TeamLine
+              name={match.homeTeam.name}
+              logo={match.homeTeam.logo}
+              score={score?.home}
+            />
+            <TeamLine
+              name={match.awayTeam.name}
+              logo={match.awayTeam.logo}
+              score={score?.away}
+            />
+          </span>
+        )}
       </button>
     </li>
   )

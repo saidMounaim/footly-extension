@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import type { Match } from '../../api/types.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
@@ -14,10 +14,12 @@ import { goalScorers, type GoalLine } from '../../lib/match.ts'
 import { Crest } from '../common/Crest.tsx'
 import { FootballIcon } from '../common/FootballIcon.tsx'
 import { MatchLineups } from './MatchLineups.tsx'
+import { MatchSectionTabs } from './MatchSectionTabs.tsx'
 import { StatusText } from './MatchRow.tsx'
 import { MatchStats } from './MatchStats.tsx'
 import { MatchTimeline, MatchTimelineSkeleton } from './MatchTimeline.tsx'
 import { formatScore, secondaryButtonClass } from './status.ts'
+import { sectionPanelId, sectionTabId, type MatchSection } from './tabs.ts'
 
 interface MatchDetailProps {
   match: Match
@@ -114,6 +116,17 @@ export function MatchDetail({ match, favorites, liveRefreshMs, onBack }: MatchDe
   const checked = useMemo(() => [shown], [shown])
   useKickoffChecks(checked, refresh)
   useLiveRefresh(checked, refresh, liveRefreshMs)
+  // Tied to the match it was picked on, so a newly opened match starts on Summary
+  // while live refreshes (which replace `state.match`, not `match`) keep it.
+  const [selected, setSelected] = useState<{ matchId: string; tab: MatchSection } | null>(null)
+  const loaded = state.status === 'success' ? state.match : undefined
+  const sections: MatchSection[] = [
+    'summary',
+    ...(loaded?.stats ? (['stats'] as const) : []),
+    ...(loaded?.lineups ? (['lineups'] as const) : []),
+  ]
+  const picked = selected?.matchId === match.id ? selected.tab : 'summary'
+  const active = sections.includes(picked) ? picked : 'summary'
 
   useEffect(() => {
     headingRef.current?.focus()
@@ -136,7 +149,14 @@ export function MatchDetail({ match, favorites, liveRefreshMs, onBack }: MatchDe
         {match.homeTeam.name} vs {match.awayTeam.name}
       </h2>
       <ScoreBlock match={shown} favorites={favorites} />
-      <section aria-label="Timeline">
+      {sections.length > 1 && (
+        <MatchSectionTabs
+          sections={sections}
+          active={active}
+          onChange={(tab) => setSelected({ matchId: match.id, tab })}
+        />
+      )}
+      <SectionPanel section="summary" tabbed={sections.length > 1} active={active}>
         {state.status === 'loading' && <MatchTimelineSkeleton />}
         {state.status === 'error' && (
           <div role="alert" className="flex flex-col items-center gap-3 px-6 py-8 text-center">
@@ -147,13 +167,42 @@ export function MatchDetail({ match, favorites, liveRefreshMs, onBack }: MatchDe
           </div>
         )}
         {state.status === 'success' && <MatchTimeline match={state.match} />}
-      </section>
-      {state.status === 'success' && (
-        <>
-          <MatchStats match={state.match} />
-          <MatchLineups match={state.match} />
-        </>
+      </SectionPanel>
+      {loaded?.stats && (
+        <SectionPanel section="stats" tabbed active={active}>
+          <MatchStats match={loaded} />
+        </SectionPanel>
       )}
+      {loaded?.lineups && (
+        <SectionPanel section="lineups" tabbed active={active}>
+          <MatchLineups match={loaded} />
+        </SectionPanel>
+      )}
+    </div>
+  )
+}
+
+/** A tab panel, or the plain timeline section when the match has no other sections. */
+function SectionPanel({
+  section,
+  tabbed,
+  active,
+  children,
+}: {
+  section: MatchSection
+  tabbed: boolean
+  active: MatchSection
+  children: ReactNode
+}) {
+  if (!tabbed) return <section aria-label="Timeline">{children}</section>
+  return (
+    <div
+      role="tabpanel"
+      id={sectionPanelId(section)}
+      aria-labelledby={sectionTabId(section)}
+      hidden={section !== active}
+    >
+      {children}
     </div>
   )
 }

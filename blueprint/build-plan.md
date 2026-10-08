@@ -62,3 +62,7 @@
   - [x] 25b. **All Competitions on Home** - Home lists every competition: the defaults and followed ones first with live status as today, then the rest grouped as Club competitions and National teams, loading their matches only when opened. Follow and unfollow move into the competition screen.
 
 - [x] 26. **Match Center Refresh** - Give the match detail a modern score header (larger crests and score, a status pill, and each team's goal scorers under the score), draw the starting lineups on a pitch from each player's position with the current list kept as the fallback, and replace the flag-style goal icon with a football.
+
+- [ ] 27. **Match Center Polish** - Make the match detail easier to scan: tabbed sections, team badges in place of bare names, and player photos.
+  - [x] 27a. **Match Sections & Team Badges** - Split the match detail under the score header into Summary, Stats, and Lineups tabs with substitutes collapsible under the pitch; show each team's crest or flag on the stats header, lineup pitch labels, and substitute headings; draw stats as comparison bars; and show finished-match result rows as crests and score without team names.
+  - [ ] 27b. **Player Photos** - Show ESPN player headshots in lineups, falling back to the shirt number when a photo is missing.

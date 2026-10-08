@@ -1,4 +1,5 @@
 import { useRef, type KeyboardEvent } from 'react'
+import { tabIndexForKey } from '../../lib/tabs.ts'
 import { MATCH_TABS, panelId, tabId, type MatchTab } from './tabs.ts'
 
 interface MatchTabsProps {
@@ -10,23 +11,14 @@ interface MatchTabsProps {
 export function MatchTabs({ active, onChange }: MatchTabsProps) {
   const buttons = useRef(new Map<MatchTab, HTMLButtonElement>())
 
-  function select(index: number) {
-    const tab = MATCH_TABS[(index + MATCH_TABS.length) % MATCH_TABS.length].id
-    onChange(tab, 'key')
-    buttons.current.get(tab)?.focus()
-  }
-
   function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const current = MATCH_TABS.findIndex((tab) => tab.id === active)
-    const next = {
-      ArrowRight: current + 1,
-      ArrowLeft: current - 1,
-      Home: 0,
-      End: MATCH_TABS.length - 1,
-    }[event.key]
+    const next = tabIndexForKey(event.key, current, MATCH_TABS.length)
     if (next === undefined) return
     event.preventDefault()
-    select(next)
+    const tab = MATCH_TABS[next].id
+    onChange(tab, 'key')
+    buttons.current.get(tab)?.focus()
   }
 
   return (

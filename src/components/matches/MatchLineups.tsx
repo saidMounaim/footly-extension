@@ -1,6 +1,7 @@
 import type { Lineup, LineupPlayer, Match, Team } from '../../api/types.ts'
+import { ChevronDown } from 'lucide-react'
 import { pitchLines, surname } from '../../lib/pitch.ts'
-import { sectionHeadingClass } from './status.ts'
+import { Crest } from '../common/Crest.tsx'
 
 function PlayerRow({ player }: { player: LineupPlayer }) {
   return (
@@ -24,27 +25,36 @@ function PlayerRow({ player }: { player: LineupPlayer }) {
   )
 }
 
-/** `named` titles the list with the team, for when no team heading sits above it. */
+/** Closed by default; `named` titles it with the team, for when no team heading sits above it. */
 function Substitutes({ team, lineup, named = false }: { team: Team; lineup: Lineup; named?: boolean }) {
   if (lineup.substitutes.length === 0) return null
   return (
-    <>
-      <p className="px-4 pt-2 pb-1 text-xs font-medium text-muted">
-        {named ? `${team.name} substitutes` : 'Substitutes'}
-      </p>
-      <ul aria-label={`${team.name} substitutes`}>
+    <details className="group">
+      <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
+        {named && <Crest src={team.logo} name={team.name} size="md" />}
+        <span className="min-w-0 flex-1 truncate font-medium">
+          {named ? `${team.name} substitutes` : 'Substitutes'}{' '}
+          <span className="font-normal tabular-nums text-muted">({lineup.substitutes.length})</span>
+        </span>
+        <ChevronDown
+          aria-hidden="true"
+          className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180"
+        />
+      </summary>
+      <ul aria-label={`${team.name} substitutes`} className="pb-1">
         {lineup.substitutes.map((player) => (
           <PlayerRow key={player.id} player={player} />
         ))}
       </ul>
-    </>
+    </details>
   )
 }
 
 function TeamHeading({ team, lineup }: { team: Team; lineup: Lineup }) {
   return (
-    <h4 className="flex items-baseline justify-between gap-2 px-4 py-1 text-sm font-semibold text-foreground">
-      <span className="min-w-0 truncate">{team.name}</span>
+    <h4 className="flex items-center gap-2 px-4 py-1 text-sm font-semibold text-foreground">
+      <Crest src={team.logo} name={team.name} size="md" />
+      <span className="min-w-0 flex-1 truncate">{team.name}</span>
       {lineup.formation && (
         <span className="shrink-0 text-xs font-normal tabular-nums text-muted">
           <span className="sr-only">Formation </span>
@@ -114,8 +124,9 @@ function PitchHalf({
   side: 'home' | 'away'
 }) {
   const label = (
-    <p className="flex items-baseline justify-between gap-2 px-3 py-1.5 text-xs font-semibold text-pitch-line">
-      <span className="min-w-0 truncate">{team.name}</span>
+    <p className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-pitch-line">
+      <Crest src={team.logo} name={team.name} size="md" />
+      <span className="min-w-0 flex-1 truncate">{team.name}</span>
       {lineup.formation && (
         <span className="shrink-0 font-normal tabular-nums">
           <span className="sr-only">Formation </span>
@@ -185,7 +196,7 @@ function Pitch({
           <PitchHalf team={match.homeTeam} lineup={lineups.home} lines={home} side="home" />
         </div>
       </div>
-      <div className="py-2">
+      <div className="mt-2 divide-y divide-border">
         <Substitutes team={match.homeTeam} lineup={lineups.home} named />
         <Substitutes team={match.awayTeam} lineup={lineups.away} named />
       </div>
@@ -203,10 +214,7 @@ export function MatchLineups({ match }: { match: Match }) {
   const home = pitchLines(lineups.home.starters, lineups.home.formation)
   const away = pitchLines(lineups.away.starters, lineups.away.formation)
   return (
-    <section aria-labelledby="match-lineups-heading">
-      <h3 id="match-lineups-heading" className={sectionHeadingClass}>
-        Lineups
-      </h3>
+    <div className="pt-2 pb-3">
       {home && away ? (
         <Pitch match={match} lineups={lineups} home={home} away={away} />
       ) : (
@@ -215,6 +223,6 @@ export function MatchLineups({ match }: { match: Match }) {
           <TeamLineup team={match.awayTeam} lineup={lineups.away} />
         </div>
       )}
-    </section>
+    </div>
   )
 }
