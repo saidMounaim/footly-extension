@@ -38,3 +38,11 @@
 **Why it matters:** `getTeamMatches` makes two requests per team and documents that a team counts as failed when either one fails, while matches from the request that succeeded are still kept. Every failure test replies the same way to both requests (`a: 503`, `a: 429`), so a regression that drops the surviving page, or that only marks a team failed when both requests fail, would pass the suite.
 **Suggested fix:** Let `scheduleFetch` fail per request (for example `{ past: 503, upcoming: [...] }`) and add one case asserting the upcoming match is kept, the team is in `failedTeamIds`, and `failureReason` is set. Requirement lost: none.
 **Resolution:**
+
+### F-14 [P3] unverified - Open Graph image uses a relative URL
+
+**File:** site/index.html:12
+**Found:** 2026-10-08 by /audit (scope: feature 29 commit e5ed468; lens: quality)
+**Why it matters:** The Open Graph protocol expects an absolute `og:image` URL. Some link-preview crawlers ignore `/assets/icon-128.png`, so shared links may show no image. Not checked against a real crawler; the site has no domain yet.
+**Suggested fix:** Once the Vercel domain is known, make `og:image` absolute (and optionally use a larger social image). Requirement lost: none.
+**Resolution:**

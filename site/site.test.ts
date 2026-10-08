@@ -17,13 +17,18 @@ describe('website', () => {
   })
 
   it('publishes every section of PRIVACY.md', () => {
-    const headings = read('../PRIVACY.md')
-      .split('\n')
-      .filter((line) => line.startsWith('## '))
-      .map((line) => line.slice(3))
+    const lines = read('../PRIVACY.md').split('\n')
+    const headings = lines.filter((line) => line.startsWith('## ')).map((line) => line.slice(3))
     expect(headings.length).toBeGreaterThan(0)
     for (const heading of headings) {
       expect(privacyPage).toContain(`<h2>${heading}</h2>`)
+    }
+
+    // Storage keys (and host names) are the backticked first cell of a table row.
+    const codeCells = lines.flatMap((line) => line.match(/^\| `([^`]+)` \|/)?.[1] ?? [])
+    expect(codeCells.length).toBeGreaterThan(0)
+    for (const cell of codeCells) {
+      expect(privacyPage).toContain(`<code>${cell}</code>`)
     }
   })
 
