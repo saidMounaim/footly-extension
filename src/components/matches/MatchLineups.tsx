@@ -3,18 +3,12 @@ import { ArrowUp, ChevronDown } from 'lucide-react'
 import { substituteEntries, type SubstituteEntry } from '../../lib/match.ts'
 import { pitchLines } from '../../lib/pitch.ts'
 import { Crest } from '../common/Crest.tsx'
+import { PlayerPhoto } from '../common/PlayerPhoto.tsx'
 
 function PlayerRow({ player }: { player: LineupPlayer }) {
   return (
     <li className="flex items-center gap-3 px-4 py-1.5 text-sm">
-      <span className="w-6 shrink-0 text-right tabular-nums text-muted">
-        {player.jersey && (
-          <>
-            <span className="sr-only">Number </span>
-            {player.jersey}
-          </>
-        )}
-      </span>
+      <PlayerAvatar player={player} />
       <span className="min-w-0 flex-1 truncate text-foreground">{player.name}</span>
       {player.position && (
         <span className="shrink-0 text-xs text-muted">
@@ -26,23 +20,20 @@ function PlayerRow({ player }: { player: LineupPlayer }) {
   )
 }
 
-function NumberDisc({ jersey }: { jersey: string | undefined }) {
+/** The player's photo, or their number disc; the number is read out either way. */
+function PlayerAvatar({ player }: { player: LineupPlayer }) {
   return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-xs font-bold tabular-nums text-foreground">
-      {jersey && (
-        <>
-          <span className="sr-only">Number </span>
-          {jersey}
-        </>
-      )}
-    </span>
+    <>
+      <PlayerPhoto src={player.photo} jersey={player.jersey} />
+      {player.jersey && <span className="sr-only">Number {player.jersey}</span>}
+    </>
   )
 }
 
 function UsedSubRow({ entry }: { entry: SubstituteEntry }) {
   return (
     <li className="flex items-start gap-3 px-4 py-1.5 text-sm">
-      <NumberDisc jersey={entry.player.jersey} />
+      <PlayerAvatar player={entry.player} />
       <span className="min-w-0 flex-1">
         <span className="block wrap-break-word text-foreground">{entry.player.name}</span>
         {entry.playerOff && (
@@ -61,7 +52,7 @@ function UsedSubRow({ entry }: { entry: SubstituteEntry }) {
 function UnusedSubRow({ player }: { player: LineupPlayer }) {
   return (
     <li className="flex items-center gap-3 px-4 py-1.5 text-sm text-muted">
-      <NumberDisc jersey={player.jersey} />
+      <PlayerAvatar player={player} />
       <span className="min-w-0 flex-1 wrap-break-word">{player.name}</span>
       {player.position && (
         <span className="shrink-0 text-xs">

@@ -304,7 +304,8 @@ function toLineupPlayer(raw: UnknownRecord): LineupPlayer | undefined {
   const abbreviation = isRecord(raw.position) ? text(raw.position.abbreviation) : undefined
   // ESPN labels every substitute "SUB", which is not a position.
   const position = abbreviation === 'SUB' ? undefined : abbreviation
-  return { id, name, ...(jersey && { jersey }), ...(position && { position }) }
+  const photo = isRecord(athlete.headshot) ? httpsUrl(athlete.headshot.href) : undefined
+  return { id, name, ...(jersey && { jersey }), ...(position && { position }), ...(photo && { photo }) }
 }
 
 function toLineup(entry: UnknownRecord | undefined): Lineup | undefined {

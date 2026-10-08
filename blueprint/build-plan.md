@@ -63,7 +63,7 @@
 
 - [x] 26. **Match Center Refresh** - Give the match detail a modern score header (larger crests and score, a status pill, and each team's goal scorers under the score), draw the starting lineups on a pitch from each player's position with the current list kept as the fallback, and replace the flag-style goal icon with a football.
 
-- [ ] 27. **Match Center Polish** - Make the match detail easier to scan: tabbed sections, team badges in place of bare names, and player photos.
+- [x] 27. **Match Center Polish** - Make the match detail easier to scan: tabbed sections, team badges in place of bare names, and player photos.
   - [x] 27a. **Match Sections & Team Badges** - Split the match detail under the score header into Summary, Stats, and Lineups tabs with substitutes collapsible under the pitch; show each team's crest or flag on the stats header, lineup pitch labels, and substitute headings; draw stats as comparison bars; and show finished-match result rows as crests and score without team names.
-  - [ ] 27b. **Player Photos** - Show ESPN player headshots in lineups, falling back to the shirt number when a photo is missing.
+  - [x] 27b. **Player Photos** - Show ESPN player headshots in lineups, falling back to the shirt number when a photo is missing.
   - [x] 27c. **Readable Timeline, Subs & Names** - Split the Summary timeline by team (home events left, away right, each with its crest), list substitutes with the minute they came on and who they replaced (unused ones after, muted), and show players' full names on the pitch and under the score instead of a cut-off or last-word name.

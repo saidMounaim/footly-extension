@@ -471,6 +471,28 @@ describe('normalizeSummary stats and lineups', () => {
     expect(home.substitutes[0]).toEqual({ id: expect.any(String), name: 'Gerónimo Rulli', jersey: '28' })
   })
 
+  it('keeps a player headshot only when it is an https URL', () => {
+    const headshot = (href: unknown) => ({ id: 'h', displayName: 'Home One', headshot: { href } })
+    const match = normalizeSummary(
+      {
+        rosters: [
+          rosterTeam('382', [
+            { starter: true, athlete: headshot('https://a.espncdn.com/i/headshots/soccer/players/full/1.png') },
+            { starter: true, athlete: { ...headshot('http://a.espncdn.com/x.png'), id: 'h2' } },
+            { starter: true, athlete: { ...headshot('not a url'), id: 'h3' } },
+            { starter: true, athlete: { ...headshot(42), id: 'h4' } },
+            player('h5', 'No Photo'),
+          ]),
+          rosterTeam('366', [player('a1', 'Away One')]),
+        ],
+      },
+      listMatch,
+    )
+    const starters = match.lineups!.home.starters
+    expect(starters[0]?.photo).toBe('https://a.espncdn.com/i/headshots/soccer/players/full/1.png')
+    for (const starter of starters.slice(1)) expect(starter).not.toHaveProperty('photo')
+  })
+
   it('leaves stats and lineups out of a summary without them', () => {
     const match = normalizeSummary(summaryFixture, listMatch)
     expect(match).not.toHaveProperty('stats')

@@ -82,4 +82,6 @@ export interface LineupPlayer {
   jersey?: string
   /** Short label, e.g. "G" or "CD-L". */
   position?: string
+  /** https headshot URL; ESPN only sends one for players it has a photo of. */
+  photo?: string
 }
