@@ -56,7 +56,7 @@
 
 - [x] 24. **More Competitions 2** - Add more club and national-team competitions (World Cup, Copa América, Euro, Nations League, Gold Cup, World Cup qualifiers for South America, Europe, CONCACAF, and Asia; Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each confirmed against ESPN, and group the followable extras in Favorites as Clubs and National teams so the longer list stays easy to scan.
 
-- [ ] 25. **Favorites & Home Reorganize** - Favorites becomes your teams' matches; every competition moves to Home.
+- [x] 25. **Favorites & Home Reorganize** - Favorites becomes your teams' matches; every competition moves to Home.
 
   - [x] 25a. **Your Teams' Matches in Favorites** - Favorites shows each favorite team's upcoming and recent matches in every competition they play, from that team's ESPN schedule (one request per favorite team, only while the tab is open), instead of the competition follow lists. The "Your teams" list and team search stay.
-  - [ ] 25b. **All Competitions on Home** - Home lists every competition: the defaults and followed ones first with live status as today, then the rest grouped as Club competitions and National teams, loading their matches only when opened. Follow and unfollow move into the competition screen.
+  - [x] 25b. **All Competitions on Home** - Home lists every competition: the defaults and followed ones first with live status as today, then the rest grouped as Club competitions and National teams, loading their matches only when opened. Follow and unfollow move into the competition screen.

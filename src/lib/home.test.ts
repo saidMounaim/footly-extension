@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest'
-import type { MatchListResult } from '../api/football.ts'
+import {
+  CLUB_EXTRAS,
+  DEFAULT_COMPETITIONS,
+  NATIONAL_TEAM_EXTRAS,
+  type MatchListResult,
+} from '../api/football.ts'
 import type { Match, MatchStatus } from '../api/types.ts'
-import { competitionSummaries } from './home.ts'
+import { competitionSummaries, coversCompetition, homeSections } from './home.ts'
 
 let nextId = 0
 
@@ -53,5 +58,47 @@ describe('competitionSummaries', () => {
   it('gives zero live and no next match for a competition without matches', () => {
     const [esp] = competitionSummaries(result([match('upcoming', 'eng.1')]), competitions)
     expect(esp).toEqual({ id: 'esp.1', name: 'La Liga', live: 0, next: null })
+  })
+})
+
+describe('coversCompetition', () => {
+  const loaded = { status: 'success' as const, result: result([]), loadedAt: new Date(0) }
+
+  it('is true only when the loaded list includes the competition', () => {
+    expect(coversCompetition(loaded, 'eng.1')).toBe(true)
+    expect(coversCompetition(loaded, 'conmebol.libertadores')).toBe(false)
+  })
+
+  it('is false while loading or after an error', () => {
+    expect(coversCompetition({ status: 'loading' }, 'eng.1')).toBe(false)
+    expect(coversCompetition({ status: 'error', reason: 'offline' }, 'eng.1')).toBe(false)
+  })
+})
+
+describe('homeSections', () => {
+  const ids = (list: { id: string }[]) => list.map((c) => c.id)
+  const defaultIds = ids([...DEFAULT_COMPETITIONS])
+
+  it('lists the defaults as yours and every extra in its group when nothing is followed', () => {
+    const sections = homeSections(new Set())
+    expect(ids(sections.yours)).toEqual(defaultIds)
+    expect(ids(sections.clubs)).toEqual(ids([...CLUB_EXTRAS]))
+    expect(ids(sections.national)).toEqual(ids([...NATIONAL_TEAM_EXTRAS]))
+  })
+
+  it('moves followed extras to yours, in catalog order, out of their groups', () => {
+    const sections = homeSections(new Set(['conmebol.libertadores', 'fifa.world']))
+    expect(ids(sections.yours)).toEqual([...defaultIds, 'fifa.world', 'conmebol.libertadores'])
+    expect(ids(sections.clubs)).not.toContain('conmebol.libertadores')
+    expect(ids(sections.national)).not.toContain('fifa.world')
+    expect(sections.clubs).toHaveLength(CLUB_EXTRAS.length - 1)
+    expect(sections.national).toHaveLength(NATIONAL_TEAM_EXTRAS.length - 1)
+  })
+
+  it('changes no group when a default is followed', () => {
+    const sections = homeSections(new Set(['eng.1']))
+    expect(ids(sections.yours)).toEqual(defaultIds)
+    expect(sections.clubs).toHaveLength(CLUB_EXTRAS.length)
+    expect(sections.national).toHaveLength(NATIONAL_TEAM_EXTRAS.length)
   })
 })

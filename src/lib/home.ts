@@ -1,5 +1,12 @@
-import type { CatalogCompetition, MatchListResult } from '../api/football.ts'
+import {
+  CLUB_EXTRAS,
+  competitionsToLoad,
+  NATIONAL_TEAM_EXTRAS,
+  type CatalogCompetition,
+  type MatchListResult,
+} from '../api/football.ts'
 import type { Match } from '../api/types.ts'
+import type { MatchListState } from '../hooks/useMatchList.ts'
 
 export interface CompetitionSummary {
   id: string
@@ -22,4 +29,28 @@ export function competitionSummaries(
     const next = matches.find((match) => match.status === 'upcoming') ?? null
     return { id, name, live, next }
   })
+}
+
+/** True when the main match list has loaded `id`, so its screen needs no request of its own. */
+export function coversCompetition(state: MatchListState, id: string): boolean {
+  return state.status === 'success' && state.result.competitionIds.includes(id)
+}
+
+export interface HomeSections {
+  /** The defaults, then followed extras: the competitions the main list loads. */
+  yours: CatalogCompetition[]
+  /** Club extras not followed, in catalog order. */
+  clubs: CatalogCompetition[]
+  /** National-team extras not followed, in catalog order. */
+  national: CatalogCompetition[]
+}
+
+/** Every competition for Home: what you follow first, then the rest by group. */
+export function homeSections(followedIds: ReadonlySet<string>): HomeSections {
+  const notFollowed = (competition: CatalogCompetition) => !followedIds.has(competition.id)
+  return {
+    yours: competitionsToLoad(followedIds),
+    clubs: CLUB_EXTRAS.filter(notFollowed),
+    national: NATIONAL_TEAM_EXTRAS.filter(notFollowed),
+  }
 }

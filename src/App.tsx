@@ -1,6 +1,6 @@
 import { Settings } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { COMPETITIONS, competitionsToLoad } from './api/football.ts'
+import { COMPETITIONS } from './api/football.ts'
 import type { Match, Team } from './api/types.ts'
 import { CompetitionScreen } from './components/competition/CompetitionScreen.tsx'
 import { FavoritesPanel } from './components/favorites/FavoritesPanel.tsx'
@@ -24,6 +24,7 @@ import { useNow } from './hooks/useNow.ts'
 import { useOnlineStatus } from './hooks/useOnlineStatus.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
 import { useTeamMatches } from './hooks/useTeamMatches.ts'
+import { useCompetitionMatches } from './hooks/useCompetitionMatches.ts'
 import { useLocalLeagueSuggestion } from './hooks/useLocalLeagueSuggestion.ts'
 import { useThemeSetting } from './hooks/useThemeSetting.ts'
 import { collectLogos } from './lib/crest.ts'
@@ -87,11 +88,10 @@ function App() {
   )
   const [selected, setSelected] = useState<Match | null>(null)
   const returnTo = useRef<{ trigger: HTMLButtonElement; scrollY: number } | null>(null)
-  // Home cards: the competitions actually loaded (defaults, then followed extras).
-  const loadedCompetitions = useMemo(() => competitionsToLoad(competitions.ids), [competitions.ids])
   const [openCompetitionId, setOpenCompetitionId] = useState<string | null>(null)
   const competitionReturn = useRef<HTMLButtonElement | null>(null)
   const openCompetition = COMPETITIONS.find((competition) => competition.id === openCompetitionId)
+  const competitionMatches = useCompetitionMatches(openCompetition, { state, retry })
 
   const changeTab = useCallback((next: MatchTab, via: 'click' | 'key') => {
     setTab(next)
@@ -111,12 +111,23 @@ function App() {
   }, [])
 
   const closeCompetition = useCallback(() => {
+    const id = openCompetitionId
     setOpenCompetitionId(null)
     const trigger = competitionReturn.current
     competitionReturn.current = null
-    // Wait for Home to be shown again before focusing the card that opened it.
-    requestAnimationFrame(() => trigger?.focus())
-  }, [])
+    // Wait for Home to be shown again before focusing the card that opened it. A follow
+    // change moves that card to another section, so then find it again by id.
+    requestAnimationFrame(() => {
+      if (trigger?.isConnected) {
+        trigger.focus()
+        return
+      }
+      const card = id
+        ? document.querySelector<HTMLElement>(`[data-competition-id="${CSS.escape(id)}"]`)
+        : null
+      ;(card ?? document.getElementById('home-competitions'))?.focus()
+    })
+  }, [openCompetitionId])
 
   const openSettings = useCallback(() => setSettingsOpen(true), [])
 
@@ -238,7 +249,6 @@ function App() {
                   )}
                   <HomePanel
                     state={state}
-                    competitions={loadedCompetitions}
                     followedIds={competitions.idSet}
                     logos={logos}
                     now={now}
@@ -291,10 +301,13 @@ function App() {
               key={openCompetition.id}
               competition={openCompetition}
               logo={logos.competitions.get(openCompetition.id)}
-              state={state}
+              state={competitionMatches.state}
               favoriteIds={favorites.favoriteIds}
+              followed={competitions.isFavorite(openCompetition.id)}
+              followReady={competitions.ready}
+              onToggleFollow={() => competitions.toggle(openCompetition.id)}
               now={now}
-              onRetry={retry}
+              onRetry={competitionMatches.retry}
               onSelect={openMatch}
               onBack={closeCompetition}
             />

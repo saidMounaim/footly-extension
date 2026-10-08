@@ -4,6 +4,7 @@ import type { CatalogCompetition } from '../../api/football.ts'
 import type { Match } from '../../api/types.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
 import { Crest } from '../common/Crest.tsx'
+import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
 import { MatchList } from '../matches/MatchList.tsx'
 import type { ListTab } from '../matches/tabs.ts'
 
@@ -20,6 +21,10 @@ interface CompetitionScreenProps {
   logo: string | undefined
   state: MatchListState
   favoriteIds: ReadonlySet<string>
+  /** Whether this competition is followed, and whether follows can be changed yet. */
+  followed: boolean
+  followReady: boolean
+  onToggleFollow: () => void
   now: Date
   onRetry: () => void
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
@@ -32,6 +37,9 @@ export function CompetitionScreen({
   logo,
   state,
   favoriteIds,
+  followed,
+  followReady,
+  onToggleFollow,
   now,
   onRetry,
   onSelect,
@@ -74,6 +82,14 @@ export function CompetitionScreen({
         >
           {competition.name}
         </h2>
+        <span className="ml-auto">
+          <FavoriteToggle
+            name={competition.name}
+            pressed={followed}
+            disabled={!followReady}
+            onToggle={onToggleFollow}
+          />
+        </span>
       </div>
       <div
         role="radiogroup"

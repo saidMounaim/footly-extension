@@ -4,7 +4,7 @@ import type { CatalogCompetition } from '../../api/football.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
 import type { LogoLookup } from '../../lib/crest.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
-import { competitionSummaries, type CompetitionSummary } from '../../lib/home.ts'
+import { competitionSummaries, homeSections, type CompetitionSummary } from '../../lib/home.ts'
 import { Crest } from '../common/Crest.tsx'
 import { ListBanner, MatchListError, MatchListSkeleton } from '../matches/MatchList.tsx'
 import { sectionHeadingClass } from '../matches/status.ts'
@@ -13,8 +13,6 @@ export type OpenCompetition = (id: string, trigger: HTMLButtonElement) => void
 
 interface HomePanelProps {
   state: MatchListState
-  /** The loaded competitions (defaults, then followed extras), in display order. */
-  competitions: readonly CatalogCompetition[]
   followedIds: ReadonlySet<string>
   logos: LogoLookup
   /** Current time for "Today"/"Tomorrow" labels. */
@@ -51,6 +49,7 @@ function CompetitionCard({
     <li>
       <button
         type="button"
+        data-competition-id={summary.id}
         onClick={(event) => onOpen(summary.id, event.currentTarget)}
         aria-label={`${summary.name}, ${status}${followed ? ', followed' : ''}`}
         className="flex h-full w-full flex-col gap-3 rounded-2xl border border-border bg-background p-3 text-left shadow-sm transition-colors hover:border-accent hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
@@ -80,8 +79,66 @@ function CompetitionCard({
   )
 }
 
-/** Home: one card per loaded competition; opening a card shows its matches. */
-export function HomePanel({
+/** A competition that isn't loaded: no status, its matches load when opened. */
+function BrowseCard({
+  competition,
+  logo,
+  onOpen,
+}: {
+  competition: CatalogCompetition
+  logo: string | undefined
+  onOpen: OpenCompetition
+}) {
+  return (
+    <li>
+      <button
+        type="button"
+        data-competition-id={competition.id}
+        onClick={(event) => onOpen(competition.id, event.currentTarget)}
+        className="flex h-full w-full flex-col gap-3 rounded-2xl border border-border bg-background p-3 text-left shadow-sm transition-colors hover:border-accent hover:bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        <Crest src={logo} name={competition.name} size="lg" kind="competition" />
+        <span className="line-clamp-2 text-sm font-semibold text-foreground">{competition.name}</span>
+      </button>
+    </li>
+  )
+}
+
+function BrowseSection({
+  id,
+  title,
+  list,
+  logos,
+  onOpen,
+}: {
+  id: string
+  title: string
+  list: CatalogCompetition[]
+  logos: LogoLookup
+  onOpen: OpenCompetition
+}) {
+  if (list.length === 0) return null
+  return (
+    <section aria-labelledby={id}>
+      <h2 id={id} className={sectionHeadingClass}>
+        {title}
+      </h2>
+      <ul className="grid grid-cols-2 gap-2.5 px-3 pb-3">
+        {list.map((competition) => (
+          <BrowseCard
+            key={competition.id}
+            competition={competition}
+            logo={logos.competitions.get(competition.id)}
+            onOpen={onOpen}
+          />
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+/** The loaded competitions' cards with live status, or the list's loading or error state. */
+function YourCompetitions({
   state,
   competitions,
   followedIds,
@@ -89,39 +146,91 @@ export function HomePanel({
   now,
   onRetry,
   onOpenCompetition,
-}: HomePanelProps) {
+}: {
+  state: MatchListState
+  competitions: CatalogCompetition[]
+  followedIds: ReadonlySet<string>
+  logos: LogoLookup
+  now: Date
+  onRetry: () => void
+  onOpenCompetition: OpenCompetition
+}) {
   const summaries = useMemo(
     () => (state.status === 'success' ? competitionSummaries(state.result, competitions) : null),
     [state, competitions],
   )
-  if (state.status === 'loading') return <MatchListSkeleton />
-  if (state.status === 'error') return <MatchListError reason={state.reason} onRetry={onRetry} />
-  if (!summaries) return <MatchListError reason="unexpected" onRetry={onRetry} />
+  return (
+    <section aria-labelledby="home-competitions">
+      <h2
+        id="home-competitions"
+        tabIndex={-1}
+        className={`${sectionHeadingClass} focus:outline-none`}
+      >
+        Your competitions
+      </h2>
+      {state.status === 'loading' ? (
+        <MatchListSkeleton />
+      ) : state.status === 'error' || !summaries ? (
+        <MatchListError reason={state.status === 'error' ? state.reason : 'unexpected'} onRetry={onRetry} />
+      ) : (
+        <>
+          <ListBanner state={state} onRetry={onRetry} />
+          <ul className="grid grid-cols-2 gap-2.5 px-3 pb-3">
+            {summaries.map((summary) => (
+              <CompetitionCard
+                key={summary.id}
+                summary={summary}
+                logo={logos.competitions.get(summary.id)}
+                followed={followedIds.has(summary.id)}
+                now={now}
+                onOpen={onOpenCompetition}
+              />
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  )
+}
 
+/**
+ * Home: the loaded competitions with live status first, then every other
+ * competition by group; opening any card shows its matches.
+ */
+export function HomePanel({
+  state,
+  followedIds,
+  logos,
+  now,
+  onRetry,
+  onOpenCompetition,
+}: HomePanelProps) {
+  const sections = useMemo(() => homeSections(followedIds), [followedIds])
   return (
     <div>
-      <ListBanner state={state} onRetry={onRetry} />
-      <section aria-labelledby="home-competitions">
-        <h2
-          id="home-competitions"
-          tabIndex={-1}
-          className={`${sectionHeadingClass} focus:outline-none`}
-        >
-          Competitions
-        </h2>
-        <ul className="grid grid-cols-2 gap-2.5 px-3 pb-3">
-          {summaries.map((summary) => (
-            <CompetitionCard
-              key={summary.id}
-              summary={summary}
-              logo={logos.competitions.get(summary.id)}
-              followed={followedIds.has(summary.id)}
-              now={now}
-              onOpen={onOpenCompetition}
-            />
-          ))}
-        </ul>
-      </section>
+      <YourCompetitions
+        state={state}
+        competitions={sections.yours}
+        followedIds={followedIds}
+        logos={logos}
+        now={now}
+        onRetry={onRetry}
+        onOpenCompetition={onOpenCompetition}
+      />
+      <BrowseSection
+        id="home-club-competitions"
+        title="Club competitions"
+        list={sections.clubs}
+        logos={logos}
+        onOpen={onOpenCompetition}
+      />
+      <BrowseSection
+        id="home-national-teams"
+        title="National teams"
+        list={sections.national}
+        logos={logos}
+        onOpen={onOpenCompetition}
+      />
     </div>
   )
 }
