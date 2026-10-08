@@ -1,5 +1,5 @@
 import { ArrowLeft } from 'lucide-react'
-import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { CatalogCompetition } from '../../api/football.ts'
 import type { Match } from '../../api/types.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
@@ -7,11 +7,7 @@ import { Crest } from '../common/Crest.tsx'
 import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
 import { MatchList } from '../matches/MatchList.tsx'
 import type { ListTab } from '../matches/tabs.ts'
-
-const VIEWS: { id: ListTab; label: string }[] = [
-  { id: 'upcoming', label: 'Upcoming' },
-  { id: 'results', label: 'Results' },
-]
+import { ViewSwitch } from '../matches/ViewSwitch.tsx'
 
 /** No "your competitions" section inside a single competition. */
 const NO_COMPETITIONS: ReadonlySet<string> = new Set()
@@ -47,20 +43,10 @@ export function CompetitionScreen({
 }: CompetitionScreenProps) {
   const [view, setView] = useState<ListTab>('upcoming')
   const heading = useRef<HTMLHeadingElement>(null)
-  const buttons = useRef(new Map<ListTab, HTMLButtonElement>())
 
   useEffect(() => {
     heading.current?.focus()
   }, [])
-
-  function onKeyDown(event: KeyboardEvent<HTMLDivElement>) {
-    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
-    event.preventDefault()
-    const next = view === 'upcoming' ? 'results' : 'upcoming'
-    const choice = event.key === 'Home' ? 'upcoming' : event.key === 'End' ? 'results' : next
-    setView(choice)
-    buttons.current.get(choice)?.focus()
-  }
 
   return (
     <div>
@@ -91,37 +77,7 @@ export function CompetitionScreen({
           />
         </span>
       </div>
-      <div
-        role="radiogroup"
-        aria-labelledby="competition-title"
-        onKeyDown={onKeyDown}
-        className="mx-3 mt-3 flex rounded-full border border-border bg-surface p-1"
-      >
-        {VIEWS.map(({ id, label }) => {
-          const checked = id === view
-          return (
-            <button
-              key={id}
-              ref={(element) => {
-                if (element) buttons.current.set(id, element)
-                else buttons.current.delete(id)
-              }}
-              type="button"
-              role="radio"
-              aria-checked={checked}
-              tabIndex={checked ? 0 : -1}
-              onClick={() => setView(id)}
-              className={`flex-1 rounded-full px-3 py-1 text-sm transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
-                checked
-                  ? 'bg-background font-semibold text-foreground shadow-sm'
-                  : 'font-medium text-muted hover:text-foreground'
-              }`}
-            >
-              {label}
-            </button>
-          )
-        })}
-      </div>
+      <ViewSwitch view={view} onChange={setView} labelledBy="competition-title" />
       <MatchList
         key={view}
         state={state}

@@ -337,7 +337,7 @@ Footly should feel like a **modern, compact football companion**, not a miniatur
 
 ### Popup structure
 
-Current direction (features 23 and 25): Home lists every competition card. The default leagues and followed ones come first, each showing live games or the next kickoff; the rest follow, grouped as Club competitions and National teams. Opening a competition shows its upcoming matches and results with day chips and a Follow button. Favorites shows your teams' matches. The original sketch below is kept for history.
+Current direction (features 23 and 25): Home lists every competition card. The default leagues and followed ones come first, each showing live games or the next kickoff; the rest follow, grouped as Club competitions and National teams. Opening a competition shows its upcoming matches and results with day chips and a Follow button. Favorites shows your teams' matches. Tapping a team in Search or Find teams opens a team screen with a Follow star and that team's upcoming matches and recent results, so any team can be checked without following it (feature 28). The original sketch below is kept for history.
 
 The default popup should prioritize the most relevant information:
 

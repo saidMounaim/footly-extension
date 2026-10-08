@@ -12,7 +12,7 @@ import { groupCardClass, secondaryButtonClass, sectionHeadingClass } from '../ma
 import { Crest } from '../common/Crest.tsx'
 import { MatchListError, MatchListSkeleton } from '../matches/MatchList.tsx'
 import { MatchRow } from '../matches/MatchRow.tsx'
-import { FavoriteToggle } from './FavoriteToggle.tsx'
+import { TeamRow } from '../team/TeamRow.tsx'
 
 interface FavoritesPanelProps {
   favorites: FavoriteTeamsApi
@@ -27,6 +27,7 @@ interface FavoritesPanelProps {
   onRetryCatalog: () => void
   onRetryTeamMatches: () => void
   onSelectMatch: (match: Match, trigger: HTMLButtonElement) => void
+  onOpenTeam: (team: Team, trigger: HTMLButtonElement) => void
 }
 
 function MatchGroup({
@@ -149,7 +150,17 @@ function CatalogSkeleton() {
   )
 }
 
-function SearchResults({ teams, query, favorites }: { teams: Team[]; query: string; favorites: FavoriteTeamsApi }) {
+function SearchResults({
+  teams,
+  query,
+  favorites,
+  onOpenTeam,
+}: {
+  teams: Team[]
+  query: string
+  favorites: FavoriteTeamsApi
+  onOpenTeam: FavoritesPanelProps['onOpenTeam']
+}) {
   if (!query.trim()) return null
   const found = searchTeams(teams, query)
   if (found.length === 0) {
@@ -159,13 +170,12 @@ function SearchResults({ teams, query, favorites }: { teams: Team[]; query: stri
     <ul aria-label="Search results" className="divide-y divide-border">
       {found.map((team) => (
         <li key={team.id}>
-          <FavoriteToggle
-            name={team.name}
-            pressed={favorites.isFavorite(team.id)}
-            disabled={!favorites.ready}
-            onToggle={() => favorites.toggle(team)}
-            showName
-            icon={<Crest src={team.logo} name={team.name} />}
+          <TeamRow
+            team={team}
+            favorite={favorites.isFavorite(team.id)}
+            favoriteReady={favorites.ready}
+            onToggleFavorite={() => favorites.toggle(team)}
+            onOpen={onOpenTeam}
           />
         </li>
       ))}
@@ -183,6 +193,7 @@ export function FavoritesPanel({
   onRetryCatalog,
   onRetryTeamMatches,
   onSelectMatch,
+  onOpenTeam,
 }: FavoritesPanelProps) {
   const [query, setQuery] = useState('')
   const inputId = useId()
@@ -243,7 +254,12 @@ export function FavoritesPanel({
                 </button>
               </div>
             )}
-            <SearchResults teams={catalog.result.teams} query={query} favorites={favorites} />
+            <SearchResults
+              teams={catalog.result.teams}
+              query={query}
+              favorites={favorites}
+              onOpenTeam={onOpenTeam}
+            />
           </>
         )}
       </section>

@@ -12,6 +12,7 @@ import { MatchTabs } from './components/matches/MatchTabs.tsx'
 import { MATCH_TABS, panelId, tabId, type MatchTab } from './components/matches/tabs.ts'
 import { SearchPanel } from './components/search/SearchPanel.tsx'
 import { SettingsPanel } from './components/settings/SettingsPanel.tsx'
+import { TeamScreen } from './components/team/TeamScreen.tsx'
 import { useFavoriteCompetitions } from './hooks/useFavoriteCompetitions.ts'
 import { useFavoriteTeams } from './hooks/useFavoriteTeams.ts'
 import { useKickoffChecks } from './hooks/useKickoffChecks.ts'
@@ -92,6 +93,9 @@ function App() {
   const competitionReturn = useRef<HTMLButtonElement | null>(null)
   const openCompetition = COMPETITIONS.find((competition) => competition.id === openCompetitionId)
   const competitionMatches = useCompetitionMatches(openCompetition, { state, retry })
+  const [openTeam, setOpenTeam] = useState<Team | null>(null)
+  const teamReturn = useRef<{ trigger: HTMLButtonElement; scrollY: number } | null>(null)
+  const openTeamMatches = useTeamMatches(openTeam !== null, openTeam ? [openTeam] : NO_TEAMS)
 
   const changeTab = useCallback((next: MatchTab, via: 'click' | 'key') => {
     setTab(next)
@@ -109,6 +113,24 @@ function App() {
     setOpenCompetitionId(id)
     window.scrollTo(0, 0)
   }, [])
+
+  const showTeam = useCallback((team: Team, trigger: HTMLButtonElement) => {
+    teamReturn.current = { trigger, scrollY: window.scrollY }
+    setOpenTeam(team)
+    window.scrollTo(0, 0)
+  }, [])
+
+  const closeTeam = useCallback(() => {
+    setOpenTeam(null)
+    const target = teamReturn.current
+    teamReturn.current = null
+    // Wait for the list to be shown again before restoring scroll and focus.
+    requestAnimationFrame(() => {
+      if (target) window.scrollTo(0, target.scrollY)
+      if (target?.trigger.isConnected) target.trigger.focus({ preventScroll: true })
+      else document.getElementById(tabId(tab))?.focus()
+    })
+  }, [tab])
 
   const closeCompetition = useCallback(() => {
     const id = openCompetitionId
@@ -143,6 +165,8 @@ function App() {
     returnTo.current = null
     setOpenCompetitionId(null)
     competitionReturn.current = null
+    setOpenTeam(null)
+    teamReturn.current = null
     changeTab('favorites', 'click')
     requestAnimationFrame(() => document.getElementById(tabId('favorites'))?.focus())
   }, [changeTab])
@@ -225,7 +249,7 @@ function App() {
         )}
         <div
           className={
-            selected || settingsOpen || openCompetition ? 'hidden' : 'flex flex-1 flex-col'
+            selected || settingsOpen || openCompetition || openTeam ? 'hidden' : 'flex flex-1 flex-col'
           }
         >
           {MATCH_TABS.map(({ id }) => (
@@ -266,6 +290,7 @@ function App() {
                   onRetryCatalog={catalog.retry}
                   onRetryTeamMatches={teamMatches.retry}
                   onSelectMatch={openMatch}
+                  onOpenTeam={showTeam}
                 />
               ) : id === 'search' ? (
                 <SearchPanel
@@ -276,6 +301,7 @@ function App() {
                   competitions={competitions}
                   logos={logos}
                   onSelect={openMatch}
+                  onOpenTeam={showTeam}
                   focusRequest={searchFocus}
                 />
               ) : (
@@ -309,6 +335,27 @@ function App() {
               onRetry={competitionMatches.retry}
               onSelect={openMatch}
               onBack={closeCompetition}
+            />
+          </div>
+        )}
+        {openTeam && (
+          // Stays mounted under an open match so Back restores its scroll and focus.
+          <div hidden={selected !== null || settingsOpen}>
+            <TeamScreen
+              key={openTeam.id}
+              team={openTeam}
+              logo={openTeam.logo ?? logos.teams.get(openTeam.id)}
+              competitionLogos={logos.competitions}
+              state={openTeamMatches.state}
+              favoriteIds={favorites.favoriteIds}
+              favorite={favorites.isFavorite(openTeam.id)}
+              favoriteReady={favorites.ready}
+              onToggleFavorite={() => favorites.toggle(openTeam)}
+              backTo={tab === 'search' ? 'search' : 'favorites'}
+              now={now}
+              onRetry={openTeamMatches.retry}
+              onSelect={openMatch}
+              onBack={closeTeam}
             />
           </div>
         )}

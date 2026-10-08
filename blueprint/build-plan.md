@@ -67,3 +67,5 @@
   - [x] 27a. **Match Sections & Team Badges** - Split the match detail under the score header into Summary, Stats, and Lineups tabs with substitutes collapsible under the pitch; show each team's crest or flag on the stats header, lineup pitch labels, and substitute headings; draw stats as comparison bars; and show finished-match result rows as crests and score without team names.
   - [x] 27b. **Player Photos** - Show ESPN player headshots in lineups, falling back to the shirt number when a photo is missing.
   - [x] 27c. **Readable Timeline, Subs & Names** - Split the Summary timeline by team (home events left, away right, each with its crest), list substitutes with the minute they came on and who they replaced (unused ones after, muted), and show players' full names on the pitch and under the score instead of a cut-off or last-word name.
+
+- [x] 28. **Team Screen** - Tapping a team in Search or Find teams opens a team screen with its crest, a Follow star, and its upcoming matches and recent results in every competition, from that team's ESPN schedule (loaded only while the screen is open), so any team can be checked without following it.

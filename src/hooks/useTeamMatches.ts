@@ -15,9 +15,9 @@ type Settled = { request: string } & (
 )
 
 /**
- * Loads the favorite teams' matches while `enabled` (the Favorites tab is open),
- * then keeps them for the popup. A changed set of teams reloads, but only once
- * the tab is open again; nothing is requested without teams.
+ * Loads the given teams' matches while `enabled` (the Favorites tab or a team
+ * screen is open), then keeps them for the popup. A changed set of teams reloads,
+ * but only once enabled again; nothing is requested without teams.
  */
 export function useTeamMatches(
   enabled: boolean,

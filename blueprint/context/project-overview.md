@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash c18a5f9bf1ac4bdcc6fb6490b475039bdf7ba2acd925a845de062be86f3facec -->
+<!-- blueprint:source-hash ecdb4b4d400bd896a804a084084f8d06748bc867e233966f36c3124cfe806b1d -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -28,7 +28,7 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 
 ## Features
 
-Build order from `build-plan.md`; features 1 to 26 and 27a are done; 27c is next, then 27b (27c was added later but builds first). Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
+Build order from `build-plan.md`; features 1 to 27 are done (27c was added later but built before 27b); 28 is next. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
 
 1. **Match Discovery & Upcoming Games** (done) - upcoming matches with competition, teams, kickoff, status. Split into:
    - **1a. Extension Shell** - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
@@ -62,10 +62,11 @@ Build order from `build-plan.md`; features 1 to 26 and 27a are done; 27c is next
    - **25a. Your Teams' Matches in Favorites** - each favorite team's upcoming and recent matches in every competition, from that team's ESPN schedule (one request per favorite team, only while the tab is open), replacing the competition follow lists; "Your teams" and team search stay.
    - **25b. All Competitions on Home** - every competition on Home: defaults and followed first with live status, then the rest grouped as Club competitions and National teams, loading only when opened; follow/unfollow moves into the competition screen. Botola Pro stays out (no free source without a backend).
 26. **Match Center Refresh** (done) - modern match-detail score header (larger crests and score, status pill, goal scorers per team), starting lineups drawn on a pitch from player positions with the list as fallback, and a football icon for goals.
-27. **Match Center Polish** - easier-to-scan match detail: tabbed sections, team badges in place of bare names, player photos. Split into:
+27. **Match Center Polish** (done) - easier-to-scan match detail: tabbed sections, team badges in place of bare names, player photos. Split into:
    - **27a. Match Sections & Team Badges** (done) - Summary, Stats, and Lineups tabs under the score header, substitutes collapsible under the pitch; team crest or flag on the stats header, pitch labels, and substitute headings; stats as comparison bars; finished-match result rows show crests and score without team names.
-   - **27b. Player Photos** - ESPN player headshots in lineups, falling back to the shirt number when missing.
-   - **27c. Readable Timeline, Subs & Names** - Summary timeline split by team (home left, away right, each with its crest); substitutes listed with the minute they came on and who they replaced, unused ones after and muted; full player names on the pitch and under the score instead of cut-off or last-word names.
+   - **27b. Player Photos** (done) - ESPN player headshots in lineups, falling back to the shirt number when missing.
+   - **27c. Readable Timeline, Subs & Names** (done) - Summary timeline split by team (home left, away right, each with its crest); substitutes listed with the minute they came on and who they replaced, unused ones after and muted; full player names on the pitch and under the score instead of cut-off or last-word names.
+28. **Team Screen** - tapping a team in Search or Find teams opens a team screen (crest, Follow star, that team's upcoming matches and recent results in every competition) from the team's ESPN schedule, loaded only while the screen is open; any team can be checked without following it.
 
 ## Data model
 
@@ -144,7 +145,7 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 
 - Popup `Home` - competition cards (default leagues plus followed with live count or next kickoff; after 25b, every other competition grouped below, loaded on open); opening one shows its upcoming matches and results with day chips; bottom navigation
 - `Favorites` - your teams' matches (25a), the team list, and team search; competition following moves to Home (25b)
-- `Search` - teams and matches
+- `Search` - teams and matches; tapping a team (here or in Favorites' Find teams) opens its team screen (28)
 - `Settings` - preferences and notifications
 - Status uses text or icons, not color alone (upcoming neutral, live prominent, halftime label, finished final score, postponed warning, cancelled clear)
 - Events listed chronologically (minute, icon, player)
@@ -180,4 +181,5 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 - **Testing.** The plan lists Vitest and React Testing Library; only Vitest is configured (`npm test`), and UI stays out of unit tests by the coding standards.
 - **Result rows without names (27a).** The UI/UX rule says crests are decorative and names stay visible; 27a drops team names from finished-match rows. The build plan wins for 27a, but `project-plan.md` should be updated to match (names kept as accessible labels and tooltips).
 - **Substitute details (27c).** Substitution events carry player names while lineups carry ids, so 27c must match subs to events by name; matching is unverified against live ESPN data.
+- **Team screen reach (28).** Search's team list only holds teams from loaded matches and Find teams uses the loaded-competition catalog, so teams outside loaded competitions can't be opened; the plans don't extend either list.
 - **Player photo field (27b).** The project plan's `LineupPlayer` has no photo; 27b will add an optional ESPN headshot URL (https, `a.espncdn.com` only). ESPN headshot coverage for soccer players is unverified.

@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { COMPETITIONS } from '../../api/football.ts'
-import type { Match } from '../../api/types.ts'
+import type { Match, Team } from '../../api/types.ts'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { MatchListState } from '../../hooks/useMatchList.ts'
@@ -11,6 +11,7 @@ import { FavoriteToggle } from '../favorites/FavoriteToggle.tsx'
 import { MatchListError, MatchListSkeleton, StaleBanner } from '../matches/MatchList.tsx'
 import { MatchRow } from '../matches/MatchRow.tsx'
 import { sectionHeadingClass } from '../matches/status.ts'
+import { TeamRow } from '../team/TeamRow.tsx'
 
 interface SearchPanelProps {
   state: MatchListState
@@ -21,6 +22,7 @@ interface SearchPanelProps {
   /** Competition logos from the loaded list. */
   logos: LogoLookup
   onSelect: (match: Match, trigger: HTMLButtonElement) => void
+  onOpenTeam: (team: Team, trigger: HTMLButtonElement) => void
   /** Changes each time the Search tab is clicked, to move focus to the field. */
   focusRequest: number
 }
@@ -73,6 +75,7 @@ export function SearchPanel({
   competitions,
   logos,
   onSelect,
+  onOpenTeam,
   focusRequest,
 }: SearchPanelProps) {
   const [query, setQuery] = useState('')
@@ -162,13 +165,12 @@ export function SearchPanel({
               <ul className="divide-y divide-border">
                 {foundTeams.map((team) => (
                   <li key={team.id}>
-                    <FavoriteToggle
-                      name={team.name}
-                      pressed={favorites.isFavorite(team.id)}
-                      disabled={!favorites.ready}
-                      onToggle={() => favorites.toggle(team)}
-                      showName
-                      icon={<Crest src={team.logo} name={team.name} />}
+                    <TeamRow
+                      team={team}
+                      favorite={favorites.isFavorite(team.id)}
+                      favoriteReady={favorites.ready}
+                      onToggleFavorite={() => favorites.toggle(team)}
+                      onOpen={onOpenTeam}
                     />
                   </li>
                 ))}
