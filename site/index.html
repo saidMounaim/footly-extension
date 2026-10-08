@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Footly - Live football in your browser</title>
+    <meta name="description" content="Upcoming matches, live scores, and results for your favorite football teams, right in your Chrome toolbar. Free, no account, no ads." />
+    <meta name="theme-color" content="#0b0f14" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Footly - Live football in your browser" />
+    <meta property="og:description" content="Upcoming matches, live scores, and results for your favorite football teams, right in your Chrome toolbar." />
+    <meta property="og:image" content="/assets/icon-128.png" />
+    <link rel="icon" type="image/png" href="/assets/icon-128.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/main.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href="/">
+          <img src="/assets/icon-128.png" alt="" width="32" height="32" />
+          <span>Foot<span class="accent">ly</span></span>
+        </a>
+        <a class="btn btn-primary btn-small" data-store-link href="#">Add to Chrome</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero" aria-labelledby="hero-title">
+        <div class="container hero-grid">
+          <div class="hero-copy">
+            <span class="eyebrow"><span class="live-dot" aria-hidden="true"></span>Live scores in your toolbar</span>
+            <h1 id="hero-title">Football,<br /><span class="accent">one click</span> away.</h1>
+            <p class="hero-lead">
+              Upcoming matches, live scores, and results for your favorite teams in a compact
+              Chrome popup. Match alerts when it matters, and nothing else in the way.
+            </p>
+            <div class="hero-actions">
+              <a class="btn btn-primary" data-store-link href="#">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+                Add to Chrome
+              </a>
+              <a class="btn btn-ghost" href="#features">See features</a>
+            </div>
+            <p class="hero-note">Free · No account · No ads</p>
+          </div>
+
+          <div class="stage">
+            <div class="popup">
+              <img src="/assets/home.png" width="708" height="1212" alt="Footly Home: competition cards for the Premier League, La Liga, Serie A, Bundesliga, Ligue 1 and Champions League, each with its next kickoff" />
+            </div>
+            <div class="chip chip-live" aria-hidden="true"><span class="live-dot"></span>LIVE 67'</div>
+            <div class="toast" aria-hidden="true">
+              <span class="toast-icon">⚽</span>
+              <span>
+                <span class="toast-title">Goal · 67'</span><br />
+                <span class="toast-body">Arsenal 2-1 Chelsea</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="marquee" aria-hidden="true">
+          <div class="marquee-track">
+            <span>Premier League</span><span>La Liga</span><span>Serie A</span><span>Bundesliga</span><span>Ligue 1</span><span>Champions League</span><span>World Cup</span><span>Euro</span><span>Copa América</span><span>Africa Cup of Nations</span>
+            <span>Premier League</span><span>La Liga</span><span>Serie A</span><span>Bundesliga</span><span>Ligue 1</span><span>Champions League</span><span>World Cup</span><span>Euro</span><span>Copa América</span><span>Africa Cup of Nations</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="features" aria-labelledby="features-title">
+        <div class="container">
+          <div class="section-head reveal">
+            <p class="kicker">Features</p>
+            <h2 id="features-title">Everything you check, nothing you don't.</h2>
+            <p>From the top European leagues to the World Cup, Footly keeps every competition a click away and puts your teams first.</p>
+          </div>
+
+          <div class="bento">
+            <article class="tile tile-match reveal">
+              <div>
+                <div class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 12h-4l-3 9L9 3l-3 9H2" /></svg></div>
+                <h3>A match center that's easy to read</h3>
+                <p>Live score with each team's goal scorers, a timeline split by team, stat comparison bars, and starting lineups drawn on a pitch.</p>
+                <ul class="tab-list">
+                  <li>Summary</li>
+                  <li>Stats</li>
+                  <li>Lineups</li>
+                </ul>
+              </div>
+              <div class="tile-shot">
+                <img src="/assets/lineups.png" width="708" height="1216" loading="lazy" alt="Finished match: Argentina 3-0 Benin with goal scorers, and the Lineups tab showing Benin's 4-2-3-1 on a pitch" />
+              </div>
+            </article>
+
+            <article class="tile reveal">
+              <div class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg></div>
+              <h3>Live alerts</h3>
+              <p>Kick-off, goals, red cards, and full-time results for your teams.</p>
+              <div class="alerts" aria-hidden="true">
+                <div class="alert">⚽ Goal <span class="when">67'</span></div>
+                <div class="alert"><span class="card card-red"></span>Red card <span class="when">74'</span></div>
+                <div class="alert">🏁 Full-time <span class="when">FT</span></div>
+              </div>
+            </article>
+
+            <article class="tile reveal">
+              <div class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg></div>
+              <h3>Favorites first</h3>
+              <p>Your teams' upcoming and recent matches, in every competition they play.</p>
+              <div class="team-chips" aria-hidden="true">
+                <span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>Arsenal</span>
+                <span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>Real Madrid</span>
+                <span><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>Morocco</span>
+              </div>
+            </article>
+
+            <article class="tile tile-themes reveal">
+              <div>
+                <div class="tile-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" /></svg></div>
+                <h3>Dark and light themes</h3>
+                <p>Follows your system, or pick one in Settings. Quick search finds teams, competitions, and matches without leaving the popup.</p>
+              </div>
+              <div class="swatches" aria-hidden="true">
+                <div class="swatch swatch-light"><strong>Light</strong><div class="bar"></div><div class="bar"></div></div>
+                <div class="swatch swatch-dark"><strong>Dark</strong><div class="bar"></div><div class="bar"></div></div>
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="privacy-title">
+        <div class="container">
+          <div class="privacy-strip reveal">
+            <div class="section-head">
+              <p class="kicker">Privacy</p>
+              <h2 id="privacy-title">No account, no tracking, no ads.</h2>
+              <p>Favorites and settings stay on your device. Footly asks for no access to the sites you visit, and only these three permissions:</p>
+            </div>
+            <ul class="permissions">
+              <li>
+                <strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3" /><path d="M3 5V19A9 3 0 0 0 21 19V5" /><path d="M3 12A9 3 0 0 0 21 12" /></svg>Storage</strong>
+                <p>Saves your favorites, settings, and recent match data on this device.</p>
+              </li>
+              <li>
+                <strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8" /><path d="M12 9v4l2 2" /><path d="M5 3 2 6" /><path d="m22 6-3-3" /></svg>Alarms</strong>
+                <p>Wakes Footly around your favorite teams' kickoffs to check for alerts.</p>
+              </li>
+              <li>
+                <strong><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" /><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" /></svg>Notifications</strong>
+                <p>Shows kick-off, goal, red card, and result alerts.</p>
+              </li>
+            </ul>
+            <a class="text-link" href="/privacy/">Read the privacy policy</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="cta-title">
+        <div class="container">
+          <div class="cta reveal">
+            <img src="/assets/icon-128.png" width="72" height="72" alt="" />
+            <h2 id="cta-title">Your next match is one click away.</h2>
+            <p>Add Footly to Chrome and know what's happening in seconds.</p>
+            <a class="btn btn-primary" data-store-link href="#">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
+              Add to Chrome
+            </a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <span>© Footly</span>
+        <nav aria-label="Footer">
+          <a href="/privacy/">Privacy</a>
+          <a href="https://github.com/saidMounaim/footly-extension">GitHub</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>

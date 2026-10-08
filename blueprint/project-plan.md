@@ -463,6 +463,10 @@ The extension should use:
 Manifest V3
 ```
 
+### Website
+
+A static landing page and privacy page live in `site/`, separate from the extension build (no build step, no backend, English only). They are deployed to **Vercel** from that folder. The privacy page publishes `PRIVACY.md` at `/privacy` for the Chrome Web Store listing. The "Add to Chrome" link stays empty until the Web Store listing is live.
+
 ### Development
 
 Run locally with the Vite development workflow and load the generated extension through:

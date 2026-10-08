@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash ecdb4b4d400bd896a804a084084f8d06748bc867e233966f36c3124cfe806b1d -->
+<!-- blueprint:source-hash a8e33fdb3d05571ba0d3676ffe1dcd0d5f44fce4e233edb4ff3cd2b37dca0954 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -28,7 +28,7 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 
 ## Features
 
-Build order from `build-plan.md`; features 1 to 27 are done (27c was added later but built before 27b); 28 is next. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
+Build order from `build-plan.md`; features 1 to 28 are done (27c was added later but built before 27b); 29 is next. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
 
 1. **Match Discovery & Upcoming Games** (done) - upcoming matches with competition, teams, kickoff, status. Split into:
    - **1a. Extension Shell** - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
@@ -66,7 +66,8 @@ Build order from `build-plan.md`; features 1 to 27 are done (27c was added later
    - **27a. Match Sections & Team Badges** (done) - Summary, Stats, and Lineups tabs under the score header, substitutes collapsible under the pitch; team crest or flag on the stats header, pitch labels, and substitute headings; stats as comparison bars; finished-match result rows show crests and score without team names.
    - **27b. Player Photos** (done) - ESPN player headshots in lineups, falling back to the shirt number when missing.
    - **27c. Readable Timeline, Subs & Names** (done) - Summary timeline split by team (home left, away right, each with its crest); substitutes listed with the minute they came on and who they replaced, unused ones after and muted; full player names on the pitch and under the score instead of cut-off or last-word names.
-28. **Team Screen** - tapping a team in Search or Find teams opens a team screen (crest, Follow star, that team's upcoming matches and recent results in every competition) from the team's ESPN schedule, loaded only while the screen is open; any team can be checked without following it.
+28. **Team Screen** (done) - tapping a team in Search or Find teams opens a team screen (crest, Follow star, that team's upcoming matches and recent results in every competition) from the team's ESPN schedule, loaded only while the screen is open; any team can be checked without following it.
+29. **Landing Page** - static marketing site in `site/`, outside the extension build, on Vercel: hero with an "Add to Chrome" button (Web Store link empty until the listing is live, no "Coming soon" label) and an animated popup mockup with a sliding goal alert, four-tile feature grid revealed on scroll, privacy strip with the three permissions, final call-to-action and footer. Dark-first pitch-green, CSS-first animation off under reduced motion, English only, phone-friendly; also serves PRIVACY.md at `/privacy` for the store's privacy policy URL.
 
 ## Data model
 
@@ -164,7 +165,8 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 - No content scripts or host permissions ideally; request minimal permissions
 - Avoid aggressive polling, large bundles, DOM observers, unnecessary background work
 - Env vars only if a backend is added (`FOOTBALL_API_BASE_URL`, `FOOTBALL_API_KEY`); never ship private credentials in the bundle
-- > TODO: backend host (Vercel or similar), health check, domain are undecided and only relevant if a backend is introduced
+- Website (29): static landing and privacy pages in `site/`, no build step or backend, deployed to Vercel from that folder; English only
+- > TODO: backend host (Vercel or similar), health check, domain are undecided and only relevant if a backend is introduced; the website's domain is also undecided
 
 ## Open questions
 
@@ -182,4 +184,5 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 - **Result rows without names (27a).** The UI/UX rule says crests are decorative and names stay visible; 27a drops team names from finished-match rows. The build plan wins for 27a, but `project-plan.md` should be updated to match (names kept as accessible labels and tooltips).
 - **Substitute details (27c).** Substitution events carry player names while lineups carry ids, so 27c must match subs to events by name; matching is unverified against live ESPN data.
 - **Team screen reach (28).** Search's team list only holds teams from loaded matches and Find teams uses the loaded-competition catalog, so teams outside loaded competitions can't be opened; the plans don't extend either list.
-- **Player photo field (27b).** The project plan's `LineupPlayer` has no photo; 27b will add an optional ESPN headshot URL (https, `a.espncdn.com` only). ESPN headshot coverage for soccer players is unverified.
+- **Landing page store link (29).** The "Add to Chrome" button ships with an empty Web Store link; the spec must decide how an empty link behaves (e.g. one obvious constant to fill in later) without a "Coming soon" label.
+- **Player photo field (27b). The project plan's `LineupPlayer` has no photo; 27b will add an optional ESPN headshot URL (https, `a.espncdn.com` only). ESPN headshot coverage for soccer players is unverified.

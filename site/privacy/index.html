@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Privacy Policy - Footly</title>
+    <meta name="description" content="Footly has no account and collects nothing about you. Your favorites and settings stay on this device." />
+    <meta name="theme-color" content="#0b0f14" />
+    <link rel="icon" type="image/png" href="/assets/icon-128.png" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/main.js" defer></script>
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href="/">
+          <img src="/assets/icon-128.png" alt="" width="32" height="32" />
+          <span>Foot<span class="accent">ly</span></span>
+        </a>
+        <a class="btn btn-primary btn-small" data-store-link href="#">Add to Chrome</a>
+      </div>
+    </header>
+
+    <main class="container policy">
+      <a class="back-link" href="/">&larr; Back to Footly</a>
+      <h1>Footly Privacy Policy</h1>
+      <p class="lead">
+        Footly is a Chrome extension that shows football fixtures, live scores, and results.
+        Footly has no account and collects nothing about you. Your favorites and settings stay
+        on this device.
+      </p>
+      <p>Your country is guessed on this device from your time zone and language, only to suggest a league; it is never sent anywhere.</p>
+
+      <h2>What Footly does not do</h2>
+      <ul>
+        <li>No accounts, sign-in, analytics, tracking, or advertising.</li>
+        <li>
+          No access to your browsing history or to the pages you visit. Footly has no host
+          permissions and injects no scripts into websites.
+        </li>
+        <li>
+          No selling or sharing of data. Footly has no server of its own, so nothing about you is
+          sent to the developer.
+        </li>
+      </ul>
+
+      <h2>Permissions</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Permission</th><th scope="col">Why Footly needs it</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Storage</td><td>Saves your favorites, settings, and recent match data on this device.</td></tr>
+            <tr><td>Alarms</td><td>Wakes Footly around your favorite teams' kickoffs to check for alerts.</td></tr>
+            <tr><td>Notifications</td><td>Shows kick-off, goal, red card, and result alerts.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>What is stored on this device</h2>
+      <p>
+        Everything below lives in Chrome's local extension storage on your computer. It never
+        leaves the device.
+      </p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Key</th><th scope="col">Contents</th><th scope="col">Why</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>favoriteTeams</code></td><td>Team IDs, names, and crest addresses you chose</td><td>Prioritize and alert on your teams</td></tr>
+            <tr><td><code>favoriteCompetitions</code></td><td>Competition IDs you follow</td><td>Surface their matches</td></tr>
+            <tr><td><code>notificationsEnabled</code></td><td>On or off</td><td>The match notifications switch</td></tr>
+            <tr><td><code>notificationTypes</code></td><td>Match updates, goals, and red cards on or off</td><td>Which alerts you get</td></tr>
+            <tr><td><code>liveRefreshMinutes</code></td><td>1, 2, or 5</td><td>How often live scores refresh in the popup</td></tr>
+            <tr><td><code>theme</code></td><td>System, light, or dark</td><td>Your chosen appearance</td></tr>
+            <tr><td><code>matchListCache</code></td><td>Today's fixtures and recent results, with save time</td><td>Open the popup instantly and make fewer requests</td></tr>
+            <tr><td><code>teamCatalogCache</code></td><td>Clubs in the supported competitions, with save time</td><td>Team search without reloading every time</td></tr>
+            <tr><td><code>watchedMatches</code></td><td>Your teams' upcoming matches and their last status</td><td>Send each alert once</td></tr>
+            <tr><td><code>localLeagueSuggestion</code></td><td>Whether you accepted or dismissed the local league card (no country)</td><td>Show the card only once</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        The popup also keeps a copy of your theme choice under <code>footly-theme</code> in its own
+        local storage, so it opens in the right theme without a flash.
+      </p>
+
+      <h2>Servers Footly contacts</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th scope="col">Server</th><th scope="col">Purpose</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>site.api.espn.com</code></td><td>Scores, fixtures, and team lists from ESPN.</td></tr>
+            <tr><td><code>a.espncdn.com</code></td><td>Club crests, league logos, and player photos from ESPN's image server.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>
+        Like any web request, these reveal your IP address to ESPN. Footly sends nothing else
+        about you: no identifiers, no favorites, and no referrer. ESPN's own privacy policy
+        applies to those requests.
+      </p>
+
+      <h2>Erasing your data</h2>
+      <ul>
+        <li>
+          In Footly, open <strong>Settings → Privacy &amp; permissions → Erase Footly data</strong>.
+          This removes your favorites, settings, and saved matches from this device, and stops
+          background checks.
+        </li>
+        <li>Removing the extension from Chrome also deletes everything it stored.</li>
+      </ul>
+
+      <h2>Contact</h2>
+      <p>
+        Questions or concerns: open an issue at
+        <a href="https://github.com/saidMounaim/footly-extension/issues">github.com/saidMounaim/footly-extension/issues</a>.
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <span>© Footly</span>
+        <nav aria-label="Footer">
+          <a href="/privacy/">Privacy</a>
+          <a href="https://github.com/saidMounaim/footly-extension">GitHub</a>
+        </nav>
+      </div>
+    </footer>
+  </body>
+</html>
