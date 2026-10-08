@@ -79,25 +79,30 @@ function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTea
     <div className="mx-3 my-3 rounded-3xl border border-border bg-gradient-to-b from-surface to-background px-3 pt-5 pb-4 shadow-sm">
       <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
         <TeamSide team={match.homeTeam} favorites={favorites} />
-        <div className="flex flex-col items-center gap-2 pt-2">
-          <p className="text-5xl font-extrabold leading-none tracking-tight tabular-nums text-foreground">
+        <div className={`flex flex-col items-center gap-2 ${upcoming ? 'pt-4' : 'pt-2'}`}>
+          <p
+            className={`leading-none tracking-tight tabular-nums text-foreground ${
+              match.score ? 'text-5xl font-extrabold' : 'text-xl font-bold'
+            }`}
+          >
             {match.score ? formatScore(match.score) : formatKickoff(new Date(match.startTime))}
           </p>
-          <div className="text-sm">
-            {upcoming ? (
-              <span className="flex flex-col items-center">
-                <span className="text-muted">{dayLabel(new Date(match.startTime), now)}</span>
-                <span className="tabular-nums text-foreground">
-                  {detailCountdown(new Date(match.startTime), now)}
-                </span>
-              </span>
-            ) : (
+          {!upcoming && (
+            <div className="text-sm">
               <StatusText match={match} showScore={false} />
-            )}
-          </div>
+            </div>
+          )}
         </div>
         <TeamSide team={match.awayTeam} favorites={favorites} />
       </div>
+      {upcoming && (
+        <p className="mt-3 flex flex-col items-center border-t border-border pt-3 text-sm">
+          <span className="text-muted">{dayLabel(new Date(match.startTime), now)}</span>
+          <span className="tabular-nums text-foreground">
+            {detailCountdown(new Date(match.startTime), now)}
+          </span>
+        </p>
+      )}
       {hasScorers && (
         <div className="mt-3 grid grid-cols-[1fr_auto_1fr] gap-2 border-t border-border pt-3">
           <Scorers goals={scorers.home} label={`${match.homeTeam.name} goals`} />
