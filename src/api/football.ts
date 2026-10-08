@@ -4,9 +4,11 @@ import {
   normalizeScoreboard,
   normalizeSummary,
   normalizeTeams,
+  normalizeTeamSchedule,
   scoreboardUrl,
   standingsUrl,
   summaryUrl,
+  teamScheduleUrl,
 } from './espn.ts'
 import type { Match, Team } from './types.ts'
 
@@ -255,6 +257,92 @@ export async function getMatchList({
     results,
     failedCompetitionIds,
     competitionIds: competitions.map((competition) => competition.id),
+    ...(failureReason && { failureReason }),
+  }
+}
+
+/** How far ahead and back the favorite teams' matches reach. */
+export const TEAM_MATCH_WINDOW_DAYS = 30
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+export interface TeamMatchesResult {
+  /** Not finished, kicking off within the window (live ones included), kickoff ascending. */
+  upcoming: Match[]
+  /** Finished within the window, newest first. */
+  results: Match[]
+  failedTeamIds: string[]
+  /** The teams requested for this result. */
+  teamIds: string[]
+  /** The most relevant reason a team failed; set only when one did. Never saved. */
+  failureReason?: FailureReason
+}
+
+/**
+ * Favorite teams' matches in every competition, from two schedule requests per
+ * team (past and upcoming). A match between two favorites appears once. A team
+ * counts as failed when either request fails; unexpected errors are rethrown.
+ */
+export async function getTeamMatches(
+  teams: readonly Pick<Team, 'id'>[],
+  {
+    now = new Date(),
+    fetchImpl = defaultFetch,
+    isOnline = browserOnline,
+  }: RequestOptions & { now?: Date } = {},
+): Promise<TeamMatchesResult> {
+  const settled = await Promise.all(
+    teams.map((team) =>
+      Promise.allSettled(
+        [false, true].map(async (fixtures) =>
+          normalizeTeamSchedule(
+            await fetchJson(teamScheduleUrl(team.id, fixtures), fetchImpl, isOnline),
+          ),
+        ),
+      ),
+    ),
+  )
+
+  const failedTeamIds: string[] = []
+  const reasons: FailureReason[] = []
+  const byId = new Map<string, Match>()
+  settled.forEach((pages, index) => {
+    let failed = false
+    for (const page of pages) {
+      if (page.status === 'rejected') {
+        const reason = expectedReason(page.reason)
+        if (!reason) throw page.reason
+        reasons.push(reason)
+        failed = true
+        continue
+      }
+      for (const match of page.value) {
+        if (!byId.has(match.id)) byId.set(match.id, match)
+      }
+    }
+    if (failed) failedTeamIds.push(teams[index].id)
+  })
+
+  const kickoff = (match: Match) => Date.parse(match.startTime)
+  const nowMs = now.getTime()
+  const windowMs = TEAM_MATCH_WINDOW_DAYS * DAY_MS
+  const within = (match: Match, start: number, end: number) =>
+    kickoff(match) >= start && kickoff(match) <= end
+  const matches = [...byId.values()]
+  // Unfinished matches from up to a day ago stay listed, so live ones show.
+  const upcoming = matches
+    .filter((m) => m.status !== 'finished' && within(m, nowMs - DAY_MS, nowMs + windowMs))
+    .sort((a, b) => kickoff(a) - kickoff(b))
+  const results = matches
+    .filter((m) => m.status === 'finished' && within(m, nowMs - windowMs, nowMs))
+    .sort((a, b) => kickoff(b) - kickoff(a))
+
+  const failureReason = mostRelevant(reasons)
+  return {
+    upcoming,
+    results,
+    failedTeamIds,
+    teamIds: teams.map((team) => team.id),
     ...(failureReason && { failureReason }),
   }
 }

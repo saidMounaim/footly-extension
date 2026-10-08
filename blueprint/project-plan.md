@@ -65,7 +65,8 @@ The product should work for both casual football fans and users who follow footb
 - Favorite teams.
 - Favorite competitions.
 - Local league suggestion: a one-time prompt to follow the user's own country's league, guessed on the device.
-- More competitions beyond the six default leagues, grouped in Favorites as Clubs and National teams: national-team matches (friendlies, World Cup, World Cup qualifiers for Africa, South America, Europe, CONCACAF, and Asia, AFCON, Copa América, Euro, Nations League, Gold Cup) and more club competitions (other countries' top leagues, Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each only where ESPN serves it. Botola Pro is not available from ESPN. They load only when followed, so the default request count stays the same.
+- More competitions beyond the six default leagues, grouped on Home as Club competitions and National teams: national-team matches (friendlies, World Cup, World Cup qualifiers for Africa, South America, Europe, CONCACAF, and Asia, AFCON, Copa América, Euro, Nations League, Gold Cup) and more club competitions (other countries' top leagues, Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each only where ESPN serves it. Botola Pro is not available from ESPN, and no free source works without a backend, so it is left out. Their matches load only when followed or opened, so the default request count stays the same.
+- Favorites tab: your favorite teams' upcoming and recent matches in every competition, plus the team list and team search; following competitions happens on Home.
 - Match countdown.
 - Quick team and match search.
 - Match detail view, with basic team statistics and starting lineups when the provider supplies them.
@@ -336,7 +337,7 @@ Footly should feel like a **modern, compact football companion**, not a miniatur
 
 ### Popup structure
 
-Current direction (feature 23): Home lists competition cards (the default leagues plus followed ones), each showing live games or the next kickoff; opening a competition shows its upcoming matches and results with day chips. The original sketch below is kept for history.
+Current direction (features 23 and 25): Home lists every competition card. The default leagues and followed ones come first, each showing live games or the next kickoff; the rest follow, grouped as Club competitions and National teams. Opening a competition shows its upcoming matches and results with day chips and a Follow button. Favorites shows your teams' matches. The original sketch below is kept for history.
 
 The default popup should prioritize the most relevant information:
 

@@ -10,7 +10,9 @@ import {
   getMatchDetails,
   getMatchList,
   getTeamCatalog,
+  getTeamMatches,
   MatchDetailsError,
+  TEAM_MATCH_WINDOW_DAYS,
 } from './football.ts'
 import type { Match } from './types.ts'
 
@@ -463,6 +465,144 @@ describe('getTeamCatalog', () => {
     // fetchJson wraps anything fetch throws as an expected failure, so the error comes from parsing.
     const fetchImpl = vi.fn<typeof fetch>(async () => ({ ok: true, json: async () => body }) as Response)
     await expect(getTeamCatalog({ fetchImpl })).rejects.toBe(bug)
+  })
+})
+
+describe('getTeamMatches', () => {
+  const DAY = 24 * 60 * 60 * 1000
+  const at = (offsetMs: number) => new Date(NOW.getTime() + offsetMs).toISOString()
+
+  interface ScheduleEvent {
+    id: string
+    date: string
+    state?: 'pre' | 'in' | 'post'
+    slug?: string
+  }
+
+  function schedule(events: ScheduleEvent[]) {
+    return {
+      events: events.map(({ id, date, state = 'pre', slug = 'eng.1' }) => ({
+        id,
+        date,
+        league: { name: slug, slug },
+        competitions: [
+          {
+            status: { type: { name: state === 'post' ? 'STATUS_FULL_TIME' : 'STATUS_SCHEDULED', state } },
+            competitors: [
+              { homeAway: 'home', score: { displayValue: '1' }, team: { id: `${id}h`, displayName: 'Home' } },
+              { homeAway: 'away', score: { displayValue: '0' }, team: { id: `${id}a`, displayName: 'Away' } },
+            ],
+          },
+        ],
+      })),
+    }
+  }
+
+  type ScheduleReply = { past?: ScheduleEvent[]; upcoming?: ScheduleEvent[] } | number | Error
+
+  /** Replies per team id; `past` and `upcoming` are the two schedule requests. */
+  function scheduleFetch(replies: Record<string, ScheduleReply>) {
+    return vi.fn(async (input: RequestInfo | URL) => {
+      const url = new URL(String(input))
+      const teamId = url.pathname.split('/teams/')[1].split('/')[0]
+      const reply = replies[teamId] ?? {}
+      if (reply instanceof Error) throw reply
+      if (typeof reply === 'number') return new Response('nope', { status: reply })
+      const events = url.searchParams.get('fixture') === 'true' ? reply.upcoming : reply.past
+      return new Response(JSON.stringify(schedule(events ?? [])))
+    })
+  }
+
+  it('makes no request without teams', async () => {
+    const fetchImpl = scheduleFetch({})
+    await expect(getTeamMatches([], { now: NOW, fetchImpl })).resolves.toEqual({
+      upcoming: [],
+      results: [],
+      failedTeamIds: [],
+      teamIds: [],
+    })
+    expect(fetchImpl).not.toHaveBeenCalled()
+  })
+
+  it('asks for past and upcoming matches of each team', async () => {
+    const fetchImpl = scheduleFetch({})
+    await getTeamMatches([{ id: '359' }, { id: '86' }], { now: NOW, fetchImpl })
+    const base = 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams'
+    expect(fetchImpl.mock.calls.map(([input]) => String(input))).toEqual([
+      `${base}/359/schedule`,
+      `${base}/359/schedule?fixture=true`,
+      `${base}/86/schedule`,
+      `${base}/86/schedule?fixture=true`,
+    ])
+  })
+
+  it('lists a match between two favorites once, sorted, with each competition kept', async () => {
+    const fetchImpl = scheduleFetch({
+      a: {
+        past: [{ id: 'old', date: at(-2 * DAY), state: 'post' }],
+        upcoming: [{ id: 'derby', date: at(3 * DAY), slug: 'eng.league_cup' }],
+      },
+      b: {
+        past: [{ id: 'older', date: at(-5 * DAY), state: 'post' }],
+        upcoming: [
+          { id: 'derby', date: at(3 * DAY), slug: 'eng.league_cup' },
+          { id: 'live', date: at(-1000), state: 'in' },
+        ],
+      },
+    })
+    const result = await getTeamMatches([{ id: 'a' }, { id: 'b' }], { now: NOW, fetchImpl })
+    expect(result.upcoming.map((m) => m.id)).toEqual(['live', 'derby'])
+    expect(result.upcoming[1].competition.id).toBe('eng.league_cup')
+    expect(result.results.map((m) => m.id)).toEqual(['old', 'older'])
+    expect(result.failedTeamIds).toEqual([])
+    expect(result).not.toHaveProperty('failureReason')
+  })
+
+  it(`keeps matches exactly ${TEAM_MATCH_WINDOW_DAYS} days away and drops anything beyond`, async () => {
+    const edge = TEAM_MATCH_WINDOW_DAYS * DAY
+    const fetchImpl = scheduleFetch({
+      a: {
+        past: [
+          { id: 'result-edge', date: at(-edge), state: 'post' },
+          { id: 'result-beyond', date: at(-edge - 60_000), state: 'post' },
+        ],
+        upcoming: [
+          { id: 'upcoming-edge', date: at(edge) },
+          { id: 'upcoming-beyond', date: at(edge + 60_000) },
+          { id: 'stale', date: at(-2 * DAY) },
+        ],
+      },
+    })
+    const result = await getTeamMatches([{ id: 'a' }], { now: NOW, fetchImpl })
+    expect(result.upcoming.map((m) => m.id)).toEqual(['upcoming-edge'])
+    expect(result.results.map((m) => m.id)).toEqual(['result-edge'])
+  })
+
+  it('reports teams whose schedule failed, keeping what loaded', async () => {
+    const fetchImpl = scheduleFetch({
+      a: { upcoming: [{ id: 'm1', date: at(DAY) }] },
+      b: 503,
+    })
+    const result = await getTeamMatches([{ id: 'a' }, { id: 'b' }], { now: NOW, fetchImpl })
+    expect(result.upcoming.map((m) => m.id)).toEqual(['m1'])
+    expect(result).toMatchObject({ failedTeamIds: ['b'], teamIds: ['a', 'b'], failureReason: 'unavailable' })
+  })
+
+  it('reports every team when all fail, with the most relevant reason', async () => {
+    const fetchImpl = scheduleFetch({ a: 429, b: 503 })
+    const result = await getTeamMatches([{ id: 'a' }, { id: 'b' }], { now: NOW, fetchImpl })
+    expect(result).toMatchObject({ failedTeamIds: ['a', 'b'], failureReason: 'rate-limited' })
+  })
+
+  it('does not fold unexpected errors into failed teams', async () => {
+    const bug = new RangeError('bug')
+    const body = {
+      get events(): unknown {
+        throw bug
+      },
+    }
+    const fetchImpl = vi.fn<typeof fetch>(async () => ({ ok: true, json: async () => body }) as Response)
+    await expect(getTeamMatches([{ id: 'a' }], { now: NOW, fetchImpl })).rejects.toBe(bug)
   })
 })
 

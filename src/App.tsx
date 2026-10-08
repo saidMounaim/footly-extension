@@ -23,6 +23,7 @@ import { useNotificationTypes } from './hooks/useNotificationTypes.ts'
 import { useNow } from './hooks/useNow.ts'
 import { useOnlineStatus } from './hooks/useOnlineStatus.ts'
 import { useTeamCatalog } from './hooks/useTeamCatalog.ts'
+import { useTeamMatches } from './hooks/useTeamMatches.ts'
 import { useLocalLeagueSuggestion } from './hooks/useLocalLeagueSuggestion.ts'
 import { useThemeSetting } from './hooks/useThemeSetting.ts'
 import { collectLogos } from './lib/crest.ts'
@@ -73,6 +74,7 @@ function App() {
   const [tab, setTab] = useState<MatchTab>('home')
   const [searchFocus, setSearchFocus] = useState(0)
   const catalog = useTeamCatalog(tab === 'favorites', competitions.ids)
+  const teamMatches = useTeamMatches(tab === 'favorites', favorites.teams)
   // The catalog hook returns a fresh state object each render, so depend on its stable teams array.
   const catalogTeams = catalog.state.status === 'success' ? catalog.state.result.teams : NO_TEAMS
   const logos = useMemo(
@@ -249,8 +251,12 @@ function App() {
                   favorites={favorites}
                   competitions={competitions}
                   catalog={catalog.state}
+                  teamMatches={teamMatches.state}
                   logos={logos}
+                  now={now}
                   onRetryCatalog={catalog.retry}
+                  onRetryTeamMatches={teamMatches.retry}
+                  onSelectMatch={openMatch}
                 />
               ) : id === 'search' ? (
                 <SearchPanel

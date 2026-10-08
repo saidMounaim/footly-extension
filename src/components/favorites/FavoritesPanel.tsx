@@ -1,28 +1,104 @@
 import { useId, useState } from 'react'
-import {
-  CLUB_EXTRAS,
-  DEFAULT_COMPETITIONS,
-  NATIONAL_TEAM_EXTRAS,
-  type CatalogCompetition,
-} from '../../api/football.ts'
-import type { Team } from '../../api/types.ts'
+import { TEAM_MATCH_WINDOW_DAYS } from '../../api/football.ts'
+import type { Match, Team } from '../../api/types.ts'
 import type { FavoriteCompetitionsApi } from '../../hooks/useFavoriteCompetitions.ts'
 import type { FavoriteTeamsApi } from '../../hooks/useFavoriteTeams.ts'
 import type { TeamCatalogState } from '../../hooks/useTeamCatalog.ts'
+import type { TeamMatchesState } from '../../hooks/useTeamMatches.ts'
 import type { LogoLookup } from '../../lib/crest.ts'
 import { failureMessage } from '../../lib/errors.ts'
 import { searchTeams } from '../../lib/search.ts'
 import { groupCardClass, secondaryButtonClass, sectionHeadingClass } from '../matches/status.ts'
 import { Crest } from '../common/Crest.tsx'
+import { MatchListError, MatchListSkeleton } from '../matches/MatchList.tsx'
+import { MatchRow } from '../matches/MatchRow.tsx'
 import { FavoriteToggle } from './FavoriteToggle.tsx'
 
 interface FavoritesPanelProps {
   favorites: FavoriteTeamsApi
+  /** Only its load error is shown here; competitions are followed elsewhere. */
   competitions: FavoriteCompetitionsApi
   catalog: TeamCatalogState
-  /** Logos from loaded data, for favorites saved without one and for competitions. */
+  teamMatches: TeamMatchesState
+  /** Logos from loaded data, for favorites saved without one. */
   logos: LogoLookup
+  /** Current time for upcoming countdowns. */
+  now: Date
   onRetryCatalog: () => void
+  onRetryTeamMatches: () => void
+  onSelectMatch: (match: Match, trigger: HTMLButtonElement) => void
+}
+
+function MatchGroup({
+  title,
+  matches,
+  now,
+  onSelect,
+}: {
+  title: string
+  matches: Match[]
+  now: Date
+  onSelect: (match: Match, trigger: HTMLButtonElement) => void
+}) {
+  return (
+    <div>
+      <h3 className="px-4 pt-2 pb-1 text-xs font-medium text-muted">{title}</h3>
+      <ul className="pb-1.5">
+        {matches.map((match) => (
+          <MatchRow key={match.id} match={match} favorite now={now} onSelect={onSelect} />
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/** The favorite teams' upcoming matches and recent results, in every competition. */
+function TeamMatches({
+  state,
+  now,
+  onRetry,
+  onSelect,
+}: {
+  state: TeamMatchesState
+  now: Date
+  onRetry: () => void
+  onSelect: (match: Match, trigger: HTMLButtonElement) => void
+}) {
+  if (state.status === 'idle') return null
+  return (
+    <section aria-labelledby="team-matches-heading">
+      <h2 id="team-matches-heading" className={sectionHeadingClass}>
+        Your teams' matches
+      </h2>
+      {state.status === 'loading' && <MatchListSkeleton />}
+      {state.status === 'error' && <MatchListError reason={state.reason} onRetry={onRetry} />}
+      {state.status === 'success' && (
+        <>
+          {state.result.failedTeamIds.length > 0 && (
+            <div
+              role="alert"
+              className="flex items-center justify-between gap-3 border-y border-border px-4 py-2"
+            >
+              <p className="text-xs text-muted">Some teams' matches couldn't be loaded.</p>
+              <button type="button" onClick={onRetry} className={secondaryButtonClass}>
+                Retry
+              </button>
+            </div>
+          )}
+          {state.result.upcoming.length > 0 ? (
+            <MatchGroup title="Upcoming" matches={state.result.upcoming} now={now} onSelect={onSelect} />
+          ) : (
+            <p className="px-6 py-4 text-center text-sm text-muted">
+              No matches for your teams in the next {TEAM_MATCH_WINDOW_DAYS} days.
+            </p>
+          )}
+          {state.result.results.length > 0 && (
+            <MatchGroup title="Results" matches={state.result.results} now={now} onSelect={onSelect} />
+          )}
+        </>
+      )}
+    </section>
+  )
 }
 
 
@@ -57,83 +133,6 @@ function YourTeams({ favorites, logos }: { favorites: FavoriteTeamsApi; logos: L
         </ul>
       )}
     </section>
-  )
-}
-
-function CompetitionGroup({
-  id,
-  title,
-  list,
-  competitions,
-  logos,
-}: {
-  id: string
-  title: string
-  list: readonly CatalogCompetition[]
-  competitions: FavoriteCompetitionsApi
-  logos: LogoLookup
-}) {
-  return (
-    <section aria-labelledby={id}>
-      <h2 id={id} className={sectionHeadingClass}>
-        {title}
-      </h2>
-      <ul className={groupCardClass}>
-        {list.map((competition) => (
-          <li key={competition.id}>
-            <FavoriteToggle
-              name={competition.name}
-              pressed={competitions.isFavorite(competition.id)}
-              disabled={!competitions.ready}
-              onToggle={() => competitions.toggle(competition.id)}
-              showName
-              icon={
-                <Crest
-                  src={logos.competitions.get(competition.id)}
-                  name={competition.name}
-                  kind="competition"
-                />
-              }
-            />
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
-}
-
-/** The always-loaded leagues, then club and national-team extras that load once followed. */
-function Competitions({
-  competitions,
-  logos,
-}: {
-  competitions: FavoriteCompetitionsApi
-  logos: LogoLookup
-}) {
-  return (
-    <>
-      <CompetitionGroup
-        id="favorites-leagues"
-        title="Leagues"
-        list={DEFAULT_COMPETITIONS}
-        competitions={competitions}
-        logos={logos}
-      />
-      <CompetitionGroup
-        id="favorites-club-competitions"
-        title="Club competitions"
-        list={CLUB_EXTRAS}
-        competitions={competitions}
-        logos={logos}
-      />
-      <CompetitionGroup
-        id="favorites-national-teams"
-        title="National teams"
-        list={NATIONAL_TEAM_EXTRAS}
-        competitions={competitions}
-        logos={logos}
-      />
-    </>
   )
 }
 
@@ -178,8 +177,12 @@ export function FavoritesPanel({
   favorites,
   competitions,
   catalog,
+  teamMatches,
   logos,
+  now,
   onRetryCatalog,
+  onRetryTeamMatches,
+  onSelectMatch,
 }: FavoritesPanelProps) {
   const [query, setQuery] = useState('')
   const inputId = useId()
@@ -192,8 +195,13 @@ export function FavoritesPanel({
           Couldn't load your saved favorites.
         </p>
       )}
+      <TeamMatches
+        state={teamMatches}
+        now={now}
+        onRetry={onRetryTeamMatches}
+        onSelect={onSelectMatch}
+      />
       <YourTeams favorites={favorites} logos={logos} />
-      <Competitions competitions={competitions} logos={logos} />
       <section aria-labelledby="find-teams-heading">
         <h2 id="find-teams-heading" className={sectionHeadingClass}>
           Find teams

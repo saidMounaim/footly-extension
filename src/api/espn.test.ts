@@ -4,14 +4,17 @@ import {
   normalizeScoreboard,
   normalizeSummary,
   normalizeTeams,
+  normalizeTeamSchedule,
   scoreboardUrl,
   standingsUrl,
   summaryUrl,
+  teamScheduleUrl,
 } from './espn.ts'
 import fixture from './fixtures/espn-scoreboard.json'
 import summaryFixture from './fixtures/espn-summary.json'
 import centerFixture from './fixtures/espn-summary-center.json'
 import standingsFixture from './fixtures/espn-standings.json'
+import scheduleFixture from './fixtures/espn-team-schedule.json'
 import type { Match } from './types.ts'
 
 const league = { id: '700', name: 'English Premier League' }
@@ -168,6 +171,46 @@ describe('normalizeScoreboard', () => {
     ['a missing league', { events: [] }],
   ])('throws EspnResponseError for %s', (_label, input) => {
     expect(() => normalizeScoreboard(input, 'eng.1')).toThrow(EspnResponseError)
+  })
+})
+
+describe('teamScheduleUrl', () => {
+  it('asks for past matches, or upcoming ones with fixture=true, across all competitions', () => {
+    const base = 'https://site.api.espn.com/apis/site/v2/sports/soccer/all/teams/359/schedule'
+    expect(teamScheduleUrl('359', false)).toBe(base)
+    expect(teamScheduleUrl('359', true)).toBe(`${base}?fixture=true`)
+  })
+})
+
+describe('normalizeTeamSchedule', () => {
+  it('gives each match the competition of its own league', () => {
+    const matches = normalizeTeamSchedule(scheduleFixture)
+    expect(matches.map((m) => [m.id, m.competition.id, m.status])).toEqual([
+      ['401879274', 'eng.1', 'finished'],
+      ['401914268', 'eng.league_cup', 'finished'],
+      ['401915417', 'uefa.champions', 'upcoming'],
+    ])
+    expect(matches[1]).toMatchObject({
+      competition: { id: 'eng.league_cup', name: 'English Carabao Cup' },
+      homeTeam: { id: '373', name: 'Ipswich Town' },
+      awayTeam: { id: '359', name: 'Arsenal', logo: 'https://a.espncdn.com/i/teamlogos/soccer/500/359.png' },
+      score: { home: 2, away: 4 },
+    })
+    expect(matches[2].score).toBeUndefined()
+  })
+
+  it('skips malformed events and events without a league slug', () => {
+    const [good] = scheduleFixture.events
+    const noSlug = { ...good, id: 'x1', league: { name: 'Mystery Cup' } }
+    const noLeague = { ...good, id: 'x2', league: undefined }
+    const noTeams = { ...good, id: 'x3', competitions: [] }
+    const matches = normalizeTeamSchedule({ events: [good, noSlug, noLeague, noTeams, 'junk'] })
+    expect(matches.map((m) => m.id)).toEqual([good.id])
+  })
+
+  it('throws for a body without an events list', () => {
+    expect(() => normalizeTeamSchedule({ team: {} })).toThrow(EspnResponseError)
+    expect(() => normalizeTeamSchedule(null)).toThrow(EspnResponseError)
   })
 })
 

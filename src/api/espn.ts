@@ -30,6 +30,15 @@ export function standingsUrl(slug: string): string {
   return `https://site.api.espn.com/apis/v2/sports/soccer/${slug}/standings`
 }
 
+/**
+ * One team's schedule across every competition it plays in. ESPN returns past
+ * matches by default and upcoming ones only with `fixture=true`.
+ */
+export function teamScheduleUrl(teamId: string, fixtures: boolean): string {
+  const url = `${ESPN_SOCCER_BASE}/all/teams/${encodeURIComponent(teamId)}/schedule`
+  return fixtures ? `${url}?fixture=true` : url
+}
+
 /** Summary URL for one match in a competition. */
 export function summaryUrl(slug: string, matchId: string): string {
   return `${ESPN_SOCCER_BASE}/${slug}/summary?event=${encodeURIComponent(matchId)}`
@@ -72,7 +81,13 @@ function toTeam(team: unknown): Team | undefined {
   const name = text(team.displayName)
   if (!id || !name) return undefined
   const shortName = text(team.shortDisplayName)
-  const logo = httpsUrl(team.logo)
+  // Scoreboards give `logo`; team schedules give a `logos` list instead.
+  const logos = Array.isArray(team.logos) ? team.logos : []
+  const logo =
+    httpsUrl(team.logo) ??
+    logos
+      .map((entry) => (isRecord(entry) ? httpsUrl(entry.href) : undefined))
+      .find((href) => href !== undefined)
   return { id, name, ...(shortName && { shortName }), ...(logo && { logo }) }
 }
 
@@ -88,8 +103,10 @@ function toStatus(status: unknown): MatchStatus | undefined {
   return undefined
 }
 
+/** Scoreboards give the score as a string; team schedules as `{ displayValue }`. */
 function toGoals(value: unknown): number | undefined {
-  return typeof value === 'string' && /^\d+$/.test(value) ? Number(value) : undefined
+  const raw = isRecord(value) ? value.displayValue : value
+  return typeof raw === 'string' && /^\d+$/.test(raw) ? Number(raw) : undefined
 }
 
 /** Home and away competitor records from an ESPN competition object. */
@@ -119,12 +136,13 @@ function toMatch(event: unknown, competition: Competition): Match | undefined {
   if (!isRecord(event)) return undefined
   const id = text(event.id)
   const date = text(event.date)
-  const status = toStatus(event.status)
+  const contest = Array.isArray(event.competitions) ? event.competitions[0] : undefined
+  // Team schedules put the status on the competition rather than the event.
+  const status = toStatus(event.status) ?? toStatus(isRecord(contest) ? contest.status : undefined)
   if (!id || !date || !status) return undefined
   const time = Date.parse(date)
   if (Number.isNaN(time)) return undefined
 
-  const contest = Array.isArray(event.competitions) ? event.competitions[0] : undefined
   const { home, away } = sides(contest)
   const homeTeam = toTeam(home?.team)
   const awayTeam = toTeam(away?.team)
@@ -158,6 +176,23 @@ export function normalizeScoreboard(json: unknown, competitionId: string): Match
     throw new EspnResponseError('Scoreboard response has no valid league')
   }
   return json.events.flatMap((event) => toMatch(event, competition) ?? [])
+}
+
+/**
+ * Converts an untrusted ESPN team schedule into Footly matches, each with its
+ * own competition from the event's league. Malformed events and events without
+ * a league slug are skipped; a malformed response throws EspnResponseError.
+ */
+export function normalizeTeamSchedule(json: unknown): Match[] {
+  if (!isRecord(json) || !Array.isArray(json.events)) {
+    throw new EspnResponseError('Team schedule response has no events list')
+  }
+  return json.events.flatMap((event) => {
+    if (!isRecord(event) || !isRecord(event.league)) return []
+    const slug = text(event.league.slug)
+    const competition = slug ? toCompetition(event.league, slug) : undefined
+    return (competition && toMatch(event, competition)) ?? []
+  })
 }
 
 function toEventType(type: string, scoringPlay: boolean): MatchEventType | undefined {

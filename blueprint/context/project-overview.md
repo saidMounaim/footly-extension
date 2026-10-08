@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash 0e4742f6d48719604814997d331572df954b64ad435caeaf94ba05fff1f17fe7 -->
+<!-- blueprint:source-hash bd538a462097a085d011d5a4eda020324bccdc08d81a8b4d21a90acfca6bd631 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -57,7 +57,10 @@ Build order from `build-plan.md`; features 1 to 22 are done. Feature 19 was list
 18. **Chrome Web Store Readiness** (done) - Manifest V3 compliance, icons, screenshots, metadata, privacy info, production build.
 22. **Local League Suggestion** (done) - one-time prompt to follow the user's own country's league, guessed on the device from time zone and language; national-team competitions where ESPN lacks the league.
 23. **Competition Browser on Home** (done) - Home lists competition cards instead of games; opening one shows its upcoming matches and results with day chips.
-24. **More Competitions 2** - more national-team competitions (World Cup, Copa América, Euro, Nations League, Gold Cup, World Cup qualifiers for South America, Europe, CONCACAF, Asia) and club competitions (Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each only where ESPN serves it; extras grouped in Favorites as Clubs and National teams.
+24. **More Competitions 2** (done) - more national-team competitions (World Cup, Copa América, Euro, Nations League, Gold Cup, World Cup qualifiers for South America, Europe, CONCACAF, Asia) and club competitions (Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each only where ESPN serves it; extras grouped in Favorites as Clubs and National teams.
+25. **Favorites & Home Reorganize** - Favorites becomes your teams' matches; every competition moves to Home.
+   - **25a. Your Teams' Matches in Favorites** - each favorite team's upcoming and recent matches in every competition, from that team's ESPN schedule (one request per favorite team, only while the tab is open), replacing the competition follow lists; "Your teams" and team search stay.
+   - **25b. All Competitions on Home** - every competition on Home: defaults and followed first with live status, then the rest grouped as Club competitions and National teams, loading only when opened; follow/unfollow moves into the competition screen. Botola Pro stays out (no free source without a backend).
 
 ## Data model
 
@@ -134,8 +137,8 @@ Not in v1: free and adoption-focused. Possible later "Footly Plus" (advanced not
 
 Modern, compact football companion, not a mini football website. Clean, fast, easy to scan, strong hierarchy, clear live status, excellent dark mode, fits the Chrome popup size.
 
-- Popup `Home` - competition cards (default leagues plus followed; live count or next kickoff); opening one shows its upcoming matches and results with day chips; bottom navigation
-- `Favorites` - followed teams and competitions; followable extras grouped as Clubs and National teams
+- Popup `Home` - competition cards (default leagues plus followed with live count or next kickoff; after 25b, every other competition grouped below, loaded on open); opening one shows its upcoming matches and results with day chips; bottom navigation
+- `Favorites` - your teams' matches (25a), the team list, and team search; competition following moves to Home (25b)
 - `Search` - teams and matches
 - `Settings` - preferences and notifications
 - Status uses text or icons, not color alone (upcoming neutral, live prominent, halftime label, finished final score, postponed warning, cancelled clear)

@@ -30,3 +30,11 @@
 **Why it matters:** The answer is now written only from the `Promise.all(follows).then` callback. If that callback never runs or sees a `false` while the follows still end up stored, the competitions are followed but the saved answer stays `null`. Two paths: the popup closes after Follow before the storage writes resolve, so the callback is lost with the page; or, for a two-competition national-team suggestion, the first save fails and the second (which writes the full list) succeeds, so `useSavedValue` skips the rollback but the first result is `false`. The card stays hidden while everything is followed, but if the user later unfollows one of those competitions, the one-time card can appear again. Not reproduced; both paths need a sub-second popup close or a partial `chrome.storage.local` failure.
 **Suggested fix:** If observed, record `accepted` when the follows' final state contains every suggested competition (for example, check `competitions.idSet` after settling), or accept the edge as harmless. Requirement lost: none.
 **Resolution:**
+
+### F-11 [P3] open - No test covers a team whose past or upcoming schedule request fails alone
+
+**File:** src/api/football.test.ts
+**Found:** 2026-10-08 by /audit (scope: current; lenses: quality, security, performance, tests)
+**Why it matters:** `getTeamMatches` makes two requests per team and documents that a team counts as failed when either one fails, while matches from the request that succeeded are still kept. Every failure test replies the same way to both requests (`a: 503`, `a: 429`), so a regression that drops the surviving page, or that only marks a team failed when both requests fail, would pass the suite.
+**Suggested fix:** Let `scheduleFetch` fail per request (for example `{ past: 503, upcoming: [...] }`) and add one case asserting the upcoming match is kept, the team is in `failedTeamIds`, and `failureReason` is set. Requirement lost: none.
+**Resolution:**

@@ -1,0 +1,192 @@
+{
+  "team": {
+    "id": "359",
+    "displayName": "Arsenal"
+  },
+  "events": [
+    {
+      "id": "401879274",
+      "date": "2026-09-19T14:00Z",
+      "league": {
+        "id": "700",
+        "name": "English Premier League",
+        "shortName": "Premier League",
+        "slug": "eng.1"
+      },
+      "competitions": [
+        {
+          "id": "401879274",
+          "status": {
+            "type": {
+              "id": "28",
+              "name": "STATUS_FULL_TIME",
+              "state": "post",
+              "completed": true,
+              "description": "Full Time",
+              "detail": "FT",
+              "shortDetail": "FT"
+            }
+          },
+          "competitors": [
+            {
+              "id": "331",
+              "homeAway": "home",
+              "team": {
+                "id": "331",
+                "displayName": "Brighton & Hove Albion",
+                "shortDisplayName": "Brighton",
+                "logos": [
+                  {
+                    "href": "https://a.espncdn.com/i/teamlogos/soccer/500/331.png"
+                  }
+                ]
+              },
+              "score": {
+                "value": 3,
+                "displayValue": "3"
+              }
+            },
+            {
+              "id": "359",
+              "homeAway": "away",
+              "team": {
+                "id": "359",
+                "displayName": "Arsenal",
+                "shortDisplayName": "Arsenal",
+                "logos": [
+                  {
+                    "href": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png"
+                  }
+                ]
+              },
+              "score": {
+                "value": 0,
+                "displayValue": "0"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401914268",
+      "date": "2026-09-15T19:00Z",
+      "league": {
+        "id": "3920",
+        "name": "English Carabao Cup",
+        "shortName": "Carabao Cup",
+        "slug": "eng.league_cup"
+      },
+      "competitions": [
+        {
+          "id": "401914268",
+          "status": {
+            "type": {
+              "id": "28",
+              "name": "STATUS_FULL_TIME",
+              "state": "post",
+              "completed": true,
+              "description": "Full Time",
+              "detail": "FT",
+              "shortDetail": "FT"
+            }
+          },
+          "competitors": [
+            {
+              "id": "373",
+              "homeAway": "home",
+              "team": {
+                "id": "373",
+                "displayName": "Ipswich Town",
+                "shortDisplayName": "Ipswich",
+                "logos": [
+                  {
+                    "href": "https://a.espncdn.com/i/teamlogos/soccer/500/373.png"
+                  }
+                ]
+              },
+              "score": {
+                "value": 2,
+                "displayValue": "2"
+              }
+            },
+            {
+              "id": "359",
+              "homeAway": "away",
+              "team": {
+                "id": "359",
+                "displayName": "Arsenal",
+                "shortDisplayName": "Arsenal",
+                "logos": [
+                  {
+                    "href": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png"
+                  }
+                ]
+              },
+              "score": {
+                "value": 4,
+                "displayValue": "4"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "401915417",
+      "date": "2026-10-13T19:00Z",
+      "league": {
+        "id": "775",
+        "name": "UEFA Champions League",
+        "shortName": "UEFA Champions League",
+        "slug": "uefa.champions"
+      },
+      "competitions": [
+        {
+          "id": "401915417",
+          "status": {
+            "type": {
+              "id": "1",
+              "name": "STATUS_SCHEDULED",
+              "state": "pre",
+              "completed": false,
+              "description": "Scheduled",
+              "detail": "Tue, October 13th at 3:00 PM EDT",
+              "shortDetail": "10/13 - 3:00 PM EDT"
+            }
+          },
+          "competitors": [
+            {
+              "id": "359",
+              "homeAway": "home",
+              "team": {
+                "id": "359",
+                "displayName": "Arsenal",
+                "shortDisplayName": "Arsenal",
+                "logos": [
+                  {
+                    "href": "https://a.espncdn.com/i/teamlogos/soccer/500/359.png"
+                  }
+                ]
+              }
+            },
+            {
+              "id": "166",
+              "homeAway": "away",
+              "team": {
+                "id": "166",
+                "displayName": "Lille",
+                "shortDisplayName": "Lille",
+                "logos": [
+                  {
+                    "href": "https://a.espncdn.com/i/teamlogos/soccer/500/166.png"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
