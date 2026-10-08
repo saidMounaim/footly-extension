@@ -192,9 +192,8 @@ function App() {
   return (
     <div className="flex min-h-[480px] flex-col">
       <header className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/90 px-4 py-2.5 backdrop-blur">
-        <h1 className="flex items-center gap-1.5 text-lg font-bold tracking-tight text-foreground">
-          <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
-          Foot<span className="-ml-1.5 text-accent">ly</span>
+        <h1 className="flex items-center text-lg font-bold tracking-tight text-foreground">
+          Foot<span className="text-accent">ly</span>
         </h1>
         <button
           ref={settingsButton}
