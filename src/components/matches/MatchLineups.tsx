@@ -1,6 +1,7 @@
-import type { Lineup, LineupPlayer, Match, Team } from '../../api/types.ts'
-import { ChevronDown } from 'lucide-react'
-import { pitchLines, surname } from '../../lib/pitch.ts'
+import type { Lineup, LineupPlayer, Match, MatchEvent, Team } from '../../api/types.ts'
+import { ArrowUp, ChevronDown } from 'lucide-react'
+import { substituteEntries, type SubstituteEntry } from '../../lib/match.ts'
+import { pitchLines } from '../../lib/pitch.ts'
 import { Crest } from '../common/Crest.tsx'
 
 function PlayerRow({ player }: { player: LineupPlayer }) {
@@ -25,9 +26,70 @@ function PlayerRow({ player }: { player: LineupPlayer }) {
   )
 }
 
-/** Closed by default; `named` titles it with the team, for when no team heading sits above it. */
-function Substitutes({ team, lineup, named = false }: { team: Team; lineup: Lineup; named?: boolean }) {
+function NumberDisc({ jersey }: { jersey: string | undefined }) {
+  return (
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-xs font-bold tabular-nums text-foreground">
+      {jersey && (
+        <>
+          <span className="sr-only">Number </span>
+          {jersey}
+        </>
+      )}
+    </span>
+  )
+}
+
+function UsedSubRow({ entry }: { entry: SubstituteEntry }) {
+  return (
+    <li className="flex items-start gap-3 px-4 py-1.5 text-sm">
+      <NumberDisc jersey={entry.player.jersey} />
+      <span className="min-w-0 flex-1">
+        <span className="block wrap-break-word text-foreground">{entry.player.name}</span>
+        {entry.playerOff && (
+          <span className="block wrap-break-word text-xs text-muted">for {entry.playerOff}</span>
+        )}
+      </span>
+      <span className="flex shrink-0 items-center gap-0.5 pt-0.5 text-xs font-semibold tabular-nums text-accent">
+        <ArrowUp aria-hidden="true" className="size-3.5" />
+        <span className="sr-only">Came on </span>
+        {entry.minute}
+      </span>
+    </li>
+  )
+}
+
+function UnusedSubRow({ player }: { player: LineupPlayer }) {
+  return (
+    <li className="flex items-center gap-3 px-4 py-1.5 text-sm text-muted">
+      <NumberDisc jersey={player.jersey} />
+      <span className="min-w-0 flex-1 wrap-break-word">{player.name}</span>
+      {player.position && (
+        <span className="shrink-0 text-xs">
+          <span className="sr-only">Position </span>
+          {player.position}
+        </span>
+      )}
+    </li>
+  )
+}
+
+/**
+ * Closed by default: subs who came on first, then the unused ones. `named` titles
+ * it with the team, for when no team heading sits above it.
+ */
+function Substitutes({
+  team,
+  lineup,
+  events,
+  named = false,
+}: {
+  team: Team
+  lineup: Lineup
+  events: MatchEvent[]
+  named?: boolean
+}) {
   if (lineup.substitutes.length === 0) return null
+  const { used, unused } = substituteEntries(lineup, events, team.id)
   return (
     <details className="group">
       <summary className="flex cursor-pointer list-none items-center gap-2 px-4 py-2 text-sm text-foreground hover:bg-surface focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent [&::-webkit-details-marker]:hidden">
@@ -41,11 +103,25 @@ function Substitutes({ team, lineup, named = false }: { team: Team; lineup: Line
           className="size-4 shrink-0 text-muted transition-transform group-open:rotate-180"
         />
       </summary>
-      <ul aria-label={`${team.name} substitutes`} className="pb-1">
-        {lineup.substitutes.map((player) => (
-          <PlayerRow key={player.id} player={player} />
-        ))}
-      </ul>
+      <div className="pb-1">
+        {used.length > 0 && (
+          <ul aria-label={`${team.name} substitutes who came on`}>
+            {used.map((entry) => (
+              <UsedSubRow key={entry.player.id} entry={entry} />
+            ))}
+          </ul>
+        )}
+        {used.length > 0 && unused.length > 0 && (
+          <p className="px-4 pt-2 pb-1 text-xs font-medium text-muted">Unused</p>
+        )}
+        {unused.length > 0 && (
+          <ul aria-label={used.length > 0 ? `${team.name} unused substitutes` : `${team.name} substitutes`}>
+            {unused.map((player) => (
+              <UnusedSubRow key={player.id} player={player} />
+            ))}
+          </ul>
+        )}
+      </div>
     </details>
   )
 }
@@ -66,7 +142,7 @@ function TeamHeading({ team, lineup }: { team: Team; lineup: Lineup }) {
 }
 
 /** Today's list layout: starters then substitutes, used when the pitch can't be drawn. */
-function TeamLineup({ team, lineup }: { team: Team; lineup: Lineup }) {
+function TeamLineup({ team, lineup, events }: { team: Team; lineup: Lineup; events: MatchEvent[] }) {
   return (
     <div className="py-2">
       <TeamHeading team={team} lineup={lineup} />
@@ -75,7 +151,7 @@ function TeamLineup({ team, lineup }: { team: Team; lineup: Lineup }) {
           <PlayerRow key={player.id} player={player} />
         ))}
       </ol>
-      <Substitutes team={team} lineup={lineup} />
+      <Substitutes team={team} lineup={lineup} events={events} />
     </div>
   )
 }
@@ -95,8 +171,12 @@ function PitchPlayer({ player, row, column, span }: { player: LineupPlayer; row:
       >
         {player.jersey}
       </span>
-      <span aria-hidden="true" className="max-w-full truncate text-[11px] font-medium leading-tight text-pitch-line">
-        {surname(player.name)}
+      <span
+        aria-hidden="true"
+        title={player.name}
+        className="line-clamp-2 max-w-full text-center text-[10px] font-medium leading-tight wrap-break-word text-pitch-line"
+      >
+        {player.name}
       </span>
       <span className="sr-only">
         {player.jersey && `Number ${player.jersey}, `}
@@ -197,8 +277,8 @@ function Pitch({
         </div>
       </div>
       <div className="mt-2 divide-y divide-border">
-        <Substitutes team={match.homeTeam} lineup={lineups.home} named />
-        <Substitutes team={match.awayTeam} lineup={lineups.away} named />
+        <Substitutes team={match.homeTeam} lineup={lineups.home} events={match.events} named />
+        <Substitutes team={match.awayTeam} lineup={lineups.away} events={match.events} named />
       </div>
     </>
   )
@@ -219,8 +299,8 @@ export function MatchLineups({ match }: { match: Match }) {
         <Pitch match={match} lineups={lineups} home={home} away={away} />
       ) : (
         <div className="divide-y divide-border">
-          <TeamLineup team={match.homeTeam} lineup={lineups.home} />
-          <TeamLineup team={match.awayTeam} lineup={lineups.away} />
+          <TeamLineup team={match.homeTeam} lineup={lineups.home} events={match.events} />
+          <TeamLineup team={match.awayTeam} lineup={lineups.away} events={match.events} />
         </div>
       )}
     </div>

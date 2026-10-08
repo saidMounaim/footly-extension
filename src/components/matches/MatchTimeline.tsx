@@ -1,6 +1,7 @@
 import { ArrowLeftRight, CircleX } from 'lucide-react'
 import type { ReactNode } from 'react'
-import type { Match, MatchEvent, MatchEventType } from '../../api/types.ts'
+import type { Match, MatchEvent, MatchEventType, Team } from '../../api/types.ts'
+import { Crest } from '../common/Crest.tsx'
 import { FootballIcon } from '../common/FootballIcon.tsx'
 
 const iconClass = 'size-4 text-muted'
@@ -25,29 +26,55 @@ const SUFFIX: Partial<Record<MatchEventType, string>> = {
   'penalty-goal': ' (pen)',
 }
 
-function teamName(match: Match, teamId: string | undefined): string | undefined {
-  const team = [match.homeTeam, match.awayTeam].find((candidate) => candidate.id === teamId)
-  return team ? (team.shortName ?? team.name) : undefined
+function eventTeam(match: Match, teamId: string | undefined): { team: Team; side: 'home' | 'away' } | undefined {
+  if (teamId === undefined) return undefined
+  if (teamId === match.homeTeam.id) return { team: match.homeTeam, side: 'home' }
+  if (teamId === match.awayTeam.id) return { team: match.awayTeam, side: 'away' }
+  return undefined
 }
 
+/**
+ * One event on a split timeline: the minute in the centre, home events to its
+ * left and away events to its right, each with its crest on the outer edge.
+ * Events without a known team sit centred under the minute.
+ */
 export function EventRow({ event, match }: { event: MatchEvent; match: Match }) {
   const { icon, label } = EVENT_DISPLAY[event.type]
-  const team = teamName(match, event.teamId)
+  const owner = eventTeam(match, event.teamId)
+  const placement =
+    owner?.side === 'home'
+      ? 'col-start-1 row-start-1 flex-row-reverse justify-start text-right'
+      : owner?.side === 'away'
+        ? 'col-start-3 row-start-1'
+        : 'col-span-3 row-start-2 justify-center text-center'
   return (
-    <li className="flex items-start gap-3 px-4 py-2 text-sm">
-      <span className="w-12 shrink-0 tabular-nums text-muted">{event.minute}</span>
-      <span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center">
-        {icon}
+    <li className="grid grid-cols-[1fr_auto_1fr] items-start gap-x-2 gap-y-1 px-3 py-2 text-sm">
+      <span className="col-start-2 row-start-1 w-11 rounded-full bg-surface py-0.5 text-center text-xs tabular-nums text-muted">
+        {event.minute}
       </span>
-      <span className="sr-only">{label}:</span>
-      <div className="min-w-0 flex-1">
-        <p className="text-foreground">
-          {event.player ?? label}
-          {SUFFIX[event.type]}
-        </p>
-        {event.playerOff && <p className="text-xs text-muted">Replaces {event.playerOff}</p>}
+      <div className={`flex min-w-0 items-start gap-2 ${placement}`}>
+        <span aria-hidden="true" className="flex size-5 shrink-0 items-center justify-center">
+          {icon}
+        </span>
+        <span className="sr-only">
+          {label}
+          {owner && `, ${owner.team.name}`}:
+        </span>
+        <div className="min-w-0">
+          <p className="wrap-break-word text-foreground">
+            {event.player ?? label}
+            {SUFFIX[event.type]}
+          </p>
+          {event.playerOff && (
+            <p className="wrap-break-word text-xs text-muted">Replaces {event.playerOff}</p>
+          )}
+        </div>
+        {owner && (
+          <span className="mt-0.5 flex shrink-0">
+            <Crest src={owner.team.logo} name={owner.team.name} size="sm" />
+          </span>
+        )}
       </div>
-      {team && <span className="shrink-0 text-xs text-muted">{team}</span>}
     </li>
   )
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import type { Match, MatchEvent } from '../api/types.ts'
-import { goalScorers } from './match.ts'
+import type { Lineup, Match, MatchEvent } from '../api/types.ts'
+import { goalScorers, substituteEntries } from './match.ts'
 
 function match(events: MatchEvent[]): Match {
   return {
@@ -57,5 +57,73 @@ describe('goalScorers', () => {
 
   it('gives two empty lists without goals', () => {
     expect(goalScorers(match([]))).toEqual({ home: [], away: [] })
+  })
+})
+
+describe('substituteEntries', () => {
+  const lineup: Lineup = {
+    starters: [{ id: '1', name: 'Bukayo Saka' }],
+    substitutes: [
+      { id: '11', name: 'Gabriel Martinelli', jersey: '11' },
+      { id: '20', name: 'Jorginho', jersey: '20' },
+      { id: '22', name: 'David Raya', jersey: '22' },
+    ],
+  }
+  const sub = (id: string, minute: string, player: string, teamId = 'h', playerOff?: string): MatchEvent => ({
+    id,
+    type: 'substitution',
+    minute,
+    teamId,
+    player,
+    ...(playerOff && { playerOff }),
+  })
+  const ids = (players: { id: string }[]) => players.map((player) => player.id)
+
+  it('lists matched subs with their minute and the player they replaced', () => {
+    const { used } = substituteEntries(lineup, [sub('e1', "67'", 'Gabriel Martinelli', 'h', 'Bukayo Saka')], 'h')
+    expect(used).toEqual([{ player: lineup.substitutes[0], minute: "67'", playerOff: 'Bukayo Saka' }])
+  })
+
+  it('leaves out playerOff when the event names nobody going off', () => {
+    const { used } = substituteEntries(lineup, [sub('e1', "81'", 'Jorginho')], 'h')
+    expect(used).toEqual([{ player: lineup.substitutes[1], minute: "81'" }])
+  })
+
+  it('orders used subs by the events and unused ones by the roster', () => {
+    const { used, unused } = substituteEntries(
+      lineup,
+      [sub('e1', "60'", 'David Raya'), sub('e2', "75'", 'Gabriel Martinelli')],
+      'h',
+    )
+    expect(used.map((entry) => entry.player.id)).toEqual(['22', '11'])
+    expect(ids(unused)).toEqual(['20'])
+  })
+
+  it('counts unmatched names and other event types as unused', () => {
+    const goal: MatchEvent = { id: 'g', type: 'goal', minute: "10'", teamId: 'h', player: 'Jorginho' }
+    const { used, unused } = substituteEntries(lineup, [goal, sub('e1', "70'", 'Someone Else')], 'h')
+    expect(used).toEqual([])
+    expect(ids(unused)).toEqual(['11', '20', '22'])
+  })
+
+  it('ignores the same name coming on for the other team', () => {
+    const { used } = substituteEntries(lineup, [sub('e1', "70'", 'Jorginho', 'a')], 'h')
+    expect(used).toEqual([])
+  })
+
+  it('keeps the first of duplicate events', () => {
+    const { used } = substituteEntries(lineup, [sub('e1', "70'", 'Jorginho'), sub('e2', "88'", 'Jorginho')], 'h')
+    expect(used).toEqual([{ player: lineup.substitutes[1], minute: "70'" }])
+  })
+
+  it('matches names despite surrounding whitespace', () => {
+    const { used } = substituteEntries(lineup, [sub('e1', "70'", '  Jorginho ')], 'h')
+    expect(used.map((entry) => entry.player.id)).toEqual(['20'])
+  })
+
+  it('lists everyone as unused without events', () => {
+    const { used, unused } = substituteEntries(lineup, [], 'h')
+    expect(used).toEqual([])
+    expect(ids(unused)).toEqual(['11', '20', '22'])
   })
 })

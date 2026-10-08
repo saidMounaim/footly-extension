@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash a558d37cefcd512f7d946788d8cd184766f9a7c0c04cd83a42419ec56d56df39 -->
+<!-- blueprint:source-hash c18a5f9bf1ac4bdcc6fb6490b475039bdf7ba2acd925a845de062be86f3facec -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -28,7 +28,7 @@ Principles: fast, simple, focused, lightweight (few requests, little background 
 
 ## Features
 
-Build order from `build-plan.md`; features 1 to 26 are done; 27 is next. Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
+Build order from `build-plan.md`; features 1 to 26 and 27a are done; 27c is next, then 27b (27c was added later but builds first). Feature 19 was listed after 15 and built before 16; features 20 and 21 are listed after 17 and built before 18. Headline: the compact popup with next match and live score.
 
 1. **Match Discovery & Upcoming Games** (done) - upcoming matches with competition, teams, kickoff, status. Split into:
    - **1a. Extension Shell** - MV3 popup via `@crxjs/vite-plugin`, Tailwind CSS, light/dark tokens following the system theme; no permissions.
@@ -63,8 +63,9 @@ Build order from `build-plan.md`; features 1 to 26 are done; 27 is next. Feature
    - **25b. All Competitions on Home** - every competition on Home: defaults and followed first with live status, then the rest grouped as Club competitions and National teams, loading only when opened; follow/unfollow moves into the competition screen. Botola Pro stays out (no free source without a backend).
 26. **Match Center Refresh** (done) - modern match-detail score header (larger crests and score, status pill, goal scorers per team), starting lineups drawn on a pitch from player positions with the list as fallback, and a football icon for goals.
 27. **Match Center Polish** - easier-to-scan match detail: tabbed sections, team badges in place of bare names, player photos. Split into:
-   - **27a. Match Sections & Team Badges** - Summary, Stats, and Lineups tabs under the score header, substitutes collapsible under the pitch; team crest or flag on the stats header, pitch labels, and substitute headings; stats as comparison bars; finished-match result rows show crests and score without team names.
+   - **27a. Match Sections & Team Badges** (done) - Summary, Stats, and Lineups tabs under the score header, substitutes collapsible under the pitch; team crest or flag on the stats header, pitch labels, and substitute headings; stats as comparison bars; finished-match result rows show crests and score without team names.
    - **27b. Player Photos** - ESPN player headshots in lineups, falling back to the shirt number when missing.
+   - **27c. Readable Timeline, Subs & Names** - Summary timeline split by team (home left, away right, each with its crest); substitutes listed with the minute they came on and who they replaced, unused ones after and muted; full player names on the pitch and under the score instead of cut-off or last-word names.
 
 ## Data model
 
@@ -178,4 +179,5 @@ Modern, compact football companion, not a mini football website. Clean, fast, ea
 - **Competition ids.** ESPN does not serve Botola Pro (`mar.1`); feature 22 must verify each local-league id against ESPN before relying on it.
 - **Testing.** The plan lists Vitest and React Testing Library; only Vitest is configured (`npm test`), and UI stays out of unit tests by the coding standards.
 - **Result rows without names (27a).** The UI/UX rule says crests are decorative and names stay visible; 27a drops team names from finished-match rows. The build plan wins for 27a, but `project-plan.md` should be updated to match (names kept as accessible labels and tooltips).
+- **Substitute details (27c).** Substitution events carry player names while lineups carry ids, so 27c must match subs to events by name; matching is unverified against live ESPN data.
 - **Player photo field (27b).** The project plan's `LineupPlayer` has no photo; 27b will add an optional ESPN headshot URL (https, `a.espncdn.com` only). ESPN headshot coverage for soccer players is unverified.

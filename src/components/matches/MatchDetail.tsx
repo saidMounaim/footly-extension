@@ -57,9 +57,9 @@ function Scorers({ goals, label }: { goals: GoalLine[]; label: string }) {
   return (
     <ul aria-label={label} className="min-w-0 space-y-0.5 text-center text-xs text-muted">
       {goals.map((goal) => (
-        <li key={goal.id} className="flex items-center justify-center gap-1">
-          <FootballIcon className="size-3 shrink-0" />
-          <span className="min-w-0 truncate">
+        <li key={goal.id} className="flex items-start justify-center gap-1">
+          <FootballIcon className="mt-0.5 size-3 shrink-0" />
+          <span className="min-w-0 wrap-break-word">
             {goal.player && <span className="text-foreground">{goal.player} </span>}
             <span className="tabular-nums">{goal.minute}</span>
             {goal.suffix && ` ${goal.suffix}`}

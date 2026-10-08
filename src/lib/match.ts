@@ -1,4 +1,4 @@
-import type { Match, MatchEventType } from '../api/types.ts'
+import type { Lineup, LineupPlayer, Match, MatchEvent, MatchEventType } from '../api/types.ts'
 
 export interface GoalLine {
   id: string
@@ -37,4 +37,34 @@ export function goalScorers(match: Match): { home: GoalLine[]; away: GoalLine[] 
     })
   }
   return { home, away }
+}
+
+export interface SubstituteEntry {
+  player: LineupPlayer
+  minute: string
+  playerOff?: string
+}
+
+/**
+ * A team's substitutes split into those who came on, in the order they did, and
+ * the rest in roster order. Events name players while lineups carry ids, so a
+ * substitute is matched by exact (trimmed) name to its team's first
+ * substitution event; anyone unmatched counts as unused.
+ */
+export function substituteEntries(
+  lineup: Lineup,
+  events: MatchEvent[],
+  teamId: string,
+): { used: SubstituteEntry[]; unused: LineupPlayer[] } {
+  const byName = new Map(lineup.substitutes.map((player) => [player.name.trim(), player]))
+  const used: SubstituteEntry[] = []
+  const cameOn = new Set<string>()
+  for (const event of events) {
+    if (event.type !== 'substitution' || event.teamId !== teamId || !event.player) continue
+    const player = byName.get(event.player.trim())
+    if (!player || cameOn.has(player.id)) continue
+    cameOn.add(player.id)
+    used.push({ player, minute: event.minute, ...(event.playerOff && { playerOff: event.playerOff }) })
+  }
+  return { used, unused: lineup.substitutes.filter((player) => !cameOn.has(player.id)) }
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { LineupPlayer } from '../api/types.ts'
-import { pitchLines, surname } from './pitch.ts'
+import { pitchLines } from './pitch.ts'
 
 function players(positions: (string | undefined)[]): LineupPlayer[] {
   return positions.map((position, index) => ({
@@ -55,13 +55,5 @@ describe('pitchLines', () => {
     expect(pitchLines(players([...fixture.slice(0, 10), undefined]), '4-2-3-1')).toBeNull()
     expect(pitchLines(players([...fixture.slice(0, 10), 'XX']), '4-2-3-1')).toBeNull()
     expect(pitchLines([])).toBeNull()
-  })
-})
-
-describe('surname', () => {
-  it('uses the last word of a multi-word name and keeps single names', () => {
-    expect(surname('Bukayo Saka')).toBe('Saka')
-    expect(surname('Kevin De Bruyne')).toBe('Bruyne')
-    expect(surname('Rodri')).toBe('Rodri')
   })
 })

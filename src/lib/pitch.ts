@@ -69,9 +69,3 @@ export function pitchLines(starters: readonly LineupPlayer[], formation?: string
   }
   return [keepers, ...lines].filter((line) => line.length > 0).map((line) => [...line].sort(byLateral))
 }
-
-/** The name shown under a player's disc: the last word of a multi-word name. */
-export function surname(name: string): string {
-  const words = name.trim().split(/\s+/)
-  return words.at(-1) ?? name
-}
