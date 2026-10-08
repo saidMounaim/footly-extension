@@ -60,3 +60,5 @@
 
   - [x] 25a. **Your Teams' Matches in Favorites** - Favorites shows each favorite team's upcoming and recent matches in every competition they play, from that team's ESPN schedule (one request per favorite team, only while the tab is open), instead of the competition follow lists. The "Your teams" list and team search stay.
   - [x] 25b. **All Competitions on Home** - Home lists every competition: the defaults and followed ones first with live status as today, then the rest grouped as Club competitions and National teams, loading their matches only when opened. Follow and unfollow move into the competition screen.
+
+- [x] 26. **Match Center Refresh** - Give the match detail a modern score header (larger crests and score, a status pill, and each team's goal scorers under the score), draw the starting lineups on a pitch from each player's position with the current list kept as the fallback, and replace the flag-style goal icon with a football.

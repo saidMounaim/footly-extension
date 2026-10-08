@@ -1,6 +1,6 @@
 # Footly - Project Overview
 
-<!-- blueprint:source-hash bd538a462097a085d011d5a4eda020324bccdc08d81a8b4d21a90acfca6bd631 -->
+<!-- blueprint:source-hash 12f4fa27f64cdeca714b170b3b0e3fd76457de95028cb59e01a687e71c4721c0 -->
 
 > Footly is a lightweight Chrome extension that shows upcoming matches, live scores, and results in a compact popup, prioritizing the user's favorite teams and competitions.
 
@@ -58,9 +58,10 @@ Build order from `build-plan.md`; features 1 to 22 are done. Feature 19 was list
 22. **Local League Suggestion** (done) - one-time prompt to follow the user's own country's league, guessed on the device from time zone and language; national-team competitions where ESPN lacks the league.
 23. **Competition Browser on Home** (done) - Home lists competition cards instead of games; opening one shows its upcoming matches and results with day chips.
 24. **More Competitions 2** (done) - more national-team competitions (World Cup, Copa América, Euro, Nations League, Gold Cup, World Cup qualifiers for South America, Europe, CONCACAF, Asia) and club competitions (Europa League, Conference League, Libertadores, Championship, FA Cup, Copa del Rey), each only where ESPN serves it; extras grouped in Favorites as Clubs and National teams.
-25. **Favorites & Home Reorganize** - Favorites becomes your teams' matches; every competition moves to Home.
+25. **Favorites & Home Reorganize** (done) - Favorites becomes your teams' matches; every competition moves to Home.
    - **25a. Your Teams' Matches in Favorites** - each favorite team's upcoming and recent matches in every competition, from that team's ESPN schedule (one request per favorite team, only while the tab is open), replacing the competition follow lists; "Your teams" and team search stay.
    - **25b. All Competitions on Home** - every competition on Home: defaults and followed first with live status, then the rest grouped as Club competitions and National teams, loading only when opened; follow/unfollow moves into the competition screen. Botola Pro stays out (no free source without a backend).
+26. **Match Center Refresh** - modern match-detail score header (larger crests and score, status pill, goal scorers per team), starting lineups drawn on a pitch from player positions with the list as fallback, and a football icon for goals.
 
 ## Data model
 

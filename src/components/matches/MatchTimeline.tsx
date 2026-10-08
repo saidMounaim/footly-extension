@@ -1,6 +1,7 @@
-import { ArrowLeftRight, CircleX, Goal } from 'lucide-react'
+import { ArrowLeftRight, CircleX } from 'lucide-react'
 import type { ReactNode } from 'react'
 import type { Match, MatchEvent, MatchEventType } from '../../api/types.ts'
+import { FootballIcon } from '../common/FootballIcon.tsx'
 
 const iconClass = 'size-4 text-muted'
 
@@ -10,9 +11,9 @@ function Card({ color }: { color: 'bg-card-yellow' | 'bg-card-red' }) {
 }
 
 const EVENT_DISPLAY: Record<MatchEventType, { icon: ReactNode; label: string }> = {
-  goal: { icon: <Goal className={iconClass} />, label: 'Goal' },
-  'own-goal': { icon: <Goal className={iconClass} />, label: 'Own goal' },
-  'penalty-goal': { icon: <Goal className={iconClass} />, label: 'Penalty goal' },
+  goal: { icon: <FootballIcon className={iconClass} />, label: 'Goal' },
+  'own-goal': { icon: <FootballIcon className={iconClass} />, label: 'Own goal' },
+  'penalty-goal': { icon: <FootballIcon className={iconClass} />, label: 'Penalty goal' },
   'penalty-missed': { icon: <CircleX className={iconClass} />, label: 'Missed penalty' },
   'yellow-card': { icon: <Card color="bg-card-yellow" />, label: 'Yellow card' },
   'red-card': { icon: <Card color="bg-card-red" />, label: 'Red card' },

@@ -11,6 +11,9 @@
   --card-yellow: #facc15;
   --card-red: #dc2626;
   --crest-backdrop: #ffffff;
+  --pitch: #166534;
+  --pitch-stripe: #15803d;
+  --pitch-line: #ffffff;
 
   color-scheme: light dark;
 }
@@ -28,6 +31,9 @@
     --card-yellow: #facc15;
     --card-red: #ef4444;
     --crest-backdrop: #e5e7eb;
+    --pitch: #14532d;
+    --pitch-stripe: #166534;
+    --pitch-line: #f3f4f6;
   }
 }
 
@@ -48,6 +54,9 @@
   --card-yellow: #facc15;
   --card-red: #ef4444;
   --crest-backdrop: #e5e7eb;
+  --pitch: #14532d;
+  --pitch-stripe: #166534;
+  --pitch-line: #f3f4f6;
 }
 
 @theme inline {
@@ -61,6 +70,9 @@
   --color-card-yellow: var(--card-yellow);
   --color-card-red: var(--card-red);
   --color-crest-backdrop: var(--crest-backdrop);
+  --color-pitch: var(--pitch);
+  --color-pitch-stripe: var(--pitch-stripe);
+  --color-pitch-line: var(--pitch-line);
 }
 
 body {

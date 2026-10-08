@@ -69,7 +69,7 @@ The product should work for both casual football fans and users who follow footb
 - Favorites tab: your favorite teams' upcoming and recent matches in every competition, plus the team list and team search; following competitions happens on Home.
 - Match countdown.
 - Quick team and match search.
-- Match detail view, with basic team statistics and starting lineups when the provider supplies them.
+- Match detail view, with a score header that lists each team's goal scorers, basic team statistics, and starting lineups drawn on a pitch when the provider supplies them.
 - Intelligent API refresh and caching.
 - Basic goal and match notifications.
 - Dark and light themes.

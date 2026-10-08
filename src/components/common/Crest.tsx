@@ -2,13 +2,14 @@ import { Trophy } from 'lucide-react'
 import { useState } from 'react'
 import { initials, safeImageUrl, sizedCrestUrl } from '../../lib/crest.ts'
 
-type CrestSize = 'sm' | 'md' | 'lg'
+type CrestSize = 'sm' | 'md' | 'lg' | 'xl'
 
-/** Display classes and the requested image size (2× the 16, 20, and 40px display) from one map. */
+/** Display classes and the requested image size (2× the 16, 20, 40, and 56px display) from one map. */
 const SIZES: Record<CrestSize, { className: string; px: number }> = {
   sm: { className: 'size-4 text-[7px]', px: 32 },
   md: { className: 'size-5 text-[8px]', px: 40 },
   lg: { className: 'size-10 text-xs', px: 80 },
+  xl: { className: 'size-14 text-sm', px: 112 },
 }
 
 interface CrestProps {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import css from '../index.css?raw'
 
 // card-yellow, card-red, and crest-backdrop are decorative (always beside a text label), so they
-// are not contrast-checked.
+// are not contrast-checked. The pitch tokens are checked for the names drawn on the pitch.
 const TOKENS = [
   'background',
   'surface',
@@ -14,6 +14,9 @@ const TOKENS = [
   'card-yellow',
   'card-red',
   'crest-backdrop',
+  'pitch',
+  'pitch-stripe',
+  'pitch-line',
 ]
 
 /** The custom property values declared directly in the block opened by `selector`. */
@@ -65,6 +68,10 @@ describe.each([
     ['background', 'surface'].map((ground) => [text, ground] as const),
   ))('%s on %s is at least 4.5:1', (text, ground) => {
     expect(contrast(tokens[text], tokens[ground])).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it.each(['pitch', 'pitch-stripe'])('pitch-line text on %s is at least 4.5:1', (ground) => {
+    expect(contrast(tokens['pitch-line'], tokens[ground])).toBeGreaterThanOrEqual(4.5)
   })
 
   it('switch knob (background on accent) is at least 3:1', () => {

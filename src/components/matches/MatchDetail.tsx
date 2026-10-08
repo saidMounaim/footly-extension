@@ -10,7 +10,9 @@ import { useNow } from '../../hooks/useNow.ts'
 import { detailCountdown } from '../../lib/countdown.ts'
 import { dayLabel, formatKickoff } from '../../lib/date.ts'
 import { failureMessage } from '../../lib/errors.ts'
+import { goalScorers, type GoalLine } from '../../lib/match.ts'
 import { Crest } from '../common/Crest.tsx'
+import { FootballIcon } from '../common/FootballIcon.tsx'
 import { MatchLineups } from './MatchLineups.tsx'
 import { StatusText } from './MatchRow.tsx'
 import { MatchStats } from './MatchStats.tsx'
@@ -25,52 +27,82 @@ interface MatchDetailProps {
   onBack: () => void
 }
 
+function TeamSide({
+  team,
+  favorites,
+}: {
+  team: Match['homeTeam']
+  favorites: FavoriteTeamsApi
+}) {
+  return (
+    <div className="flex min-w-0 flex-col items-center gap-2 text-center">
+      <Crest src={team.logo} name={team.name} size="xl" />
+      <p className="flex max-w-full items-start justify-center gap-0.5 text-sm font-semibold leading-tight text-foreground">
+        <span className="line-clamp-2 min-w-0 break-words">{team.name}</span>
+        <FavoriteToggle
+          name={team.name}
+          pressed={favorites.isFavorite(team.id)}
+          disabled={!favorites.ready}
+          onToggle={() => favorites.toggle(team)}
+        />
+      </p>
+    </div>
+  )
+}
+
+function Scorers({ goals, label }: { goals: GoalLine[]; label: string }) {
+  if (goals.length === 0) return <div />
+  return (
+    <ul aria-label={label} className="min-w-0 space-y-0.5 text-center text-xs text-muted">
+      {goals.map((goal) => (
+        <li key={goal.id} className="flex items-center justify-center gap-1">
+          <FootballIcon className="size-3 shrink-0" />
+          <span className="min-w-0 truncate">
+            {goal.player && <span className="text-foreground">{goal.player} </span>}
+            <span className="tabular-nums">{goal.minute}</span>
+            {goal.suffix && ` ${goal.suffix}`}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )
+}
+
 function ScoreBlock({ match, favorites }: { match: Match; favorites: FavoriteTeamsApi }) {
   const upcoming = match.status === 'upcoming'
   const now = useNow(upcoming ? 1000 : null)
+  const scorers = useMemo(() => goalScorers(match), [match])
+  const hasScorers = scorers.home.length > 0 || scorers.away.length > 0
   return (
-    <div className="mx-3 my-3 flex flex-col items-center gap-3 rounded-2xl border border-border bg-background px-4 py-5 shadow-sm">
-      <div className="flex w-full items-center gap-3">
-        <div className="flex flex-1 flex-col items-end gap-1.5">
-          <Crest src={match.homeTeam.logo} name={match.homeTeam.name} size="lg" />
-          <p className="flex items-center justify-end gap-1 text-right text-sm font-semibold text-foreground">
-            <span className="min-w-0">{match.homeTeam.name}</span>
-            <FavoriteToggle
-              name={match.homeTeam.name}
-              pressed={favorites.isFavorite(match.homeTeam.id)}
-              disabled={!favorites.ready}
-              onToggle={() => favorites.toggle(match.homeTeam)}
-            />
+    <div className="mx-3 my-3 rounded-3xl border border-border bg-gradient-to-b from-surface to-background px-3 pt-5 pb-4 shadow-sm">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2">
+        <TeamSide team={match.homeTeam} favorites={favorites} />
+        <div className="flex flex-col items-center gap-2 pt-2">
+          <p className="text-5xl font-extrabold leading-none tracking-tight tabular-nums text-foreground">
+            {match.score ? formatScore(match.score) : formatKickoff(new Date(match.startTime))}
           </p>
+          <div className="text-sm">
+            {upcoming ? (
+              <span className="flex flex-col items-center">
+                <span className="text-muted">{dayLabel(new Date(match.startTime), now)}</span>
+                <span className="tabular-nums text-foreground">
+                  {detailCountdown(new Date(match.startTime), now)}
+                </span>
+              </span>
+            ) : (
+              <StatusText match={match} showScore={false} />
+            )}
+          </div>
         </div>
-        <p className="shrink-0 text-4xl font-bold tabular-nums text-foreground">
-          {match.score ? formatScore(match.score) : formatKickoff(new Date(match.startTime))}
-        </p>
-        <div className="flex flex-1 flex-col items-start gap-1.5">
-          <Crest src={match.awayTeam.logo} name={match.awayTeam.name} size="lg" />
-          <p className="flex items-center gap-1 text-sm font-semibold text-foreground">
-            <FavoriteToggle
-              name={match.awayTeam.name}
-              pressed={favorites.isFavorite(match.awayTeam.id)}
-              disabled={!favorites.ready}
-              onToggle={() => favorites.toggle(match.awayTeam)}
-            />
-            <span className="min-w-0">{match.awayTeam.name}</span>
-          </p>
-        </div>
+        <TeamSide team={match.awayTeam} favorites={favorites} />
       </div>
-      <p className="text-sm">
-        {match.status === 'upcoming' ? (
-          <span className="flex flex-col items-center">
-            <span className="text-muted">{dayLabel(new Date(match.startTime), now)}</span>
-            <span className="tabular-nums text-foreground">
-              {detailCountdown(new Date(match.startTime), now)}
-            </span>
-          </span>
-        ) : (
-          <StatusText match={match} showScore={false} />
-        )}
-      </p>
+      {hasScorers && (
+        <div className="mt-3 grid grid-cols-[1fr_auto_1fr] gap-2 border-t border-border pt-3">
+          <Scorers goals={scorers.home} label={`${match.homeTeam.name} goals`} />
+          <span aria-hidden="true" className="w-12" />
+          <Scorers goals={scorers.away} label={`${match.awayTeam.name} goals`} />
+        </div>
+      )}
     </div>
   )
 }
